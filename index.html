@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Learn blues improvisation through colorful, interactive musical scales">
+    <title>ColorImprov — Learn Blues Improvisation</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script type="module" src="/src/main.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div id="top-panel">
+            <div id="controls">
+                <button id="play-btn" class="control-btn" aria-label="Play" title="Play (Space)">▶︎</button>
+                <button id="pause-btn" class="control-btn" aria-label="Pause" title="Pause (Space)">⏸</button>
+                <button id="stop-btn" class="control-btn stop" aria-label="Stop" title="Stop (Shift+Esc)">⏹</button>
+            </div>
+            <div id="instructions">
+                <p><strong>How to play:</strong> Press keyboard keys to play notes. The highlighted chord suggests which row (scale) to play from.</p>
+                <p><strong>Controls:</strong> <kbd>Space</kbd> to play/pause • <kbd>Shift</kbd>+<kbd>Esc</kbd> to stop (resets to beginning).</p>
+            </div>
+            <div id="error-message" role="alert" aria-live="assertive"></div>
+        </div>
+        <canvas id="mainCanvas" aria-label="Interactive musical grid"></canvas>
+    </div>
+</body>
+</html>

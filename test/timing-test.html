@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timing Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 {
+            color: #4ec9b0;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #252526;
+            border: 1px solid #3e3e42;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #0e639c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        button:hover {
+            background-color: #1177bb;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #264f78;
+            border-radius: 4px;
+        }
+    </style>
+    <script type="module" src="/test/timing-test.js"></script>
+</head>
+<body>
+    <h1>TimingEngine Test</h1>
+    <p>Check browser console for timing output</p>
+    <button id="startTest">Start Timing Test</button>
+</body>
+</html>

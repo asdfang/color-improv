@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SampleLoader Quick Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        #output {
+            background: #000;
+            padding: 20px;
+            border: 1px solid #00ff00;
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>SampleLoader Quick Test</h1>
+    <p>Open browser console (F12) for detailed output</p>
+    
+    <button onclick="runQuickTests()">Run All Tests</button>
+    <button onclick="testPlaySample()">Play Test Sample</button>
+    
+    <div id="output">Waiting for tests...</div>
+
+    <script type="module">
+        import { SampleLoader } from './src/audio/SampleLoader.js';
+
+        const output = document.getElementById('output');
+        
+        function log(message, isError = false) {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = isError ? '❌' : '✓';
+            const line = `[${timestamp}] ${prefix} ${message}`;
+            console.log(line);
+            output.textContent += line + '\n';
+        }
+
+        // Global reference for console experiments
+        window.loader = null;
+        window.audioContext = null;
+
+        window.runQuickTests = async function() {
+            output.textContent = ''; // Clear
+            log('Starting SampleLoader tests...\n');
+
+            try {
+                // Initialize
+                log('Test 0: Initializing AudioContext...');
+                window.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                window.loader = new SampleLoader(audioContext);
+                log('AudioContext created');
+
+                // TEST 1: Load single sample
+                log('\nTest 1: Loading single sample (60.wav)...');
+                const startTime = performance.now();
+                const buffer1 = await loader.loadSample('/sounds/trumpetsounds/60.wav');
+                const loadTime = (performance.now() - startTime).toFixed(2);
+                log(`Sample loaded in ${loadTime}ms`);
+                log(`Duration: ${buffer1.duration.toFixed(2)}s, Channels: ${buffer1.numberOfChannels}`);
+
+                // TEST 2: Cache hit (should be instant)
+                log('\nTest 2: Loading same sample (should use cache)...');
+                const cacheStartTime = performance.now();
+                const buffer2 = await loader.loadSample('/sounds/trumpetsounds/60.wav');
+                const cacheTime = (performance.now() - cacheStartTime).toFixed(2);
+                const isCached = buffer1 === buffer2;
+                log(`Loaded in ${cacheTime}ms (cache hit: ${isCached})`);
+                
+                if (!isCached) {
+                    log('WARNING: Cache not working!', true);
+                }
+
+                // TEST 3: Load different sample
+                log('\nTest 3: Loading different sample (62.wav)...');
+                const buffer3 = await loader.loadSample('/sounds/trumpetsounds/62.wav');
+                log(`Different sample loaded: ${buffer3.duration.toFixed(2)}s`);
+
+                // TEST 4: Check cache size
+                log('\nTest 4: Checking cache state...');
+                const progress = loader.getProgress(2);
+                log(`Cache contains ${progress.loaded} samples (${progress.percentage.toFixed(0)}%)`);
+
+                // TEST 5: Load multiple in parallel
+                log('\nTest 5: Loading multiple samples in parallel...');
+                const parallelStart = performance.now();
+                const midiNumbers = [64, 65, 67];
+                const urls = midiNumbers.map(n => `/sounds/trumpetsounds/${n}.wav`);
+                const buffers = await loader.loadMultipleSamples(urls);
+                const parallelTime = (performance.now() - parallelStart).toFixed(2);
+                log(`Loaded ${buffers.length} samples in ${parallelTime}ms`);
+
+                // TEST 6: Error handling
+                log('\nTest 6: Testing error handling (404)...');
+                try {
+                    await loader.loadSample('/fake-file-does-not-exist.wav');
+                    log('ERROR: Should have thrown an error!', true);
+                } catch (error) {
+                    log(`Correctly caught error: ${error.message}`);
+                }
+
+                // TEST 7: Load all trumpet samples
+                log('\nTest 7: Loading all required trumpet samples...');
+                const allSamplesStart = performance.now();
+                const requiredSamples = [60, 62, 63, 64, 65, 66, 67, 69, 70, 71, 72, 74, 75, 76, 77, 79];
+                const sampleMap = await loader.loadTrumpetSamples(requiredSamples);
+                const allSamplesTime = (performance.now() - allSamplesStart).toFixed(2);
+                log(`Loaded ${sampleMap.size} trumpet samples in ${allSamplesTime}ms`);
+
+                log('\n✅ ALL TESTS PASSED!');
+                
+            } catch (error) {
+                log(`\nFATAL ERROR: ${error.message}`, true);
+                console.error(error);
+            }
+        };
+
+        // Bonus: Play a loaded sample
+        window.testPlaySample = async function() {
+            if (!window.loader || !window.audioContext) {
+                alert('Run tests first!');
+                return;
+            }
+
+            try {
+                log('\nPlaying sample 60.wav...');
+                const buffer = await loader.loadSample('/sounds/trumpetsounds/60.wav');
+                
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioContext.destination);
+                source.start();
+                
+                log('Playing! (you should hear it)');
+            } catch (error) {
+                log(`Play error: ${error.message}`, true);
+            }
+        };
+
+        // Auto-run on load (optional - comment out if you prefer manual)
+        // window.addEventListener('load', () => {
+        //     setTimeout(runQuickTests, 500);
+        // });
+    </script>
+</body>
+</html>

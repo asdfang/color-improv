@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AudioEngine Quick Test</title>
+    <script type="module" src="/test/audioengine-quicktest.js"></script>
+</head>
+<body>
+    <h1>AudioEngine Quick Test</h1>
+    <p>Output in browser console</p>
+
+    <!-- AudioEngine should be constructed and start in suspended state on page load. -->
+    <button id="initTest">Test initialization (resuming AudioContext)</button>
+    <p>Press and hold "z" to play MIDI 60. Release to stop the note.</p>
+    <p>Press and hold "x" to play MIDI 62. Release to stop the note.</p>
+    <p>Play both sounds at the same time.</p>
+
+    <button id="playBackingTrack">Play Backing Track</button>
+    <p>Backing track should start playing when button is pressed.</p>
+
+    <button id="pauseBackingTrack">Pause Backing Track</button>
+    <p>Backing track should pause when button is pressed.</p>
+
+    <!-- <button id="resumeBackingTrack">Resume Backing Track</button>
+    <p>Backing track should resume when button is pressed.</p> -->
+
+    <button id="stopBackingTrack">Stop Backing Track</button>
+    <p>Backing track should stop and reset to beginning when button is pressed.</p>
+
+    <button id="stopSamples">Stop All Sample Sounds</button>
+    <p>All currently playing sample sounds should stop when button is pressed.</p>
+
+    <button id="stopAllSound">Stop All Sounds</button>
+    <p>All currently playing sounds (samples and backing track) should stop when button is pressed.</p>
+
+    <button id="mute">Mute AudioEngine</button>
+
+    <button id="unmute">Unmute AudioEngine</button>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KeyboardHandler Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 {
+            color: #4ec9b0;
+        }
+        .row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        button {
+            padding: 10px 16px;
+            background-color: #0e639c;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        button:hover {
+            background-color: #1177bb;
+        }
+        #output, #mappings, #activeKeys {
+            margin-top: 12px;
+            padding: 12px;
+            background-color: #252526;
+            border: 1px solid #3e3e42;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+        .panel {
+            flex: 1 1 320px;
+        }
+        .hint {
+            color: #9cdcfe;
+        }
+    </style>
+    <script type="module" src="/test/keyboardhandler-test.js"></script>
+</head>
+<body>
+    <h1>KeyboardHandler Test</h1>
+    <p class="hint">Click this page, then press keys from the mappings list to trigger events.</p>
+
+    <div class="row">
+        <button id="enableBtn">Enable</button>
+        <button id="disableBtn">Disable</button>
+        <button id="clearLogBtn">Clear Log</button>
+    </div>
+
+    <div id="status">Status: initializing</div>
+
+    <div class="row">
+        <div class="panel">
+            <h3>Active Keys</h3>
+            <div id="activeKeys">Active keys: (none)</div>
+        </div>
+        <div class="panel">
+            <h3>Mappings</h3>
+            <div id="mappings"></div>
+        </div>
+    </div>
+
+    <h3>Event Log</h3>
+    <div id="output"></div>
+</body>
+</html>
