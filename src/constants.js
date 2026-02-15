@@ -24,6 +24,7 @@ export const REQUIRED_SAMPLES = [
  * TODO: user may upload their own samples?
  */
 export const AUDIO_CONFIG = {
+    
     paths: {
         SAMPLES_BASE: '/assets/audio/samples/trumpet/',
         BACKING_TRACKS_BASE: '/assets/audio/backing-tracks/',

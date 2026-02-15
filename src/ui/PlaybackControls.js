@@ -1,4 +1,4 @@
-export class Controls {
+export class PlaybackControls {
     constructor() {
         this.playBtn = /** @type {HTMLButtonElement} */ (document.getElementById('play-btn'));
         this.pauseBtn = /** @type {HTMLButtonElement} */ (document.getElementById('pause-btn'));

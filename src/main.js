@@ -2,7 +2,7 @@ import { AudioEngine } from '/src/audio/AudioEngine.js';
 import { TimingEngine } from '/src/timing/TimingEngine.js';
 import { Renderer } from '/src/visual/Renderer.js';
 import { KeyboardHandler } from '/src/input/KeyboardHandler.js';
-import { Controls } from '/src/ui/Controls.js';
+import { PlaybackControls } from '/src/ui/PlaybackControls';
 import { keyToGridCoordinates } from '/src/visual/grid-data';
 
 /** @typedef {'STOPPED' | 'PLAYING' | 'PAUSED'} PlaybackState */
@@ -24,7 +24,7 @@ class ColorImprovApp {
         this.renderer = new Renderer(canvas);
         
         this.keyboardHandler = new KeyboardHandler(this.audioEngine);
-        this.controls = new Controls();
+        this.playbackControls = new PlaybackControls();
         this.errorElement = /** @type {HTMLElement} */ (document.getElementById('error-message'));
 
         this.animationFrameId = null;
@@ -58,7 +58,7 @@ class ColorImprovApp {
      */
     setUpEventListeners() {
         // Control button events
-        this.controls.enable({
+        this.playbackControls.enable({
             onPlay: () => this.play(),
             onPause: () => this.pause(),
             onStop: () => this.stop(),
@@ -104,7 +104,7 @@ class ColorImprovApp {
 
             // Update state before starting render loop
             this.state = 'PLAYING';
-            this.controls.setPlaying();
+            this.playbackControls.setPlaying();
             this.renderer.setPlaybackState('playing');
 
             this.audioEngine.playBackingTrack();
@@ -118,7 +118,7 @@ class ColorImprovApp {
             this.showError('Failed to start playback. Please try again or refresh the page.');
             // Reset to stopped state on error
             this.state = 'STOPPED';
-            this.controls.setStopped();
+            this.playbackControls.setStopped();
             this.renderer.setPlaybackState('stopped');
         }
     }
@@ -130,7 +130,7 @@ class ColorImprovApp {
      */
     pause() {
         this.state = 'PAUSED';
-        this.controls.setPaused();
+        this.playbackControls.setPaused();
         this.renderer.setPlaybackState('paused');
         // Renderer retains current chord highlighted only
 
@@ -152,7 +152,7 @@ class ColorImprovApp {
      */
     resume() {
         this.state = 'PLAYING';
-        this.controls.setPlaying();
+        this.playbackControls.setPlaying();
         this.renderer.setPlaybackState('playing');
 
         this.audioEngine.playBackingTrack();
@@ -170,7 +170,7 @@ class ColorImprovApp {
      */
     stop() {
         this.state = 'STOPPED';
-        this.controls.setStopped();
+        this.playbackControls.setStopped();
         this.renderer.setPlaybackState('stopped');
         
         this.audioEngine.stopAllSound();
