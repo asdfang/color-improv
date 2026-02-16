@@ -1,14 +1,13 @@
-export class Controls {
+export class PlaybackControls {
     constructor() {
-        this.playBtn = /** @type {HTMLButtonElement} */ (document.getElementById('play-btn'));
-        this.pauseBtn = /** @type {HTMLButtonElement} */ (document.getElementById('pause-btn'));
-        this.stopBtn = /** @type {HTMLButtonElement} */ (document.getElementById('stop-btn'));
-        this.instructions = /** @type {HTMLElement} */ (document.getElementById('instructions'));
+        this.playBtn = /** @type {HTMLButtonElement} */ document.getElementById('play-btn');
+        this.pauseBtn = /** @type {HTMLButtonElement} */ document.getElementById('pause-btn');
+        this.stopBtn = /** @type {HTMLButtonElement} */ document.getElementById('stop-btn');
 
         this.state = 'stopped'; // 'playing', 'paused', 'stopped'
 
+        // Initialize button display
         this.updateButtons();
-        this.updateInstructions();
     }
 
     /**
@@ -59,19 +58,16 @@ export class Controls {
     setPlaying() {
         this.state = 'playing';
         this.updateButtons();
-        this.updateInstructions();
     }
 
     setPaused() {
         this.state = 'paused';
         this.updateButtons();
-        this.updateInstructions();
     }
 
     setStopped() {
         this.state = 'stopped';
         this.updateButtons();
-        this.updateInstructions();
     }
 
     updateButtons() {
@@ -91,14 +87,6 @@ export class Controls {
                 this.pauseBtn.disabled = true;
                 this.stopBtn.disabled = true;
                 break;
-        }
-    }
-
-    updateInstructions() {
-        if (this.state === 'stopped') {
-            this.instructions.classList.remove('hidden');
-        } else {
-            this.instructions.classList.add('hidden');
         }
     }
 }

@@ -2,7 +2,9 @@ import { AudioEngine } from '/src/audio/AudioEngine.js';
 import { TimingEngine } from '/src/timing/TimingEngine.js';
 import { Renderer } from '/src/visual/Renderer.js';
 import { KeyboardHandler } from '/src/input/KeyboardHandler.js';
-import { Controls } from '/src/ui/Controls.js';
+import { PlaybackControls } from '/src/ui/PlaybackControls.js';
+import { VolumeControls } from '/src/ui/VolumeControls.js';
+import { DifficultyControls } from '/src/ui/DifficultyControls.js';
 import { keyToGridCoordinates } from '/src/visual/grid-data';
 
 /** @typedef {'STOPPED' | 'PLAYING' | 'PAUSED'} PlaybackState */
@@ -24,7 +26,9 @@ class ColorImprovApp {
         this.renderer = new Renderer(canvas);
         
         this.keyboardHandler = new KeyboardHandler(this.audioEngine);
-        this.controls = new Controls();
+        this.playbackControls = new PlaybackControls();
+        this.volumeControls = new VolumeControls();
+        this.difficultyControls = new DifficultyControls();
         this.errorElement = /** @type {HTMLElement} */ (document.getElementById('error-message'));
 
         this.animationFrameId = null;
@@ -32,16 +36,19 @@ class ColorImprovApp {
     
     /**
      * Initialize the main application: event listeners, renderer.
-     * Note: AudioEngine initialization must be triggered by user interaction.
+     * Note: AudioEngine initialization must be triggered by user interaction; done in play(), not here.
      */
     init() {
         try {
             console.log('Initializing Color Improv...');
-            
-            // AudioEngine initialization needs user interaction, cannot be done here
-            // Instead, wait for user gesture to call AudioEngine.initialize()
 
             this.setUpEventListeners();
+
+            // Initial mute button UI
+            this.volumeControls.setMuted('backingTrack', this.audioEngine.isBackingTrackMuted());
+            this.volumeControls.setMuted('samples', this.audioEngine.isSamplesMuted());
+
+            // Initial difficulty display set in HTML
 
             // Render initial stopped grid before playback starts
             this.renderer.render();
@@ -58,12 +65,21 @@ class ColorImprovApp {
      */
     setUpEventListeners() {
         // Control button events
-        this.controls.enable({
+        this.playbackControls.enable({
             onPlay: () => this.play(),
             onPause: () => this.pause(),
             onStop: () => this.stop(),
             onResume: () => this.resume(),
         });
+
+        // Volume control events
+        this.volumeControls.enable({
+            onVolumeChange: (source, volume) => this.setVolume(source, volume),
+            onMuteToggle: (source) => this.toggleMute(source),
+        });
+
+        // Difficulty control events - no callbacks
+        this.difficultyControls.enable();
 
         // Backing track end callback
         this.audioEngine.onEnded = () => this.stop();
@@ -87,6 +103,33 @@ class ColorImprovApp {
     }
 
     /**
+     * Set volume for specified source.
+     * @param {string} source 'backingTrack' | 'samples'
+     * @param {number} volume from 0 to 1
+     */
+    setVolume(source, volume) {
+        // Visual state automatic with sliders
+        if (source === 'backingTrack') this.audioEngine.setBackingTrackVolume(volume);
+        else if (source === 'samples') this.audioEngine.setSamplesMasterVolume(volume);
+        else console.warn(`Unknown source '${source}' for volume change.`);
+    }
+
+    /**
+     * Toggle mute state for specified source.
+     * @param {string} source 'backingTrack' | 'samples'
+     * @returns {boolean} whether muted after toggle
+     */
+    toggleMute(source) {
+        if (source === 'backingTrack') {
+            return this.audioEngine.toggleBackingTrackMute();
+        } else if (source === 'samples') {
+            return this.audioEngine.toggleSamplesMute();
+        }
+        console.warn(`Unknown source '${source}' for mute toggle.`);
+        return false;
+    }
+
+    /**
      * From a user interaction, start playback, timing engine, and render loop.
      * Only from paused or stopped state.
      * Initialize AudioEngine on first play.
@@ -104,7 +147,7 @@ class ColorImprovApp {
 
             // Update state before starting render loop
             this.state = 'PLAYING';
-            this.controls.setPlaying();
+            this.playbackControls.setPlaying();
             this.renderer.setPlaybackState('playing');
 
             this.audioEngine.playBackingTrack();
@@ -118,7 +161,7 @@ class ColorImprovApp {
             this.showError('Failed to start playback. Please try again or refresh the page.');
             // Reset to stopped state on error
             this.state = 'STOPPED';
-            this.controls.setStopped();
+            this.playbackControls.setStopped();
             this.renderer.setPlaybackState('stopped');
         }
     }
@@ -130,7 +173,7 @@ class ColorImprovApp {
      */
     pause() {
         this.state = 'PAUSED';
-        this.controls.setPaused();
+        this.playbackControls.setPaused();
         this.renderer.setPlaybackState('paused');
         // Renderer retains current chord highlighted only
 
@@ -152,7 +195,7 @@ class ColorImprovApp {
      */
     resume() {
         this.state = 'PLAYING';
-        this.controls.setPlaying();
+        this.playbackControls.setPlaying();
         this.renderer.setPlaybackState('playing');
 
         this.audioEngine.playBackingTrack();
@@ -170,7 +213,7 @@ class ColorImprovApp {
      */
     stop() {
         this.state = 'STOPPED';
-        this.controls.setStopped();
+        this.playbackControls.setStopped();
         this.renderer.setPlaybackState('stopped');
         
         this.audioEngine.stopAllSound();
@@ -191,14 +234,33 @@ class ColorImprovApp {
     startRenderLoop() {
         const loop = () => {
             const position = this.timingEngine.getCurrentPosition();
-            this.renderer.setCurrentChord(position.currentChord); // Highlight current chord
-            this.renderer.setNextChord(position.nextChord || null);
-            const countdown = Number.isFinite(position.beatsUntilNextChord)
-                && position.beatsUntilNextChord >= 1
-                && position.beatsUntilNextChord <= 4
-                ? position.beatsUntilNextChord
-                : null;
-            this.renderer.setNextChordCountdown(countdown);
+            const difficulty = this.difficultyControls.getDifficulty();
+
+            switch (difficulty) {
+                case 'hard': {
+                    this.renderer.setCurrentChord(null);
+                    this.renderer.setNextChordCountdown(null);
+                    break;
+                }
+                case 'medium': {
+                    this.renderer.setNextChordCountdown(null);
+                    this.renderer.setCurrentChord(position.currentChord);
+                    break;
+                }
+                case 'easy': {
+                    this.renderer.setCurrentChord(position.currentChord);
+                    this.renderer.setNextChord(position.nextChord || null);
+
+                    const countdown = Number.isFinite(position.beatsUntilNextChord)
+                        && position.beatsUntilNextChord >= 1
+                        && position.beatsUntilNextChord <= 4
+                        ? position.beatsUntilNextChord
+                        : null;
+                    this.renderer.setNextChordCountdown(countdown);
+                    break;
+                }
+            }
+
             this.renderer.render();
 
             if (this.state === 'PLAYING') this.animationFrameId = requestAnimationFrame(loop);

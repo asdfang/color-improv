@@ -11,14 +11,36 @@
 <body>
     <div id="app">
         <div id="top-panel">
-            <div id="controls">
+            <div id="volume-controls">
+                <div class="volume-group">
+                    <label for="backing-track-volume">Backing Track: </label>
+                    <input type="range" id="backing-track-volume" min="0" max="1" step="0.01" value="0.6">
+                    <button id="backing-track-mute-button">🔈</button>
+                </div>
+                <div class="volume-group">
+                    <label for="samples-volume">Trumpet: </label>
+                    <input type="range" id="samples-volume" min="0" max="1" step="0.01" value="0.8">
+                    <button id="samples-mute-button">🔈</button>
+                </div>
+            </div>
+            <div id="playback-controls">
                 <button id="play-btn" class="control-btn" aria-label="Play" title="Play (Space)">▶︎</button>
                 <button id="pause-btn" class="control-btn" aria-label="Pause" title="Pause (Space)">⏸</button>
                 <button id="stop-btn" class="control-btn stop" aria-label="Stop" title="Stop (Shift+Esc)">⏹</button>
             </div>
-            <div id="instructions">
-                <p><strong>How to play:</strong> Press keyboard keys to play notes. The highlighted chord suggests which row (scale) to play from.</p>
-                <p><strong>Controls:</strong> <kbd>Space</kbd> to play/pause • <kbd>Shift</kbd>+<kbd>Esc</kbd> to stop (resets to beginning).</p>
+            <div id="instructions-and-settings">
+                <div id="instructions" aria-label="Instructions">Hover for instructions and help.
+                    <p>Let's get a feel for the 12-bar blues! <br>
+                    Press keyboard keys from the appropriate row to play notes according to the current chord. <br>
+                    <strong>Controls:</strong> <kbd>Space</kbd> to play/pause. <kbd>Shift</kbd>+<kbd>Esc</kbd> to stop (resets to beginning).
+                    </p>
+                </div>
+                <label for="difficulty-select">Difficulty: </label>
+                <select id="difficulty-select" aria-label="Select difficulty level...">
+                    <option value="easy" selected>Easy (both helpers)</option>
+                    <option value="medium">Medium (one helper)</option>
+                    <option value="hard">Hard (no helpers)</option>
+                </select>
             </div>
             <div id="error-message" role="alert" aria-live="assertive"></div>
         </div>

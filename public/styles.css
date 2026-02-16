@@ -23,17 +23,40 @@ body {
     border-top: 1px solid #444;
     padding: 1rem;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.75rem;
-    overflow: hidden;
+    gap: 2rem;
+    overflow: visible;
 }
 
-#controls {
+#volume-controls {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.5rem;
+    row-gap: 0.75rem;
+    align-items: center;
+}
+
+.volume-group {
+    display: contents;  /* Makes children participate directly in parent grid */
+}
+
+.volume-group label {
+    text-align: right;
+}
+
+#playback-controls {
     display: flex;
     gap: 1rem;
     align-items: center;
     justify-content: center;
+}
+
+#instructions-and-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 button {
@@ -81,6 +104,17 @@ button {
     background: #666;
 }
 
+#backing-track-mute-button,
+#samples-mute-button {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+#backing-track-mute-button:hover,
+#samples-mute-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
 button:hover {
     background: #45a049;
 }
@@ -100,22 +134,48 @@ button:disabled {
 }
 
 #instructions {
-    text-align: center;
+    position: relative;
+    text-align: left;
     color: rgba(255, 255, 255, 1.0);
     font-size: 1.0rem;
-    overflow: hidden;
+    overflow: visible;
+    overflow-wrap: break-word;
     transition: all 0.3s ease;
 }
 
-#instructions.hidden {
+#instructions p {
     display: none;
-    height: 0;
-    padding: 0;
     margin: 0;
+    position: absolute;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    padding: 1rem;
+    z-index: 1000;
+    top: 100%;
+    right: 0;
+    white-space: normal;
+    width: max-content;
+    max-width: 90vw;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    margin-top: 0.5rem;
 }
 
-#instructions p {
-    margin: 0;
+@media (max-width: 768px) {
+    #instructions p {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #instructions p {
+        font-size: 0.75rem;
+    }
+}
+
+#instructions:hover p,
+#instructions:focus-within p {
+    display: block;
 }
 
 #error-message {
