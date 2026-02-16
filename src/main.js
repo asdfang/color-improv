@@ -2,7 +2,7 @@ import { AudioEngine } from '/src/audio/AudioEngine.js';
 import { TimingEngine } from '/src/timing/TimingEngine.js';
 import { Renderer } from '/src/visual/Renderer.js';
 import { KeyboardHandler } from '/src/input/KeyboardHandler.js';
-import { PlaybackControls } from '/src/ui/PlaybackControls';
+import { PlaybackControls } from '/src/ui/PlaybackControls.js';
 import { VolumeControls } from '/src/ui/VolumeControls.js';
 import { DifficultyControls } from '/src/ui/DifficultyControls.js';
 import { keyToGridCoordinates } from '/src/visual/grid-data';
@@ -51,7 +51,7 @@ class ColorImprovApp {
             // Initial difficulty display set in HTML
 
             // Render initial stopped grid before playback starts
-            this.renderer.render(); 
+            this.renderer.render();
 
             console.log('Color Improv initialized successfully.');
         } catch (error) {
@@ -102,18 +102,31 @@ class ColorImprovApp {
         });
     }
 
+    /**
+     * Set volume for specified source.
+     * @param {string} source 'backingTrack' | 'samples'
+     * @param {number} volume from 0 to 1
+     */
     setVolume(source, volume) {
         // Visual state automatic with sliders
         if (source === 'backingTrack') this.audioEngine.setBackingTrackVolume(volume);
         else if (source === 'samples') this.audioEngine.setSamplesMasterVolume(volume);
+        else console.warn(`Unknown source '${source}' for volume change.`);
     }
 
+    /**
+     * Toggle mute state for specified source.
+     * @param {string} source 'backingTrack' | 'samples'
+     * @returns {boolean} whether muted after toggle
+     */
     toggleMute(source) {
         if (source === 'backingTrack') {
             return this.audioEngine.toggleBackingTrackMute();
         } else if (source === 'samples') {
             return this.audioEngine.toggleSamplesMute();
         }
+        console.warn(`Unknown source '${source}' for mute toggle.`);
+        return false;
     }
 
     /**
@@ -223,21 +236,29 @@ class ColorImprovApp {
             const position = this.timingEngine.getCurrentPosition();
             const difficulty = this.difficultyControls.getDifficulty();
 
-            // Highlight current chord only if not hard
-            this.renderer.setCurrentChord(difficulty !== 'hard' ? position.currentChord : null); 
+            switch (difficulty) {
+                case 'hard': {
+                    this.renderer.setCurrentChord(null);
+                    this.renderer.setNextChordCountdown(null);
+                    break;
+                }
+                case 'medium': {
+                    this.renderer.setNextChordCountdown(null);
+                    this.renderer.setCurrentChord(position.currentChord);
+                    break;
+                }
+                case 'easy': {
+                    this.renderer.setCurrentChord(position.currentChord);
+                    this.renderer.setNextChord(position.nextChord || null);
 
-            // Show countdown to next chord only in easy mode and within 4 beats
-            if (difficulty === 'easy') {
-                this.renderer.setNextChord(position.nextChord || null);
-
-                const countdown = Number.isFinite(position.beatsUntilNextChord)
-                    && position.beatsUntilNextChord >= 1
-                    && position.beatsUntilNextChord <= 4
-                    ? position.beatsUntilNextChord
-                    : null;
-                this.renderer.setNextChordCountdown(countdown);
-            } else {
-                this.renderer.setNextChord(null); // No next chord highlight/countdown
+                    const countdown = Number.isFinite(position.beatsUntilNextChord)
+                        && position.beatsUntilNextChord >= 1
+                        && position.beatsUntilNextChord <= 4
+                        ? position.beatsUntilNextChord
+                        : null;
+                    this.renderer.setNextChordCountdown(countdown);
+                    break;
+                }
             }
 
             this.renderer.render();

@@ -14,12 +14,12 @@
             <div id="volume-controls">
                 <div class="volume-group">
                     <label for="backing-track-volume">Backing Track: </label>
-                    <input type="range" id="backing-track-volume" min="0" max="1" step="0.01" value="0.8">
+                    <input type="range" id="backing-track-volume" min="0" max="1" step="0.01" value="0.6">
                     <button id="backing-track-mute-button">🔈</button>
                 </div>
                 <div class="volume-group">
                     <label for="samples-volume">Trumpet: </label>
-                    <input type="range" id="samples-volume" min="0" max="1" step="0.01" value="0.6">
+                    <input type="range" id="samples-volume" min="0" max="1" step="0.01" value="0.8">
                     <button id="samples-mute-button">🔈</button>
                 </div>
             </div>
@@ -29,12 +29,11 @@
                 <button id="stop-btn" class="control-btn stop" aria-label="Stop" title="Stop (Shift+Esc)">⏹</button>
             </div>
             <div id="instructions-and-settings">
-                <div id="instructions">Hover for instructions and help.
+                <div id="instructions" aria-label="Instructions">Hover for instructions and help.
                     <p>Let's get a feel for the 12-bar blues! <br>
                     Press keyboard keys from the appropriate row to play notes according to the current chord. <br>
                     <strong>Controls:</strong> <kbd>Space</kbd> to play/pause. <kbd>Shift</kbd>+<kbd>Esc</kbd> to stop (resets to beginning).
                     </p>
-                    
                 </div>
                 <label for="difficulty-select">Difficulty: </label>
                 <select id="difficulty-select" aria-label="Select difficulty level...">

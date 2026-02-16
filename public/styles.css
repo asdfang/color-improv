@@ -156,6 +156,7 @@ button:disabled {
     right: 0;
     white-space: normal;
     width: max-content;
+    max-width: 90vw;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     margin-top: 0.5rem;
 }
@@ -172,7 +173,8 @@ button:disabled {
     }
 }
 
-#instructions:hover p {
+#instructions:hover p,
+#instructions:focus-within p {
     display: block;
 }
 

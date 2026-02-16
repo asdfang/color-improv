@@ -6,6 +6,13 @@ export class VolumeControls {
         this.samplesMuteButton = /** @type {HTMLButtonElement} */ document.getElementById('samples-mute-button');
     }
 
+    /**
+     * Set up event listeners for volume sliders and mute buttons.
+     * @param {Object} callbacks containing functions: onVolumeChange(source, volume), onMuteToggle(source)
+     * source: 'backingTrack' | 'samples'
+     * volume: number between 0 and 1
+     * onMuteToggle should return the new muted state (boolean) after toggling
+     */
     enable(callbacks) {
         this.backingTrackVolumeSlider.addEventListener('input', (e) => {
             callbacks.onVolumeChange('backingTrack', e.target.valueAsNumber);
@@ -28,9 +35,13 @@ export class VolumeControls {
                 this.setMuted('samples', isMuted);
             }
         });
-
     }
 
+    /**
+     * Sets specified source to muted/unmuted state visually.
+     * @param {string} source 'backingTrack' | 'samples'
+     * @param {boolean} isMuted
+     */
     setMuted(source, isMuted) {
         if (source === 'backingTrack') {
             this.updateMuteButton(this.backingTrackMuteButton, isMuted);
@@ -39,6 +50,11 @@ export class VolumeControls {
         }
     }
 
+    /**
+     * Updates the mute button text based on muted state.
+     * @param {HTMLButtonElement} button 
+     * @param {boolean} isMuted 
+     */
     updateMuteButton(button, isMuted) {
         button.textContent = isMuted ? '🔇' : '🔈';
     }
