@@ -19,3 +19,16 @@ export function midiToPitchClass(midiNumber) {
 export function clampVolume(volume) {
     return Math.min(Math.max(volume, 0.0), 1.0);
 }
+
+/**
+ * dB to gain conversion.
+ * @param {number} slider linear value of volume slider
+ * @param {number} minDb 
+ * @param {number} maxDb 
+ * @returns {number} gain value (linear)
+ */
+export function sliderToGain(slider, minDb = -60, maxDb = 0) {
+    const clampedSlider = clampVolume(slider);
+    const db = minDb + clampedSlider * (maxDb - minDb);
+    return Math.pow(10, db / 20);
+}

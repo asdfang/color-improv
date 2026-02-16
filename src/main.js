@@ -3,6 +3,7 @@ import { TimingEngine } from '/src/timing/TimingEngine.js';
 import { Renderer } from '/src/visual/Renderer.js';
 import { KeyboardHandler } from '/src/input/KeyboardHandler.js';
 import { PlaybackControls } from '/src/ui/PlaybackControls';
+import { VolumeControls } from '/src/ui/VolumeControls.js';
 import { keyToGridCoordinates } from '/src/visual/grid-data';
 
 /** @typedef {'STOPPED' | 'PLAYING' | 'PAUSED'} PlaybackState */
@@ -25,6 +26,7 @@ class ColorImprovApp {
         
         this.keyboardHandler = new KeyboardHandler(this.audioEngine);
         this.playbackControls = new PlaybackControls();
+        this.volumeControls = new VolumeControls();
         this.errorElement = /** @type {HTMLElement} */ (document.getElementById('error-message'));
 
         this.animationFrameId = null;
@@ -32,19 +34,20 @@ class ColorImprovApp {
     
     /**
      * Initialize the main application: event listeners, renderer.
-     * Note: AudioEngine initialization must be triggered by user interaction.
+     * Note: AudioEngine initialization must be triggered by user interaction; done in play(), not here.
      */
     init() {
         try {
             console.log('Initializing Color Improv...');
-            
-            // AudioEngine initialization needs user interaction, cannot be done here
-            // Instead, wait for user gesture to call AudioEngine.initialize()
 
             this.setUpEventListeners();
 
+            // Initial mute button UI
+            this.volumeControls.setMuted('backingTrack', this.audioEngine.isBackingTrackMuted());
+            this.volumeControls.setMuted('samples', this.audioEngine.isSamplesMuted());
+
             // Render initial stopped grid before playback starts
-            this.renderer.render();
+            this.renderer.render(); 
 
             console.log('Color Improv initialized successfully.');
         } catch (error) {
@@ -63,6 +66,12 @@ class ColorImprovApp {
             onPause: () => this.pause(),
             onStop: () => this.stop(),
             onResume: () => this.resume(),
+        });
+
+        // Volume control events
+        this.volumeControls.enable({
+            onVolumeChange: (source, volume) => this.setVolume(source, volume),
+            onMuteToggle: (source) => this.toggleMute(source),
         });
 
         // Backing track end callback
@@ -84,6 +93,20 @@ class ColorImprovApp {
             this.renderer.resize();
             this.renderer.render();
         });
+    }
+
+    setVolume(source, volume) {
+        // Visual state automatic with sliders
+        if (source === 'backingTrack') this.audioEngine.setBackingTrackVolume(volume);
+        else if (source === 'samples') this.audioEngine.setSamplesMasterVolume(volume);
+    }
+
+    toggleMute(source) {
+        if (source === 'backingTrack') {
+            return this.audioEngine.toggleBackingTrackMute();
+        } else if (source === 'samples') {
+            return this.audioEngine.toggleSamplesMute();
+        }
     }
 
     /**

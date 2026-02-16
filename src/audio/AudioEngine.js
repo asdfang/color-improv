@@ -1,6 +1,6 @@
 import { SampleLoader } from "./SampleLoader";
 import { AUDIO_CONFIG } from "/src/constants.js";
-import { clampVolume } from "/src/audio/audio-utils.js";
+import { clampVolume, sliderToGain } from "/src/audio/audio-utils.js";
 
 /**
  * AudioEngine manages audio playback and Web Audio API interactions.
@@ -30,13 +30,19 @@ export class AudioEngine {
         this.backingTrackSource = null;     // Web Audio API MediaElementAudioSourceNode for backing track
         this.backingTrackGain = null;       // GainNode for backing track volume control
 
+        // Volume state
+        this.backingTrackDesiredVolume = AUDIO_CONFIG.volumes.BACKING_TRACK_GAIN_DEFAULT; // Holds slider value
+        this.backingTrackMuted = false;
+        this.samplesMasterDesiredVolume = AUDIO_CONFIG.volumes.SAMPLES_MASTER_GAIN_DEFAULT; // Holds slider value
+        this.samplesMuted = false;
+
         // Connect gain nodes to destination immediately (connect source nodes to gain nodes later)
         this.samplesMasterGain = this.audioContext.createGain();
-        this.samplesMasterGain.gain.value = AUDIO_CONFIG.volumes.SAMPLES_MASTER_GAIN_DEFAULT;
+        this.samplesMasterGain.gain.value = sliderToGain(this.samplesMasterDesiredVolume);
         this.samplesMasterGain.connect(this.audioContext.destination);
 
         this.backingTrackGain = this.audioContext.createGain();
-        this.backingTrackGain.gain.value = AUDIO_CONFIG.volumes.BACKING_TRACK_GAIN_DEFAULT;
+        this.backingTrackGain.gain.value = sliderToGain(this.backingTrackDesiredVolume);
         this.backingTrackGain.connect(this.audioContext.destination);
 
         // Debug/seek offset (for syncing timing when seeking via setDebugTime)
@@ -292,25 +298,85 @@ export class AudioEngine {
     }
 
     /**
+     * Get current mute state of backing track.
+     * @returns {boolean} true if muted, false if unmuted
+     */
+    isBackingTrackMuted() {
+        return this.backingTrackMuted;
+    }
+
+    /**
+     * Gets current mute state of samples.
+     * @returns {boolean} true if muted, false if unmuted
+     */
+    isSamplesMuted() {
+        return this.samplesMuted;
+    }
+
+    /**
+     * Toggle backing track mute state. When muting, saves current volume to restore when unmuting.
+     * @returns {boolean} new muted state
+     */
+    toggleBackingTrackMute() {
+        this.backingTrackMuted = !this.backingTrackMuted;
+
+        if (this.backingTrackMuted && this.backingTrackGain) {
+            this.backingTrackGain.gain.value = 0; // Set gain directly
+        } else if (!this.backingTrackMuted && this.backingTrackGain) {
+            this.backingTrackGain.gain.value = sliderToGain(this.backingTrackDesiredVolume);
+        }
+
+        return this.backingTrackMuted;
+    }
+
+    /**
+     * Toggle samples mute state. When muting, saves current master volume to restore when unmuting.
+     * @returns {boolean} new muted state
+     */
+    toggleSamplesMute() {
+        this.samplesMuted = !this.samplesMuted;
+
+        if (this.samplesMuted && this.samplesMasterGain) {
+            this.samplesMasterGain.gain.value = 0; // Set gain directly
+        } else if (!this.samplesMuted && this.samplesMasterGain) {
+            this.samplesMasterGain.gain.value = sliderToGain(this.samplesMasterDesiredVolume);
+        }
+
+        return this.samplesMuted;
+    }
+
+    /**
      * Set backing track volume, clamped to valid range [0.0, 1.0].
+     * Saves volume if muted; immediately applies if not muted.
      * @param {number} volume 
-     * @returns 
+     * @returns {number} current backing track gain value (0.0 if muted)
      */
     setBackingTrackVolume(volume) {
         if (!this.backingTrackGain) return;
-
-        this.backingTrackGain.gain.value = clampVolume(volume);
+        
+        this.backingTrackDesiredVolume = clampVolume(volume);
+        if (!this.backingTrackMuted) {
+            this.backingTrackGain.gain.value = sliderToGain(this.backingTrackDesiredVolume);
+        }
+        
+        return this.backingTrackGain.gain.value;
     }
 
     /**
      * Set samples master volume, clamped to valid range [0.0, 1.0].
+     * Saves volume if muted; immediately applies if not muted.
      * @param {number} volume 
-     * @returns 
+     * @returns {number} current samples master gain value (0.0 if muted)
      */
     setSamplesMasterVolume(volume) {
         if (!this.samplesMasterGain) return;
         
-        this.samplesMasterGain.gain.value = clampVolume(volume);
+        this.samplesMasterDesiredVolume = clampVolume(volume);
+        if (!this.samplesMuted) {
+            this.samplesMasterGain.gain.value = sliderToGain(this.samplesMasterDesiredVolume);
+        }
+
+        return this.samplesMasterGain.gain.value;
     }
 
     /**
