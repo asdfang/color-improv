@@ -4,6 +4,7 @@ import { Renderer } from '/src/visual/Renderer.js';
 import { KeyboardHandler } from '/src/input/KeyboardHandler.js';
 import { PlaybackControls } from '/src/ui/PlaybackControls';
 import { VolumeControls } from '/src/ui/VolumeControls.js';
+import { DifficultyControls } from '/src/ui/DifficultyControls.js';
 import { keyToGridCoordinates } from '/src/visual/grid-data';
 
 /** @typedef {'STOPPED' | 'PLAYING' | 'PAUSED'} PlaybackState */
@@ -27,6 +28,7 @@ class ColorImprovApp {
         this.keyboardHandler = new KeyboardHandler(this.audioEngine);
         this.playbackControls = new PlaybackControls();
         this.volumeControls = new VolumeControls();
+        this.difficultyControls = new DifficultyControls();
         this.errorElement = /** @type {HTMLElement} */ (document.getElementById('error-message'));
 
         this.animationFrameId = null;
@@ -45,6 +47,8 @@ class ColorImprovApp {
             // Initial mute button UI
             this.volumeControls.setMuted('backingTrack', this.audioEngine.isBackingTrackMuted());
             this.volumeControls.setMuted('samples', this.audioEngine.isSamplesMuted());
+
+            // Initial difficulty display set in HTML
 
             // Render initial stopped grid before playback starts
             this.renderer.render(); 
@@ -73,6 +77,9 @@ class ColorImprovApp {
             onVolumeChange: (source, volume) => this.setVolume(source, volume),
             onMuteToggle: (source) => this.toggleMute(source),
         });
+
+        // Difficulty control events - no callbacks
+        this.difficultyControls.enable();
 
         // Backing track end callback
         this.audioEngine.onEnded = () => this.stop();
@@ -214,14 +221,25 @@ class ColorImprovApp {
     startRenderLoop() {
         const loop = () => {
             const position = this.timingEngine.getCurrentPosition();
-            this.renderer.setCurrentChord(position.currentChord); // Highlight current chord
-            this.renderer.setNextChord(position.nextChord || null);
-            const countdown = Number.isFinite(position.beatsUntilNextChord)
-                && position.beatsUntilNextChord >= 1
-                && position.beatsUntilNextChord <= 4
-                ? position.beatsUntilNextChord
-                : null;
-            this.renderer.setNextChordCountdown(countdown);
+            const difficulty = this.difficultyControls.getDifficulty();
+
+            // Highlight current chord only if not hard
+            this.renderer.setCurrentChord(difficulty !== 'hard' ? position.currentChord : null); 
+
+            // Show countdown to next chord only in easy mode and within 4 beats
+            if (difficulty === 'easy') {
+                this.renderer.setNextChord(position.nextChord || null);
+
+                const countdown = Number.isFinite(position.beatsUntilNextChord)
+                    && position.beatsUntilNextChord >= 1
+                    && position.beatsUntilNextChord <= 4
+                    ? position.beatsUntilNextChord
+                    : null;
+                this.renderer.setNextChordCountdown(countdown);
+            } else {
+                this.renderer.setNextChord(null); // No next chord highlight/countdown
+            }
+
             this.renderer.render();
 
             if (this.state === 'PLAYING') this.animationFrameId = requestAnimationFrame(loop);
