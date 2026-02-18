@@ -1,9 +1,13 @@
+import { AUDIO_CONFIG } from '/src/constants.js';
+
 export class VolumeControls {
     constructor() {
         this.backingTrackVolumeSlider = /** @type {HTMLInputElement} */ document.getElementById('backing-track-volume');
         this.backingTrackMuteButton = /** @type {HTMLButtonElement} */ document.getElementById('backing-track-mute-button');
+        this.backingTrackResetButton = /** @type {HTMLButtonElement} */ document.getElementById('backing-track-reset-button');
         this.samplesVolumeSlider = /** @type {HTMLInputElement} */ document.getElementById('samples-volume');
         this.samplesMuteButton = /** @type {HTMLButtonElement} */ document.getElementById('samples-mute-button');
+        this.samplesResetButton = /** @type {HTMLButtonElement} */ document.getElementById('samples-reset-button');
     }
 
     /**
@@ -34,6 +38,18 @@ export class VolumeControls {
             if (typeof isMuted === 'boolean') {
                 this.setMuted('samples', isMuted);
             }
+        });
+
+        this.backingTrackResetButton.addEventListener('click', () => {
+            const defaultVolume = AUDIO_CONFIG.volumes.BACKING_TRACK_GAIN_DEFAULT;
+            this.backingTrackVolumeSlider.value = String(defaultVolume);
+            callbacks.onVolumeChange('backingTrack', defaultVolume);
+        });
+
+        this.samplesResetButton.addEventListener('click', () => {
+            const defaultVolume = AUDIO_CONFIG.volumes.SAMPLES_MASTER_GAIN_DEFAULT;
+            this.samplesVolumeSlider.value = String(defaultVolume);
+            callbacks.onVolumeChange('samples', defaultVolume);
         });
     }
 
