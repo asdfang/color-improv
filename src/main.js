@@ -5,6 +5,8 @@ import { KeyboardHandler } from '/src/input/KeyboardHandler.js';
 import { PlaybackControls } from '/src/ui/PlaybackControls.js';
 import { VolumeControls } from '/src/ui/VolumeControls.js';
 import { DifficultyControls } from '/src/ui/DifficultyControls.js';
+import { LocalStorageBackend } from '/src/api/LocalStorageBackend';
+import { PreferencesManager } from '/src/preferences/PreferencesManager.js';
 import { keyToGridCoordinates } from '/src/visual/grid-data';
 
 /** @typedef {'STOPPED' | 'PLAYING' | 'PAUSED'} PlaybackState */
@@ -305,3 +307,5 @@ app.init();
 
 // Expose app to window for debugging in console
 window.app = app;
+window.lsb = new LocalStorageBackend();
+window.pm = new PreferencesManager(window.lsb);

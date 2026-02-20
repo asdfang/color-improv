@@ -100,3 +100,15 @@ export const KEY_MAPPINGS = {
     'Digit6': { midiNumber: 70, noteName: 'B♭', scaleRoot: 'C', scaleMode: 'Blues', scaleDegree: '♭7' },
     'Digit7': { midiNumber: 72, noteName: 'C', scaleRoot: 'C', scaleMode: 'Blues', scaleDegree: '8' },
 };
+
+/**
+ * Default user preferences in a flat object for simplicity.
+ * Used if no preferences are saved in localStorage or account.
+ */
+export const PREFERENCE_DEFAULTS = {
+    difficulty: 'easy', // | 'medium' | 'hard'
+    backingTrackVolume: AUDIO_CONFIG.volumes.BACKING_TRACK_GAIN_DEFAULT,
+    samplesVolume: AUDIO_CONFIG.volumes.SAMPLES_MASTER_GAIN_DEFAULT,
+    backingTrackMuted: false,
+    samplesMuted: false,
+}
