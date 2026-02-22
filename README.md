@@ -21,7 +21,9 @@ A simple way to improvise/solo over these chords is to use notes from the mixoly
 
 ## Future features:
 - Ability to record, download, save
-- Adjust difficulty level via visual assistance
 - Leaderboard of best improvs
 - Handle latency
 - Host
+
+## Development Process
+This solo project was built as a hands-on learning experience of modern JavaScript development and good practices after an extended time away from coding, using an old [hack-a-thon project]([url](https://github.com/dylanmor123/ColorImproviser)) as the starting point. AI tools (Claude, GitHub Copilot) largely played the role as a senior dev who pair-programmed with me in early stages, then gradually moved to just reviewing pull requests. Tests were largely AI-generated. All architectural decisions were finalized by me, pushing back on AI suggestions until they met the project's needs.
