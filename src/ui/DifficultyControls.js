@@ -1,24 +1,28 @@
 export class DifficultyControls {
     constructor() {
         this.difficultySelect = /** @type {HTMLSelectElement} */ (document.getElementById('difficulty-select'));
-        this.currentDifficulty = this.normalizeDifficulty(this.difficultySelect.value);
     }
 
     /**
-     * No callbacks needed. Changes in rendering managed by main.js by checking the difficulty when needed.
+     * Set up event listener for difficulty select.
+     * @param {object} callbacks containing function: onDifficultyChange(newDifficulty)
+     * newDifficulty: 'easy' | 'medium' | 'hard'
      */
-    enable() {
+    enable(callbacks) {
         this.difficultySelect.addEventListener('change', () => {
-            this.currentDifficulty = this.normalizeDifficulty(this.difficultySelect.value);
-            console.log(`Difficulty changed to ${this.currentDifficulty}`);
+            const newDifficulty = this.normalizeDifficulty(this.difficultySelect.value);
+            callbacks.onDifficultyChange(newDifficulty);
+            console.log(`Difficulty changed to ${newDifficulty}`);
         });
     }
 
     /**
-     * @returns {'easy' | 'medium' | 'hard'} - current difficulty level
+     * Sets the difficulty select dropdown to the given difficulty level.
+     * @param {string} difficulty 'easy' | 'medium' | 'hard'
      */
-    getDifficulty() {
-        return this.currentDifficulty;
+    setDifficulty(difficulty) {
+        const normalized = this.normalizeDifficulty(difficulty);
+        this.difficultySelect.value = normalized;
     }
 
     /**

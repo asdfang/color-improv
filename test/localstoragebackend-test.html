@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalStorageBackend Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 { color: #4ec9b0; }
+        button {
+            padding: 10px 16px;
+            margin: 6px;
+            background-color: #0e639c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        button:hover { background-color: #1177bb; }
+        #output {
+            margin-top: 12px;
+            padding: 12px;
+            background-color: #252526;
+            border: 1px solid #3e3e42;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+    </style>
+    <script type="module" src="/test/localstoragebackend-test.js"></script>
+</head>
+<body>
+    <h1>LocalStorageBackend Test</h1>
+    <p>Checks load/save behavior and invalid JSON handling.</p>
+
+    <button id="saveTest">Save Sample Preferences</button>
+    <button id="loadTest">Load Preferences</button>
+    <button id="corruptTest">Write Corrupt JSON</button>
+    <button id="clearTest">Clear Stored Data</button>
+
+    <div id="output">Waiting for tests...</div>
+</body>
+</html>

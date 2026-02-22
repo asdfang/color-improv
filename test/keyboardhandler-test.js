@@ -1,6 +1,6 @@
 import { AudioEngine } from '../src/audio/AudioEngine.js';
 import { KeyboardHandler } from '../src/input/KeyboardHandler.js';
-import { KEY_MAPPINGS } from '../src/constants.js';
+import { KEY_MAPPINGS, PREFERENCE_DEFAULTS } from '../src/constants.js';
 
 const output = document.getElementById('output');
 const statusEl = document.getElementById('status');
@@ -74,7 +74,12 @@ async function ensureAudioEngineReady() {
     if (audioReady) return;
     statusEl.textContent = 'Status: initializing audio...';
     log('Initializing AudioEngine (requires user gesture)...');
-    audioEngine = new AudioEngine();
+    audioEngine = new AudioEngine(
+        PREFERENCE_DEFAULTS.backingTrackVolume,
+        PREFERENCE_DEFAULTS.samplesVolume,
+        PREFERENCE_DEFAULTS.backingTrackMuted,
+        PREFERENCE_DEFAULTS.samplesMuted
+    );
     await audioEngine.initialize();
     audioReady = true;
     log('AudioEngine initialized');
@@ -110,6 +115,34 @@ function disableHandler() {
 function clearLog() {
     output.textContent = '';
     log('Log cleared');
+}
+
+function simulateKeyPress(code) {
+    if (!keyboardHandler) {
+        log('KeyboardHandler not initialized', true);
+        return;
+    }
+    const eventInit = {
+        code,
+        key: code,
+        bubbles: true,
+        cancelable: true,
+    };
+    document.dispatchEvent(new KeyboardEvent('keydown', eventInit));
+    setTimeout(() => {
+        document.dispatchEvent(new KeyboardEvent('keyup', eventInit));
+    }, 150);
+    log(`Simulated key press: ${code}`);
+}
+
+function releaseAll() {
+    if (!keyboardHandler) {
+        log('KeyboardHandler not initialized', true);
+        return;
+    }
+    keyboardHandler.releaseAllKeys();
+    renderActiveKeys(keyboardHandler);
+    log('Released all active keys');
 }
 
 renderMappingsList();
@@ -150,6 +183,8 @@ document.addEventListener('noteend', (event) => {
 
 document.getElementById('enableBtn').addEventListener('click', enableHandler);
 document.getElementById('disableBtn').addEventListener('click', disableHandler);
+document.getElementById('simulateBtn').addEventListener('click', () => simulateKeyPress('KeyZ'));
+document.getElementById('releaseBtn').addEventListener('click', releaseAll);
 document.getElementById('clearLogBtn').addEventListener('click', clearLog);
 
 enableHandler();

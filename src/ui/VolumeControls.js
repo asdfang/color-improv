@@ -1,5 +1,3 @@
-import { AUDIO_CONFIG } from '/src/constants.js';
-
 export class VolumeControls {
     constructor() {
         this.backingTrackVolumeSlider = /** @type {HTMLInputElement} */ document.getElementById('backing-track-volume');
@@ -27,30 +25,33 @@ export class VolumeControls {
         });
 
         this.backingTrackMuteButton.addEventListener('click', () => {
-            const isMuted = callbacks.onMuteToggle('backingTrack');
-            if (typeof isMuted === 'boolean') {
-                this.setMuted('backingTrack', isMuted);
-            }
+            callbacks.onMuteToggle('backingTrack');
         });
 
         this.samplesMuteButton.addEventListener('click', () => {
-            const isMuted = callbacks.onMuteToggle('samples');
-            if (typeof isMuted === 'boolean') {
-                this.setMuted('samples', isMuted);
-            }
+            callbacks.onMuteToggle('samples');
         });
 
         this.backingTrackResetButton.addEventListener('click', () => {
-            const defaultVolume = AUDIO_CONFIG.volumes.BACKING_TRACK_GAIN_DEFAULT;
-            this.backingTrackVolumeSlider.value = String(defaultVolume);
-            callbacks.onVolumeChange('backingTrack', defaultVolume);
+            callbacks.onReset('backingTrack');
         });
 
         this.samplesResetButton.addEventListener('click', () => {
-            const defaultVolume = AUDIO_CONFIG.volumes.SAMPLES_MASTER_GAIN_DEFAULT;
-            this.samplesVolumeSlider.value = String(defaultVolume);
-            callbacks.onVolumeChange('samples', defaultVolume);
+            callbacks.onReset('samples');
         });
+    }
+
+    /**
+     * Sets specified source volume slider to given value.
+     * @param {string} source 'backingTrack' | 'samples'
+     * @param {number} volume between 0 and 1
+     */
+    setVolume(source, volume) {
+        if (source === 'backingTrack') {
+            this.backingTrackVolumeSlider.value = String(volume);
+        } else if (source === 'samples') {
+            this.samplesVolumeSlider.value = String(volume);
+        }
     }
 
     /**

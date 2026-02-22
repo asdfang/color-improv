@@ -5,7 +5,9 @@ import { KeyboardHandler } from '/src/input/KeyboardHandler.js';
 import { PlaybackControls } from '/src/ui/PlaybackControls.js';
 import { VolumeControls } from '/src/ui/VolumeControls.js';
 import { DifficultyControls } from '/src/ui/DifficultyControls.js';
-import { keyToGridCoordinates } from '/src/visual/grid-data';
+import { LocalStorageBackend } from '/src/api/LocalStorageBackend.js';
+import { PreferencesManager } from '/src/preferences/PreferencesManager.js';
+import { keyToGridCoordinates } from '/src/visual/grid-data.js';
 
 /** @typedef {'STOPPED' | 'PLAYING' | 'PAUSED'} PlaybackState */
 
@@ -17,8 +19,17 @@ class ColorImprovApp {
         this.state = 'STOPPED';
         
         // Initialize components
-        this.audioEngine = new AudioEngine();
+        this.localStorageBackend = new LocalStorageBackend();
+        this.preferencesManager = new PreferencesManager(this.localStorageBackend);
+
+        // Exception: AudioEngine needs initial volume and muted states immediately
+        const prefs = this.preferencesManager.getAll();
+        this.audioEngine = new AudioEngine(
+            prefs.backingTrackVolume, prefs.samplesVolume,
+            prefs.backingTrackMuted, prefs.samplesMuted
+        );
         this.timingEngine = new TimingEngine(this.audioEngine, 'blues');
+
         const canvas = document.getElementById('mainCanvas');
         if (!(canvas instanceof HTMLCanvasElement)) {
             throw new Error('Main canvas element not found');
@@ -29,8 +40,8 @@ class ColorImprovApp {
         this.playbackControls = new PlaybackControls();
         this.volumeControls = new VolumeControls();
         this.difficultyControls = new DifficultyControls();
-        this.errorElement = /** @type {HTMLElement} */ (document.getElementById('error-message'));
 
+        this.errorElement = /** @type {HTMLElement} */ (document.getElementById('error-message'));
         this.animationFrameId = null;
     }
     
@@ -44,11 +55,13 @@ class ColorImprovApp {
 
             this.setUpEventListeners();
 
-            // Initial mute button UI
-            this.volumeControls.setMuted('backingTrack', this.audioEngine.isBackingTrackMuted());
-            this.volumeControls.setMuted('samples', this.audioEngine.isSamplesMuted());
-
-            // Initial difficulty display set in HTML
+            // Initial volume, mute, difficulty states from preferences to set visuals
+            const prefs = this.preferencesManager.getAll();
+            this.volumeControls.setVolume('backingTrack', prefs.backingTrackVolume);
+            this.volumeControls.setVolume('samples', prefs.samplesVolume);
+            this.volumeControls.setMuted('backingTrack', prefs.backingTrackMuted);
+            this.volumeControls.setMuted('samples', prefs.samplesMuted);
+            this.difficultyControls.setDifficulty(prefs.difficulty);
 
             // Render initial stopped grid before playback starts
             this.renderer.render();
@@ -76,10 +89,13 @@ class ColorImprovApp {
         this.volumeControls.enable({
             onVolumeChange: (source, volume) => this.setVolume(source, volume),
             onMuteToggle: (source) => this.toggleMute(source),
+            onReset: (source) => this.resetVolumeAndMuted(source),
         });
 
-        // Difficulty control events - no callbacks
-        this.difficultyControls.enable();
+        // Difficulty control events
+        this.difficultyControls.enable({
+            onDifficultyChange: (difficulty) => this.setDifficulty(difficulty),
+        });
 
         // Backing track end callback
         this.audioEngine.onEnded = () => this.stop();
@@ -103,15 +119,28 @@ class ColorImprovApp {
     }
 
     /**
+     * Update difficulty preference based on user selection. Render loop checks difficulty when updating visuals.
+     * @param {string} newDifficulty 'easy' | 'medium' | 'hard'
+     */
+    setDifficulty(newDifficulty) {
+        // Only need to update PreferencesManager; HTML select already updated from user interaction
+        this.preferencesManager.set('difficulty', newDifficulty);
+    }
+
+    /**
      * Set volume for specified source.
      * @param {string} source 'backingTrack' | 'samples'
      * @param {number} volume from 0 to 1
      */
     setVolume(source, volume) {
         // Visual state automatic with sliders
-        if (source === 'backingTrack') this.audioEngine.setBackingTrackVolume(volume);
-        else if (source === 'samples') this.audioEngine.setSamplesMasterVolume(volume);
-        else console.warn(`Unknown source '${source}' for volume change.`);
+        if (source === 'backingTrack') {
+            this.preferencesManager.set('backingTrackVolume', volume);
+            return this.audioEngine.setBackingTrackVolume(volume);
+        } else if (source === 'samples') {
+            this.preferencesManager.set('samplesVolume', volume);
+            return this.audioEngine.setSamplesMasterVolume(volume);
+        } else console.warn(`Unknown source '${source}' for volume change.`);
     }
 
     /**
@@ -121,12 +150,44 @@ class ColorImprovApp {
      */
     toggleMute(source) {
         if (source === 'backingTrack') {
-            return this.audioEngine.toggleBackingTrackMute();
+            const newMutedState = !this.preferencesManager.get('backingTrackMuted');
+            this.preferencesManager.set('backingTrackMuted', newMutedState);
+            this.volumeControls.setMuted('backingTrack', newMutedState);
+            return this.audioEngine.setBackingTrackMuted(newMutedState);
         } else if (source === 'samples') {
-            return this.audioEngine.toggleSamplesMute();
+            const newMutedState = !this.preferencesManager.get('samplesMuted');
+            this.preferencesManager.set('samplesMuted', newMutedState);
+            this.volumeControls.setMuted('samples', newMutedState);
+            return this.audioEngine.setSamplesMuted(newMutedState);
         }
         console.warn(`Unknown source '${source}' for mute toggle.`);
         return false;
+    }
+
+    /**
+     * Reset volume and muted state for specified source to default values.
+     * @param {string} source 'backingTrack' | 'samples'
+     */
+    resetVolumeAndMuted(source) {
+        if (source === 'backingTrack') {
+            const defaults = this.preferencesManager.getDefaults();
+            this.preferencesManager.set('backingTrackVolume', defaults.backingTrackVolume);
+            this.preferencesManager.set('backingTrackMuted', defaults.backingTrackMuted);
+            this.audioEngine.setBackingTrackVolume(defaults.backingTrackVolume);
+            this.audioEngine.setBackingTrackMuted(defaults.backingTrackMuted);
+            this.volumeControls.setVolume('backingTrack', defaults.backingTrackVolume);
+            this.volumeControls.setMuted('backingTrack', defaults.backingTrackMuted);
+        } else if (source === 'samples') {
+            const defaults = this.preferencesManager.getDefaults();
+            this.preferencesManager.set('samplesVolume', defaults.samplesVolume);
+            this.preferencesManager.set('samplesMuted', defaults.samplesMuted);
+            this.audioEngine.setSamplesMasterVolume(defaults.samplesVolume);
+            this.audioEngine.setSamplesMuted(defaults.samplesMuted);
+            this.volumeControls.setVolume('samples', defaults.samplesVolume);
+            this.volumeControls.setMuted('samples', defaults.samplesMuted);
+        } else {
+            console.warn(`Unknown source '${source}' for reset.`);
+        }
     }
 
     /**
@@ -234,7 +295,7 @@ class ColorImprovApp {
     startRenderLoop() {
         const loop = () => {
             const position = this.timingEngine.getCurrentPosition();
-            const difficulty = this.difficultyControls.getDifficulty();
+            const difficulty = this.preferencesManager.get('difficulty');
 
             switch (difficulty) {
                 case 'hard': {

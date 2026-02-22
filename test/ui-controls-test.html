@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Controls Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 { color: #4ec9b0; }
+        .row { display: flex; gap: 16px; flex-wrap: wrap; }
+        .panel {
+            flex: 1 1 320px;
+            padding: 12px;
+            background-color: #252526;
+            border: 1px solid #3e3e42;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+        button, input, select {
+            font-family: monospace;
+        }
+        button {
+            padding: 8px 12px;
+            margin: 4px 0;
+            background-color: #0e639c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover { background-color: #1177bb; }
+        #output {
+            margin-top: 12px;
+            padding: 12px;
+            background-color: #1e1e1e;
+            border: 1px solid #3e3e42;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 8px;
+            align-items: center;
+        }
+    </style>
+    <script type="module" src="/test/ui-controls-test.js"></script>
+</head>
+<body>
+    <h1>UI Controls Test</h1>
+    <p>Exercises PlaybackControls, VolumeControls, and DifficultyControls.</p>
+
+    <div class="row">
+        <div class="panel">
+            <h3>Playback Controls</h3>
+            <div class="controls">
+                <button id="play-btn">Play</button>
+                <button id="pause-btn">Pause</button>
+                <button id="stop-btn">Stop</button>
+            </div>
+            <p>Use buttons or Space / Shift+Esc.</p>
+        </div>
+
+        <div class="panel">
+            <h3>Volume Controls</h3>
+            <div class="controls">
+                <label for="backing-track-volume">Backing Track</label>
+                <input id="backing-track-volume" type="range" min="0" max="1" step="0.01" value="0.6">
+                <button id="backing-track-mute-button">🔈</button>
+                <label></label>
+                <button id="backing-track-reset-button">Reset</button>
+                <span></span>
+            </div>
+            <div class="controls" style="margin-top: 8px;">
+                <label for="samples-volume">Samples</label>
+                <input id="samples-volume" type="range" min="0" max="1" step="0.01" value="0.8">
+                <button id="samples-mute-button">🔈</button>
+                <label></label>
+                <button id="samples-reset-button">Reset</button>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3>Difficulty Controls</h3>
+            <label for="difficulty-select">Difficulty</label>
+            <select id="difficulty-select">
+                <option value="easy">easy</option>
+                <option value="medium">medium</option>
+                <option value="hard">hard</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="output">Waiting for tests...</div>
+</body>
+</html>
