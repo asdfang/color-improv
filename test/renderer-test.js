@@ -18,6 +18,10 @@ function log(message, isError = false) {
 let renderer = null;
 let currentChordIndex = 0;
 const chords = ['C7', 'F7', 'G7'];
+const playbackStates = ['playing', 'paused', 'stopped'];
+let playbackStateIndex = 0;
+let nextChordIndex = 0;
+let countdownValue = 4;
 
 function initRenderer() {
     try {
@@ -80,14 +84,14 @@ function testAddRemoveMultipleCells() {
     }
     try {
         if (multiCellState === 0) {
-            renderer.addActiveCell(1, 2); // F row, scale degree 2
+            renderer.addActiveCell(3, 2); // G row, scale degree 2
             renderer.render();
-            log('Added first active cell at (1, 2) and rendered');
+            log('Added first active cell at (3, 2) and rendered');
             multiCellState = 1;
         } else if (multiCellState === 1) {
-            renderer.addActiveCell(2, 3); // C row, scale degree 3
+            renderer.addActiveCell(5, 3); // C row, scale degree 3
             renderer.render();
-            log('Added second active cell at (2, 3) and rendered');
+            log('Added second active cell at (5, 3) and rendered');
             multiCellState = 2;
         } else {
             renderer.clearActiveCells();
@@ -123,10 +127,59 @@ function clearCanvas() {
     try {
         renderer.clearActiveCells();
         renderer.setCurrentChord(null);
+        renderer.setNextChord(null);
+        renderer.setNextChordCountdown(null);
         renderer.render();
         log('Canvas cleared');
     } catch (error) {
         log(`Error clearing canvas: ${error.message}`, true);
+    }
+}
+
+function testPlaybackState() {
+    if (!renderer) {
+        log('Renderer not initialized', true);
+        return;
+    }
+    try {
+        const state = playbackStates[playbackStateIndex];
+        renderer.setPlaybackState(state);
+        renderer.render();
+        log(`setPlaybackState("${state}") and rendered`);
+        playbackStateIndex = (playbackStateIndex + 1) % playbackStates.length;
+    } catch (error) {
+        log(`Error testing playback state: ${error.message}`, true);
+    }
+}
+
+function testNextChord() {
+    if (!renderer) {
+        log('Renderer not initialized', true);
+        return;
+    }
+    try {
+        const chord = chords[nextChordIndex];
+        renderer.setNextChord(chord);
+        renderer.render();
+        log(`setNextChord("${chord}") and rendered`);
+        nextChordIndex = (nextChordIndex + 1) % chords.length;
+    } catch (error) {
+        log(`Error testing next chord: ${error.message}`, true);
+    }
+}
+
+function testCountdown() {
+    if (!renderer) {
+        log('Renderer not initialized', true);
+        return;
+    }
+    try {
+        renderer.setNextChordCountdown(countdownValue);
+        renderer.render();
+        log(`setNextChordCountdown(${countdownValue}) and rendered`);
+        countdownValue = countdownValue === 1 ? 4 : countdownValue - 1;
+    } catch (error) {
+        log(`Error testing countdown: ${error.message}`, true);
     }
 }
 
@@ -182,6 +235,9 @@ document.getElementById('initBtn').addEventListener('click', initRenderer);
 document.getElementById('chordBtn').addEventListener('click', testSetCurrentChord);
 document.getElementById('singleCellBtn').addEventListener('click', testAddRemoveSingleCell);
 document.getElementById('multiCellBtn').addEventListener('click', testAddRemoveMultipleCells);
+document.getElementById('playbackBtn').addEventListener('click', testPlaybackState);
+document.getElementById('nextChordBtn').addEventListener('click', testNextChord);
+document.getElementById('countdownBtn').addEventListener('click', testCountdown);
 document.getElementById('resizeBtn').addEventListener('click', testResize);
 document.getElementById('clearBtn').addEventListener('click', clearCanvas);
 document.getElementById('sequenceBtn').addEventListener('click', testSequence);

@@ -36,7 +36,8 @@
     <div id="output">Waiting for tests...</div>
 
     <script type="module">
-        import { SampleLoader } from './src/audio/SampleLoader.js';
+        import { SampleLoader } from '/src/audio/SampleLoader.js';
+        import { AUDIO_CONFIG } from '/src/constants.js';
 
         const output = document.getElementById('output');
         
@@ -60,13 +61,13 @@
                 // Initialize
                 log('Test 0: Initializing AudioContext...');
                 window.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                window.loader = new SampleLoader(audioContext);
+                window.loader = new SampleLoader(window.audioContext);
                 log('AudioContext created');
 
                 // TEST 1: Load single sample
-                log('\nTest 1: Loading single sample (60.wav)...');
+                log('\nTest 1: Loading single sample (60)...');
                 const startTime = performance.now();
-                const buffer1 = await loader.loadSample('/sounds/trumpetsounds/60.wav');
+                const buffer1 = await window.loader.loadSample(AUDIO_CONFIG.getSamplePath(60));
                 const loadTime = (performance.now() - startTime).toFixed(2);
                 log(`Sample loaded in ${loadTime}ms`);
                 log(`Duration: ${buffer1.duration.toFixed(2)}s, Channels: ${buffer1.numberOfChannels}`);
@@ -74,7 +75,7 @@
                 // TEST 2: Cache hit (should be instant)
                 log('\nTest 2: Loading same sample (should use cache)...');
                 const cacheStartTime = performance.now();
-                const buffer2 = await loader.loadSample('/sounds/trumpetsounds/60.wav');
+                const buffer2 = await window.loader.loadSample(AUDIO_CONFIG.getSamplePath(60));
                 const cacheTime = (performance.now() - cacheStartTime).toFixed(2);
                 const isCached = buffer1 === buffer2;
                 log(`Loaded in ${cacheTime}ms (cache hit: ${isCached})`);
@@ -84,28 +85,28 @@
                 }
 
                 // TEST 3: Load different sample
-                log('\nTest 3: Loading different sample (62.wav)...');
-                const buffer3 = await loader.loadSample('/sounds/trumpetsounds/62.wav');
+                log('\nTest 3: Loading different sample (62)...');
+                const buffer3 = await window.loader.loadSample(AUDIO_CONFIG.getSamplePath(62));
                 log(`Different sample loaded: ${buffer3.duration.toFixed(2)}s`);
 
                 // TEST 4: Check cache size
                 log('\nTest 4: Checking cache state...');
-                const progress = loader.getProgress(2);
+                const progress = window.loader.getProgress(2);
                 log(`Cache contains ${progress.loaded} samples (${progress.percentage.toFixed(0)}%)`);
 
                 // TEST 5: Load multiple in parallel
                 log('\nTest 5: Loading multiple samples in parallel...');
                 const parallelStart = performance.now();
                 const midiNumbers = [64, 65, 67];
-                const urls = midiNumbers.map(n => `/sounds/trumpetsounds/${n}.wav`);
-                const buffers = await loader.loadMultipleSamples(urls);
+                const urls = midiNumbers.map(n => AUDIO_CONFIG.getSamplePath(n));
+                const buffers = await window.loader.loadMultipleSamples(urls);
                 const parallelTime = (performance.now() - parallelStart).toFixed(2);
                 log(`Loaded ${buffers.length} samples in ${parallelTime}ms`);
 
                 // TEST 6: Error handling
                 log('\nTest 6: Testing error handling (404)...');
                 try {
-                    await loader.loadSample('/fake-file-does-not-exist.wav');
+                    await window.loader.loadSample('/fake-file-does-not-exist.wav');
                     log('ERROR: Should have thrown an error!', true);
                 } catch (error) {
                     log(`Correctly caught error: ${error.message}`);
@@ -114,8 +115,12 @@
                 // TEST 7: Load all trumpet samples
                 log('\nTest 7: Loading all required trumpet samples...');
                 const allSamplesStart = performance.now();
-                const requiredSamples = [60, 62, 63, 64, 65, 66, 67, 69, 70, 71, 72, 74, 75, 76, 77, 79];
-                const sampleMap = await loader.loadTrumpetSamples(requiredSamples);
+                const requiredSamples = AUDIO_CONFIG.samples;
+                const sampleMap = await window.loader.loadTrumpetSamples(
+                    requiredSamples,
+                    AUDIO_CONFIG.paths.SAMPLES_BASE,
+                    AUDIO_CONFIG.format
+                );
                 const allSamplesTime = (performance.now() - allSamplesStart).toFixed(2);
                 log(`Loaded ${sampleMap.size} trumpet samples in ${allSamplesTime}ms`);
 
@@ -135,12 +140,12 @@
             }
 
             try {
-                log('\nPlaying sample 60.wav...');
-                const buffer = await loader.loadSample('/sounds/trumpetsounds/60.wav');
+                log('\nPlaying sample 60...');
+                const buffer = await window.loader.loadSample(AUDIO_CONFIG.getSamplePath(60));
                 
-                const source = audioContext.createBufferSource();
+                const source = window.audioContext.createBufferSource();
                 source.buffer = buffer;
-                source.connect(audioContext.destination);
+                source.connect(window.audioContext.destination);
                 source.start();
                 
                 log('Playing! (you should hear it)');

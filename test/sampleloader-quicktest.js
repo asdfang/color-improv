@@ -53,6 +53,33 @@ async function runLoadParallelTest() {
     log(`Loaded ${buffers.length} buffers in ${parallelTime}ms.`);
 }
 
+async function runLoadTrumpetSamplesTest() {
+    if (!loader) {
+        log('SampleLoader not initialized', true);
+        return;
+    }
+    log('\nTesting loadTrumpetSamples (Map of MIDI -> buffer).');
+    const startTime = performance.now();
+    const sampleMap = await loader.loadTrumpetSamples(
+        AUDIO_CONFIG.samples,
+        AUDIO_CONFIG.paths.SAMPLES_BASE,
+        AUDIO_CONFIG.format
+    );
+    const loadTime = (performance.now() - startTime).toFixed(2);
+    log(`Loaded ${sampleMap.size} trumpet samples in ${loadTime}ms.`);
+    log(`Sample 60 present: ${sampleMap.has(60)}`);
+}
+
+function runProgressTest() {
+    if (!loader) {
+        log('SampleLoader not initialized', true);
+        return;
+    }
+    log('\nTesting progress reporting.');
+    const progress = loader.getProgress(AUDIO_CONFIG.samples.length);
+    log(`Progress: ${progress.loaded}/${progress.total} (${progress.percentage.toFixed(1)}%)`);
+}
+
 async function runErrorTest() {
     log('\nTesting error handling on non-existent file.');
     try {
@@ -139,5 +166,7 @@ document.getElementById('initTest').addEventListener('click', runInitTest);
 document.getElementById('loadOneFileTest').addEventListener('click', runLoadOneFileTest);
 document.getElementById('loadCachedFileTest').addEventListener('click', runLoadCachedFileTest);
 document.getElementById('loadParallelTest').addEventListener('click', runLoadParallelTest);
+document.getElementById('loadTrumpetSamplesTest').addEventListener('click', runLoadTrumpetSamplesTest);
+document.getElementById('progressTest').addEventListener('click', runProgressTest);
 document.getElementById('errorTest').addEventListener('click', runErrorTest);
 document.getElementById('playSoundTest').addEventListener('click', runPlaySoundTest);
