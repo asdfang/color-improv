@@ -33,7 +33,7 @@ export class PreferencesManager {
 
     /**
      * @param {string} key 
-     * @returns
+     * @returns the value for the given key, or undefined if key is invalid or not set
      */
     get(key) {
         return key in this.preferences ? this.preferences[key] : undefined;
@@ -44,7 +44,7 @@ export class PreferencesManager {
      * @returns {object} a copy of the preferences object
      */
     getAll() {
-        return  { ...this.preferences };
+        return { ...this.preferences };
     }
 
     /**

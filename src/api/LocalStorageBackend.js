@@ -18,16 +18,16 @@ export class LocalStorageBackend {
                 return JSON.parse(storedData);
             } catch (error) {
                 console.error('Error parsing stored preferences:', error);
-                }
             }
+        }
         
-        return {}
+        return {};
     }
 
     /**
      * Saves stringified data object to localStorage.
-     * @param {string} data 
-     * @returns saved data if successful
+     * @param {object} data 
+     * @returns saved data if successful, otherwise undefined
      */
     save(data) {
         try {
@@ -37,5 +37,7 @@ export class LocalStorageBackend {
         } catch (error) {
             console.error('Error saving preferences:', error);
         }
+
+        return undefined;
     }
 }

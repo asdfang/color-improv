@@ -5,9 +5,9 @@ import { KeyboardHandler } from '/src/input/KeyboardHandler.js';
 import { PlaybackControls } from '/src/ui/PlaybackControls.js';
 import { VolumeControls } from '/src/ui/VolumeControls.js';
 import { DifficultyControls } from '/src/ui/DifficultyControls.js';
-import { LocalStorageBackend } from '/src/api/LocalStorageBackend';
+import { LocalStorageBackend } from '/src/api/LocalStorageBackend.js';
 import { PreferencesManager } from '/src/preferences/PreferencesManager.js';
-import { keyToGridCoordinates } from '/src/visual/grid-data';
+import { keyToGridCoordinates } from '/src/visual/grid-data.js';
 
 /** @typedef {'STOPPED' | 'PLAYING' | 'PAUSED'} PlaybackState */
 
@@ -22,7 +22,7 @@ class ColorImprovApp {
         this.localStorageBackend = new LocalStorageBackend();
         this.preferencesManager = new PreferencesManager(this.localStorageBackend);
 
-        // Exception: AudioEngine needs initial volume and mutate states immediately
+        // Exception: AudioEngine needs initial volume and muted states immediately
         const prefs = this.preferencesManager.getAll();
         this.audioEngine = new AudioEngine(
             prefs.backingTrackVolume, prefs.samplesVolume,
@@ -119,7 +119,7 @@ class ColorImprovApp {
     }
 
     /**
-     * Update difficulty preference based on user selection. Render loop checks difficulty when updating viusals.
+     * Update difficulty preference based on user selection. Render loop checks difficulty when updating visuals.
      * @param {string} newDifficulty 'easy' | 'medium' | 'hard'
      */
     setDifficulty(newDifficulty) {
@@ -152,10 +152,12 @@ class ColorImprovApp {
         if (source === 'backingTrack') {
             const newMutedState = !this.preferencesManager.get('backingTrackMuted');
             this.preferencesManager.set('backingTrackMuted', newMutedState);
+            this.volumeControls.setMuted('backingTrack', newMutedState);
             return this.audioEngine.setBackingTrackMuted(newMutedState);
         } else if (source === 'samples') {
             const newMutedState = !this.preferencesManager.get('samplesMuted');
             this.preferencesManager.set('samplesMuted', newMutedState);
+            this.volumeControls.setMuted('samples', newMutedState);
             return this.audioEngine.setSamplesMuted(newMutedState);
         }
         console.warn(`Unknown source '${source}' for mute toggle.`);
