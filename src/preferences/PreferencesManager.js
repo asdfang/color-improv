@@ -15,7 +15,7 @@ export class PreferencesManager {
             backingTrackMuted: (bool) => typeof bool === 'boolean' ? bool : undefined,
             samplesMuted: (bool) => typeof bool === 'boolean' ? bool : undefined,
         }
-        
+
         this.storageBackend = storageBackend;
         this.preferences = this.load();
         this.persistTimerId = null;
@@ -45,6 +45,14 @@ export class PreferencesManager {
      */
     getAll() {
         return  { ...this.preferences };
+    }
+
+    /**
+     * Returns a copy of the default preferences object.
+     * @returns {object} a copy of the default preferences object
+     */
+    getDefaults() {
+        return { ...PREFERENCE_DEFAULTS };
     }
 
     /**

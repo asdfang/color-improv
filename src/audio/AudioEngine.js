@@ -11,7 +11,7 @@ export class AudioEngine {
      * Initializes the AudioEngine, creating AudioContext and SampleLoader.
      * Call initialize() after user interaction to prepare for playback.
      */
-    constructor() {
+    constructor(backingTrackInitialVolume, samplesInitialVolume, backingTrackInitialMuted, samplesInitialMuted) {
         // Initialize AudioContext immediately to decode samples - state is 'suspended' until user interaction
         const AudioCtx = /** @type {typeof AudioContext} */ (window.AudioContext || window.webkitAudioContext);
         this.audioContext = new AudioCtx();
@@ -30,11 +30,11 @@ export class AudioEngine {
         this.backingTrackSource = null;     // Web Audio API MediaElementAudioSourceNode for backing track
         this.backingTrackGain = null;       // GainNode for backing track volume control
 
-        // Volume state
-        this.backingTrackDesiredVolume = AUDIO_CONFIG.volumes.BACKING_TRACK_GAIN_DEFAULT; // Holds slider value
-        this.backingTrackMuted = false;
-        this.samplesMasterDesiredVolume = AUDIO_CONFIG.volumes.SAMPLES_MASTER_GAIN_DEFAULT; // Holds slider value
-        this.samplesMuted = false;
+        // Volume state -- takes in constructor parameters
+        this.backingTrackDesiredVolume = backingTrackInitialVolume; // Holds slider value
+        this.backingTrackMuted = backingTrackInitialMuted;
+        this.samplesMasterDesiredVolume = samplesInitialVolume; // Holds slider value
+        this.samplesMuted = samplesInitialMuted;
 
         // Connect gain nodes to destination immediately (connect source nodes to gain nodes later)
         this.samplesMasterGain = this.audioContext.createGain();
@@ -44,6 +44,10 @@ export class AudioEngine {
         this.backingTrackGain = this.audioContext.createGain();
         this.backingTrackGain.gain.value = sliderToGain(this.backingTrackDesiredVolume);
         this.backingTrackGain.connect(this.audioContext.destination);
+
+        // If initially muted, set gains to 0
+        if (this.backingTrackMuted) this.backingTrackGain.gain.value = 0;
+        if (this.samplesMuted) this.samplesMasterGain.gain.value = 0;
 
         // Debug/seek offset (for syncing timing when seeking via setDebugTime)
         this.seekOffset = 0;
@@ -314,38 +318,6 @@ export class AudioEngine {
     }
 
     /**
-     * Toggle backing track mute state. When muting, saves current volume to restore when unmuting.
-     * @returns {boolean} new muted state
-     */
-    toggleBackingTrackMute() {
-        this.backingTrackMuted = !this.backingTrackMuted;
-
-        if (this.backingTrackMuted && this.backingTrackGain) {
-            this.backingTrackGain.gain.value = 0; // Set gain directly
-        } else if (!this.backingTrackMuted && this.backingTrackGain) {
-            this.backingTrackGain.gain.value = sliderToGain(this.backingTrackDesiredVolume);
-        }
-
-        return this.backingTrackMuted;
-    }
-
-    /**
-     * Toggle samples mute state. When muting, saves current master volume to restore when unmuting.
-     * @returns {boolean} new muted state
-     */
-    toggleSamplesMute() {
-        this.samplesMuted = !this.samplesMuted;
-
-        if (this.samplesMuted && this.samplesMasterGain) {
-            this.samplesMasterGain.gain.value = 0; // Set gain directly
-        } else if (!this.samplesMuted && this.samplesMasterGain) {
-            this.samplesMasterGain.gain.value = sliderToGain(this.samplesMasterDesiredVolume);
-        }
-
-        return this.samplesMuted;
-    }
-
-    /**
      * Set backing track volume, clamped to valid range [0.0, 1.0].
      * Saves volume if muted; immediately applies if not muted.
      * @param {number} volume 
@@ -377,6 +349,40 @@ export class AudioEngine {
         }
 
         return this.samplesMasterGain.gain.value;
+    }
+
+    /**
+     * Set backing track mute state directly.
+     * @param {boolean} isMuted
+     * @returns {boolean} current muted state
+     */
+    setBackingTrackMuted(isMuted) {
+        this.backingTrackMuted = Boolean(isMuted);
+
+        if (this.backingTrackGain) {
+            this.backingTrackGain.gain.value = this.backingTrackMuted
+                ? 0
+                : sliderToGain(this.backingTrackDesiredVolume);
+        }
+
+        return this.backingTrackMuted;
+    }
+
+    /**
+     * Set samples mute state directly.
+     * @param {boolean} isMuted
+     * @returns {boolean} current muted state
+     */
+    setSamplesMuted(isMuted) {
+        this.samplesMuted = Boolean(isMuted);
+
+        if (this.samplesMasterGain) {
+            this.samplesMasterGain.gain.value = this.samplesMuted
+                ? 0
+                : sliderToGain(this.samplesMasterDesiredVolume);
+        }
+
+        return this.samplesMuted;
     }
 
     /**
