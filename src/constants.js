@@ -32,6 +32,7 @@ export const AUDIO_CONFIG = {
     format: 'mp3',
 
     volumes: {
+        MAIN_GAIN_DEFAULT: 1.0,
         SAMPLES_GAIN_DEFAULT: 0.8,
         BACKING_TRACK_GAIN_DEFAULT: 0.6,
         NOTE_FADE_TIME_DEFAULT: 0.35, // seconds

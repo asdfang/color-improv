@@ -37,13 +37,18 @@ export class AudioEngine {
         this.samplesMuted = samplesInitialMuted;
 
         // Connect gain nodes to destination immediately (connect source nodes to gain nodes later)
+        // Main gain for future overall control/rerouting.
+        this.mainGain = this.audioContext.createGain();
+        this.mainGain.gain.value = AUDIO_CONFIG.volumes.MAIN_GAIN_DEFAULT;
+        this.mainGain.connect(this.audioContext.destination);
+
         this.samplesGain = this.audioContext.createGain();
         this.samplesGain.gain.value = sliderToGain(this.samplesDesiredVolume);
-        this.samplesGain.connect(this.audioContext.destination);
+        this.samplesGain.connect(this.mainGain);
 
         this.backingTrackGain = this.audioContext.createGain();
         this.backingTrackGain.gain.value = sliderToGain(this.backingTrackDesiredVolume);
-        this.backingTrackGain.connect(this.audioContext.destination);
+        this.backingTrackGain.connect(this.mainGain);
 
         // If initially muted, set gains to 0
         if (this.backingTrackMuted) this.backingTrackGain.gain.value = 0;
