@@ -33,13 +33,13 @@ export class AudioEngine {
         // Volume state -- takes in constructor parameters
         this.backingTrackDesiredVolume = backingTrackInitialVolume; // Holds slider value
         this.backingTrackMuted = backingTrackInitialMuted;
-        this.samplesMasterDesiredVolume = samplesInitialVolume; // Holds slider value
+        this.samplesDesiredVolume = samplesInitialVolume; // Holds slider value
         this.samplesMuted = samplesInitialMuted;
 
         // Connect gain nodes to destination immediately (connect source nodes to gain nodes later)
-        this.samplesMasterGain = this.audioContext.createGain();
-        this.samplesMasterGain.gain.value = sliderToGain(this.samplesMasterDesiredVolume);
-        this.samplesMasterGain.connect(this.audioContext.destination);
+        this.samplesGain = this.audioContext.createGain();
+        this.samplesGain.gain.value = sliderToGain(this.samplesDesiredVolume);
+        this.samplesGain.connect(this.audioContext.destination);
 
         this.backingTrackGain = this.audioContext.createGain();
         this.backingTrackGain.gain.value = sliderToGain(this.backingTrackDesiredVolume);
@@ -47,7 +47,7 @@ export class AudioEngine {
 
         // If initially muted, set gains to 0
         if (this.backingTrackMuted) this.backingTrackGain.gain.value = 0;
-        if (this.samplesMuted) this.samplesMasterGain.gain.value = 0;
+        if (this.samplesMuted) this.samplesGain.gain.value = 0;
 
         // Debug/seek offset (for syncing timing when seeking via setDebugTime)
         this.seekOffset = 0;
@@ -166,6 +166,8 @@ export class AudioEngine {
         console.log('AudioEngine: Initialization complete, ready for playback.');
     }
 
+    connect
+
     /**
      * Play a note based off of unique identifier (and MIDI number).
      * The same note/sample can be played multiple times simultaneously if inputID is different.
@@ -202,9 +204,9 @@ export class AudioEngine {
         const gainNode = this.audioContext.createGain();
         gainNode.gain.value = 1.0; // Start at full volume
 
-        // Connect nodes: source -> gain -> master gain (already connected to destination)
+        // Connect nodes: source -> individual -> samples gain (already connected to destination)
         sourceNode.connect(gainNode);
-        gainNode.connect(this.samplesMasterGain);
+        gainNode.connect(this.samplesGain);
 
         // Start playing note
         sourceNode.start()
@@ -335,20 +337,20 @@ export class AudioEngine {
     }
 
     /**
-     * Set samples master volume, clamped to valid range [0.0, 1.0].
+     * Set all samples volume, clamped to valid range [0.0, 1.0].
      * Saves volume if muted; immediately applies if not muted.
      * @param {number} volume 
-     * @returns {number} current samples master gain value (0.0 if muted)
+     * @returns {number} current samples gain value (0.0 if muted)
      */
-    setSamplesMasterVolume(volume) {
-        if (!this.samplesMasterGain) return;
+    setSamplesVolume(volume) {
+        if (!this.samplesGain) return;
         
-        this.samplesMasterDesiredVolume = clampVolume(volume);
+        this.samplesDesiredVolume = clampVolume(volume);
         if (!this.samplesMuted) {
-            this.samplesMasterGain.gain.value = sliderToGain(this.samplesMasterDesiredVolume);
+            this.samplesGain.gain.value = sliderToGain(this.samplesDesiredVolume);
         }
 
-        return this.samplesMasterGain.gain.value;
+        return this.samplesGain.gain.value;
     }
 
     /**
@@ -376,10 +378,10 @@ export class AudioEngine {
     setSamplesMuted(isMuted) {
         this.samplesMuted = Boolean(isMuted);
 
-        if (this.samplesMasterGain) {
-            this.samplesMasterGain.gain.value = this.samplesMuted
+        if (this.samplesGain) {
+            this.samplesGain.gain.value = this.samplesMuted
                 ? 0
-                : sliderToGain(this.samplesMasterDesiredVolume);
+                : sliderToGain(this.samplesDesiredVolume);
         }
 
         return this.samplesMuted;

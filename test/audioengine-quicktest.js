@@ -107,7 +107,7 @@ document.getElementById('checkReady').addEventListener('click', () => {
 document.getElementById('volumeTest').addEventListener('click', () => {
     if (!audioEngine) return;
     const backingGain = audioEngine.setBackingTrackVolume(1.5);
-    const sampleGain = audioEngine.setSamplesMasterVolume(-0.2);
+    const sampleGain = audioEngine.setSamplesVolume(-0.2);
     log(`Volume clamp test -> backing gain: ${backingGain?.toFixed?.(3) ?? 'n/a'}, samples gain: ${sampleGain?.toFixed?.(3) ?? 'n/a'}`);
 });
 

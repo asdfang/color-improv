@@ -139,7 +139,7 @@ class ColorImprovApp {
             return this.audioEngine.setBackingTrackVolume(volume);
         } else if (source === 'samples') {
             this.preferencesManager.set('samplesVolume', volume);
-            return this.audioEngine.setSamplesMasterVolume(volume);
+            return this.audioEngine.setSamplesVolume(volume);
         } else console.warn(`Unknown source '${source}' for volume change.`);
     }
 
@@ -181,7 +181,7 @@ class ColorImprovApp {
             const defaults = this.preferencesManager.getDefaults();
             this.preferencesManager.set('samplesVolume', defaults.samplesVolume);
             this.preferencesManager.set('samplesMuted', defaults.samplesMuted);
-            this.audioEngine.setSamplesMasterVolume(defaults.samplesVolume);
+            this.audioEngine.setSamplesVolume(defaults.samplesVolume);
             this.audioEngine.setSamplesMuted(defaults.samplesMuted);
             this.volumeControls.setVolume('samples', defaults.samplesVolume);
             this.volumeControls.setMuted('samples', defaults.samplesMuted);

@@ -32,7 +32,7 @@ export const AUDIO_CONFIG = {
     format: 'mp3',
 
     volumes: {
-        SAMPLES_MASTER_GAIN_DEFAULT: 0.8,
+        SAMPLES_GAIN_DEFAULT: 0.8,
         BACKING_TRACK_GAIN_DEFAULT: 0.6,
         NOTE_FADE_TIME_DEFAULT: 0.35, // seconds
     },
@@ -108,7 +108,7 @@ export const KEY_MAPPINGS = {
 export const PREFERENCE_DEFAULTS = {
     difficulty: 'easy', // | 'medium' | 'hard'
     backingTrackVolume: AUDIO_CONFIG.volumes.BACKING_TRACK_GAIN_DEFAULT,
-    samplesVolume: AUDIO_CONFIG.volumes.SAMPLES_MASTER_GAIN_DEFAULT,
+    samplesVolume: AUDIO_CONFIG.volumes.SAMPLES_GAIN_DEFAULT,
     backingTrackMuted: false,
     samplesMuted: false,
 }
