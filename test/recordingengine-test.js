@@ -83,17 +83,6 @@ function startRecording() {
     log('Recording started');
 }
 
-function pauseRecording() {
-    if (!ensureAudio()) return;
-    recordingEngine.pause();
-    log('Recording paused');
-}
-
-function resumeRecording() {
-    if (!ensureAudio()) return;
-    recordingEngine.resume();
-    log('Recording resumed');
-}
 
 async function stopRecording() {
     if (!ensureAudio()) return;
@@ -132,7 +121,5 @@ document.getElementById('initAudio').addEventListener('click', initAudio);
 document.getElementById('toneOn').addEventListener('click', toneOn);
 document.getElementById('toneOff').addEventListener('click', toneOff);
 document.getElementById('startRec').addEventListener('click', startRecording);
-document.getElementById('pauseRec').addEventListener('click', pauseRecording);
-document.getElementById('resumeRec').addEventListener('click', resumeRecording);
 document.getElementById('stopRec').addEventListener('click', stopRecording);
 document.getElementById('downloadRec').addEventListener('click', downloadRecording);
