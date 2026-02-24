@@ -7,7 +7,7 @@ const VISUAL_LEAD_TIME = 0.1; // seconds (100 ms)
 
 /**
  * Manages timing and synchronization between audio and visual components.
- * Uses AudioEngine's clock as the time source, but does not manage playback.
+ * Uses AudioEngine's clock as the central time source; does not manage playback.
  */
 export class TimingEngine {
     constructor(audioEngine, trackKey = 'blues') {
@@ -16,6 +16,7 @@ export class TimingEngine {
         this.startTime = null;
         this.isPlaying = false;
         this.pausedAt = null;
+        this.totalPausedDuration = 0;
         this.trackKey = trackKey;
 
         this.bpm = AUDIO_CONFIG.backingTracks[this.trackKey].bpm;
@@ -54,6 +55,7 @@ export class TimingEngine {
         this.isPlaying = false;
         this.startTime = null;
         this.pausedAt = null;
+        this.totalPausedDuration = 0;
     }
 
     /**
@@ -67,9 +69,25 @@ export class TimingEngine {
             throw new Error('TimingEngine is not paused. Cannot resume.');
         }
         const pausedDuration = this.audioEngine.getCurrentTime() - this.pausedAt;
-        this.startTime += pausedDuration;
+        this.totalPausedDuration += pausedDuration;
         this.pausedAt = null;
         this.isPlaying = true;
+    }
+
+    /**
+     * Get the AudioContext time when playback started. Useful for debugging and synchronization.
+     * @returns {number|null} The start time in AudioContext time, or null if not started.
+     */
+    getStartTime() {
+        return this.startTime;
+    }
+
+    /**
+     * Get the current AudioContext time.
+     * @returns {number} The current time in AudioContext time.
+     */
+    getCurrentTime() {
+        return this.audioEngine.getCurrentTime();
     }
 
     /**
@@ -98,7 +116,7 @@ export class TimingEngine {
             }
         }
 
-        const elapsedTotalTime = this.audioEngine.getCurrentTime() - this.startTime + VISUAL_LEAD_TIME;
+        const elapsedTotalTime = this.audioEngine.getCurrentTime() - this.startTime - this.totalPausedDuration + VISUAL_LEAD_TIME;
         const elapsedTimeSinceSilence = elapsedTotalTime - this.silenceOffset;
         const elapsedTimeFromProgressionStart = elapsedTotalTime - (this.silenceOffset + this.countInBeats * this.beatDuration);
 
