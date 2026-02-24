@@ -7,6 +7,17 @@
  */
 
 // ============================================================================
+// VISUAL CONSTANTS
+// ============================================================================
+
+/**
+ * Visual lead time for renderer to anticipate beat progression.
+ * Adds this much time ahead when calculating visual beat position,
+ * creating a visual "lead" effect for smoother animations.
+ */
+export const VISUAL_LEAD_TIME = 0.1; // seconds (100 ms)
+
+// ============================================================================
 // AUDIO CONSTANTS
 // ============================================================================
 

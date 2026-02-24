@@ -8,6 +8,7 @@ import { DifficultyControls } from '/src/ui/DifficultyControls.js';
 import { LocalStorageBackend } from '/src/api/LocalStorageBackend.js';
 import { PreferencesManager } from '/src/preferences/PreferencesManager.js';
 import { keyToGridCoordinates } from '/src/visual/grid-data.js';
+import { VISUAL_LEAD_TIME } from '/src/constants.js';
 
 /** @typedef {'STOPPED' | 'PLAYING' | 'PAUSED'} PlaybackState */
 
@@ -294,7 +295,7 @@ class ColorImprovApp {
      */
     startRenderLoop() {
         const loop = () => {
-            const position = this.timingEngine.getCurrentPosition();
+            const position = this.timingEngine.getCurrentPosition(VISUAL_LEAD_TIME);
             const difficulty = this.preferencesManager.get('difficulty');
 
             switch (difficulty) {
