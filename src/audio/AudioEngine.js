@@ -171,7 +171,37 @@ export class AudioEngine {
         console.log('AudioEngine: Initialization complete, ready for playback.');
     }
 
-    connect
+    /**
+     * Connect main gain node to external node (e.g. for recording, visualization, etc.)
+     * @param {AudioNode} externalNode 
+     */
+    connectMainToExternalNode(externalNode) {
+        if (!externalNode || !(externalNode instanceof AudioNode)) {
+            console.warn('AudioEngine: Invalid external node provided for connection. Must be instance of AudioNode.');
+            return;
+        }
+        this.mainGain.connect(externalNode);
+    }
+
+    /**
+     * Disconnect main gain node from external node
+     * @param {AudioNode} externalNode 
+     */
+    disconnectMainFromExternalNode(externalNode) {
+        if (!externalNode || !(externalNode instanceof AudioNode)) {
+            console.warn('AudioEngine: Invalid external node provided for disconnection. Must be instance of AudioNode.');
+            return;
+        }
+        try {
+            this.mainGain.disconnect(externalNode);
+        } catch (error) {
+            if (error.name === 'InvalidAccessError') {
+                console.warn('AudioEngine: Attempted to disconnect main gain from an external node that was not connected. Ignoring.');
+            } else {
+                throw error;
+            }
+        }
+    }
 
     /**
      * Play a note based off of unique identifier (and MIDI number).
