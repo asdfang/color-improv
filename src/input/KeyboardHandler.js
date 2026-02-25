@@ -100,7 +100,7 @@ export class KeyboardHandler {
             detail: {
                 uniqueID: keyCode,
                 midiNumber,
-                timestamp: performance.now(),
+                timestamp: performance.now(), // UI time
             }
         });
         document.dispatchEvent(event);
