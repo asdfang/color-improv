@@ -10,6 +10,8 @@ import { PreferencesManager } from '/src/preferences/PreferencesManager.js';
 import { keyToGridCoordinates } from '/src/visual/grid-data.js';
 import { VISUAL_LEAD_TIME } from '/src/constants.js';
 
+// TODO: trackKey as a configurable preference
+
 /** @typedef {'STOPPED' | 'PLAYING' | 'PAUSED'} PlaybackState */
 
 class ColorImprovApp {
