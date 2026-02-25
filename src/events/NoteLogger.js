@@ -9,6 +9,8 @@ export class NoteLogger {
         this.timingEngine = timingEngine;
         this.loggingStartTime = null;
         this.events = [];
+        this.backingTrack = null;
+        this.difficulty = null;
 
         this.handleNoteEvent = this.handleNoteEvent.bind(this);
     }
@@ -16,10 +18,14 @@ export class NoteLogger {
     /**
      * Start logging note events. Listens for 'notestart' and 'noteend' events dispatched by KeyboardHandler.
      * (TODO: extend to other input types).
+     * @param {string} backingTrack the backing track being used (e.g., 'blues')
+     * @param {string} difficulty the difficulty level (hard/medium/easy)
      */
-    start() {
+    start(backingTrack, difficulty) {
         this.loggingStartTime = this.timingEngine.getCurrentTime();
         this.events = []; // Clear previous logs
+        this.backingTrack = backingTrack;
+        this.difficulty = difficulty;
         
         document.addEventListener('notestart', /** @param {CustomEvent} e */ (e) => {
             this.handleNoteEvent(e);
@@ -30,13 +36,19 @@ export class NoteLogger {
     }
 
     /**
-     * Stop logging, remove event listeners, and return collected events.
-     * @returns 
+     * Stop logging, remove event listeners, and return collected events with session metadata.
+     * @returns {{backingTrack: string,difficulty: string, events: Array<{object}>}} logged data
      */
     stop() {
         document.removeEventListener('notestart', this.handleNoteEvent);
         document.removeEventListener('noteend', this.handleNoteEvent);
-        return this.events;
+        this.backingTrack = null;
+        this.difficulty = null;
+        return {
+            backingTrack: this.backingTrack,
+            difficulty: this.difficulty,
+            events: this.events,
+        };
     }
 
     /**
