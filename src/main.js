@@ -302,6 +302,8 @@ class ColorImprovApp {
     record() {
         this.recording = true;
         this.play();
+
+        console.log('Recording started.');
         // TODO: Implement recording, logging
     }
 

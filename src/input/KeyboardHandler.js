@@ -34,7 +34,7 @@ export class KeyboardHandler {
 
     handleKeyDown(event) {
         if (event.repeat) return; // Ignore key auto-repeats
-        if (event.metaKey || event.ctrlKey || event.altKey) return; // Let browser shortcuts through
+        if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return; // Let browser shortcuts through
         
         const mapping = KEY_MAPPINGS[event.code];
         if (!mapping) return; // Not a mapped key
