@@ -17,11 +17,9 @@ const VISUAL_CONFIG = {
     NOTE: {
         PADDING: 4,              // Pixels of padding around note cells
         RADIUS: 8,               // Border radius for rounded corners
-        PRESSED_OFFSET_Y: 2,     // Vertical offset when note is pressed (pixels)
-        BORDER_WIDTH: 1.5,       // Border thickness (pixels)
-        BORDER_OPACITY: 0.25,    // Border opacity for unpressed state
-        BORDER_OPACITY_PRESSED: 0.4, // Border opacity for pressed state
-        PRESSED_BRIGHTNESS_ADJUST: -0.2, // Brightness adjustment for pressed state (-1 to 1)
+        PRESSED_SCALE: 0.98,     // Scale factor when note is pressed
+        PRESS_ANIM_SPEED: 200,    // Animation speed for press/release (higher = snappier)
+        PRESSED_BRIGHTNESS_ADJUST: -0.12, // Brightness adjustment for pressed state (-1 to 1)
         MAX_FONT_HEIGHT: 0.3,    // Maximum font size as fraction of cell height
         MAX_FONT_WIDTH: 0.6,     // Maximum font size as fraction of cell width
     },
@@ -90,6 +88,8 @@ export class Renderer {
         this.gridData = buildGridData();
 
         this.activeCells = new Set(); // number calculated as row * GRID.COLS + col
+        this.cellPressScales = new Map(); // Tracks animated press scale per cell index
+        this.lastRenderTime = null; // Timestamp of last render, used to compute delta time
         this.currentChord = null;
         this.playbackState = 'stopped'; // 'playing', 'paused', 'stopped'
 
@@ -123,8 +123,7 @@ export class Renderer {
         this.canvas.width = cssWidth * dpr;
         this.canvas.height = cssHeight * dpr;
         
-        // Scale context to account for device pixel ratio
-        // Now when we draw at 100 CSS pixels, it becomes 100*dpr device pixels
+        // Map CSS pixels to device pixels
         this.ctx.scale(dpr, dpr);
 
         // Update grid size and cell sizes based on display size (in CSS pixels)
@@ -135,7 +134,7 @@ export class Renderer {
         // Fixed label column width, note columns flex
         const preferredLabelWidth = VISUAL_CONFIG.LAYOUT.PREFERRED_LABEL_WIDTH;
         const minNoteColWidth = VISUAL_CONFIG.LAYOUT.MIN_NOTE_COL_WIDTH;
-        const maxLabelWidth = cssWidth - minNoteColWidth * (GRID.COLS - 1);
+        const maxLabelWidth = cssWidth - minNoteColWidth * (GRID.COLS - 1); // Leave room for note columns
         const safeLabelWidth = Math.min(preferredLabelWidth, Math.max(VISUAL_CONFIG.LAYOUT.MIN_LABEL_WIDTH, maxLabelWidth));
         this.labelColWidth = Math.min(cssWidth, safeLabelWidth);
         this.noteColWidth = (cssWidth - this.labelColWidth) / (GRID.COLS - 1);
@@ -170,6 +169,11 @@ export class Renderer {
      * chord highlights, and active cell overlays.
      */
     render() {
+        const now = performance.now();
+        const dt = this.lastRenderTime ? (now - this.lastRenderTime) / 1000 : 0; // Delta time in seconds
+        this.lastRenderTime = now;
+        this.lastDeltaTime = dt;
+
         // Clear using CSS pixel coordinates (context is scaled by dpr)
         this.ctx.clearRect(0, 0, this.gridWidth, this.gridHeight);
 
@@ -189,7 +193,7 @@ export class Renderer {
 
 
     /**
-     * Returns opacity/desaturation settings based on playback state.
+     * Returns opacity/desaturation settings based on playback state - dimmed when paused, grayed out when stopped.
      * @private
      */
     getPlaybackVisuals() {
@@ -197,29 +201,38 @@ export class Renderer {
     }
 
     /**
-     * Draws a note cell.
+     * Draws a note cell based on state, including press animation scaling and border opacity.
      * @private
      */
-    drawNoteCell({ cell, x, y, cellWidth, opacity, desaturate }) {
+    drawNoteCell({ cell, x, y, cellWidth, opacity, desaturate, scale }) {
+        // Position and size for the note rectangle, with padding
         const btnX = x + VISUAL_CONFIG.NOTE.PADDING;
         const btnY = y + VISUAL_CONFIG.NOTE.PADDING;
         const btnW = cellWidth - VISUAL_CONFIG.NOTE.PADDING * 2;
         const btnH = this.cellHeight - VISUAL_CONFIG.NOTE.PADDING * 2;
 
-        const cellColor = this.applyDesaturateAndOpacity(cell.color, desaturate, opacity);
+        // Apply press scale for animation, centered on the cell
+        const safeScale = Math.max(VISUAL_CONFIG.NOTE.PRESSED_SCALE, Math.min(1, scale ?? 1)); // Clamp scale
+        const pressRange = 1 - VISUAL_CONFIG.NOTE.PRESSED_SCALE;
+        const pressAmount = pressRange > 0 ? (1 - safeScale) / pressRange : 0; // Normalize 0..1 press amount
+        const scaledW = btnW * safeScale;
+        const scaledH = btnH * safeScale;
+        const scaledX = btnX + (btnW - scaledW) / 2; // Center the scaled rect
+        const scaledY = btnY + (btnH - scaledH) / 2;
+
+        // Adjust color based on press amount for visual feedback, then apply desaturation and opacity
+        const pressColor = pressAmount > 0
+            ? this.adjustBrightness(cell.color, VISUAL_CONFIG.NOTE.PRESSED_BRIGHTNESS_ADJUST * pressAmount)
+            : cell.color;
+        const cellColor = this.applyDesaturateAndOpacity(pressColor, desaturate, opacity);
         this.ctx.fillStyle = cellColor;
         this.ctx.beginPath();
-        this.ctx.roundRect(btnX, btnY, btnW, btnH, VISUAL_CONFIG.NOTE.RADIUS);
+        this.ctx.roundRect(scaledX, scaledY, scaledW, scaledH, VISUAL_CONFIG.NOTE.RADIUS);
         this.ctx.fill();
 
-        this.ctx.strokeStyle = COLOR_ALPHA.BLACK(VISUAL_CONFIG.NOTE.BORDER_OPACITY * opacity);
-        this.ctx.lineWidth = VISUAL_CONFIG.NOTE.BORDER_WIDTH;
-        this.ctx.beginPath();
-        this.ctx.roundRect(btnX, btnY, btnW, btnH, VISUAL_CONFIG.NOTE.RADIUS);
-        this.ctx.stroke();
-
+        // Scale text with cell
         this.ctx.fillStyle = COLOR_ALPHA.BLACK(1);
-        const noteFontSize = Math.min(this.cellHeight * VISUAL_CONFIG.NOTE.MAX_FONT_HEIGHT, cellWidth * VISUAL_CONFIG.NOTE.MAX_FONT_WIDTH);
+        const noteFontSize = Math.min(this.cellHeight * VISUAL_CONFIG.NOTE.MAX_FONT_HEIGHT, cellWidth * VISUAL_CONFIG.NOTE.MAX_FONT_WIDTH) * safeScale;
         this.ctx.font = `${noteFontSize}px ${VISUAL_CONFIG.FONT_FAMILY}`;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
@@ -235,7 +248,7 @@ export class Renderer {
         this.ctx.textBaseline = 'middle';
 
         const lines = cell.labelText.split('\n');
-        const firstLineY = row === 1 ? y + this.cellHeight * VISUAL_CONFIG.LABEL.ROW1_Y : y + this.cellHeight / 2;
+        const firstLineY = row === 1 ? y + this.cellHeight * VISUAL_CONFIG.LABEL.ROW1_Y : y + this.cellHeight / 2; // Position label line
 
         lines.forEach((line, i) => {
             if (i === 0) {
@@ -264,6 +277,7 @@ export class Renderer {
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'alphabetic';
 
+        // Position text with row-specific vertical offset
         const centerX = x + cellWidth / 2;
         const verticalOffset = row === 1 ? this.cellHeight * VISUAL_CONFIG.SCALE_DEGREE.ROW1_OFFSET : this.cellHeight * VISUAL_CONFIG.SCALE_DEGREE.OTHER_OFFSET;
         const centerY = y + this.cellHeight / 2 + verticalOffset;
@@ -272,6 +286,7 @@ export class Renderer {
 
         this.ctx.fillText(cell.scaleDegree, centerX, centerY + scaleDegreeFontSize * VISUAL_CONFIG.SCALE_DEGREE.TEXT_OFFSET);
 
+        // Position scale degree sign (^) over digit
         const fullWidth = this.ctx.measureText(cell.scaleDegree).width;
         const numWidth = this.ctx.measureText(numericPart).width;
         const accentX = centerX + (fullWidth - numWidth) / 2;
@@ -292,6 +307,7 @@ export class Renderer {
      */
     drawGrid() {
         const { opacity, desaturate } = this.getPlaybackVisuals();
+        const dt = this.lastDeltaTime ?? 0; // Frame delta for animation
         // For each cell in grid
         for (let row = 0; row < GRID.ROWS; row++) {
             for (let col = 0; col < GRID.COLS; col++) {
@@ -307,7 +323,10 @@ export class Renderer {
 
                 // For notes
                 if (cell.type === CELL_TYPE.NOTE) {
-                    this.drawNoteCell({ cell, x, y, cellWidth, opacity, desaturate });
+                    const cellIndex = row * GRID.COLS + col;
+                    const isActive = this.activeCells.has(cellIndex);
+                    const scale = this.getAnimatedPressScale(cellIndex, isActive, dt);
+                    this.drawNoteCell({ cell, x, y, cellWidth, opacity, desaturate, scale });
                 }
 
                 // For scale/chord labels
@@ -373,19 +392,19 @@ export class Renderer {
             x,
             y,
             width: labelWidth,
-            height: this.cellHeight,
             count: this.nextChordCountdown,
         });
     }
 
     /**
      * Draws a small countdown badge in the highlighted chord cell.
-     * @param {{x: number, y: number, width: number, height: number, count: number|null}} options
+     * @param {{x: number, y: number, width: number, count: number|null}} options
      * @private
      */
-    drawCountdownBadge({ x, y, width, height, count }) {
+    drawCountdownBadge({ x, y, width, count }) {
         if (count === null || count < 1 || count > 4) return;
 
+        // Position badge in top-right corner.
         const size = VISUAL_CONFIG.COUNTDOWN_BADGE.SIZE;
         const padding = VISUAL_CONFIG.COUNTDOWN_BADGE.PADDING;
         const badgeX = x + width - size - padding;
@@ -420,6 +439,7 @@ export class Renderer {
      * @private
      */
     adjustBrightness(hslColor, amount) {
+        // Shift HSL lightness by amount in [-1, 1]
         const match = hslColor.match(/hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)/);
         if (!match) return hslColor;
         const h = match[1];
@@ -448,54 +468,37 @@ export class Renderer {
     }
 
     /**
+     * Smoothly animate press scale per cell.
+     * @private
+     */
+    getAnimatedPressScale(cellIndex, isActive, dt) {
+        const target = isActive ? VISUAL_CONFIG.NOTE.PRESSED_SCALE : 1; // Target scale for press state
+        const current = this.cellPressScales.get(cellIndex) ?? 1;
+
+        if (dt <= 0) {
+            this.cellPressScales.set(cellIndex, target);
+            return target;
+        }
+
+        const alpha = 1 - Math.exp(-VISUAL_CONFIG.NOTE.PRESS_ANIM_SPEED * dt); // Exponential smoothing factor
+        const next = current + (target - current) * alpha;
+
+        if (!isActive && Math.abs(next - 1) < 0.001) {
+            this.cellPressScales.delete(cellIndex);
+        } else {
+            this.cellPressScales.set(cellIndex, next);
+        }
+
+        return next;
+    }
+
+    /**
      * Draws overlays on currently active (playing) note cells.
      * Active cells appear slightly darker/pressed.
      * @private
      */
     drawActiveCells() {
-        for (const cellIndex of this.activeCells) {
-            const row = Math.floor(cellIndex / GRID.COLS);
-            const col = cellIndex % GRID.COLS;
-            const cell = this.gridData[row][col];
-
-            if (!cell || cell.type !== CELL_TYPE.NOTE) {
-                continue;
-            };
-
-            const x = this.getColumnX(col);
-            const y = row * this.cellHeight;
-            const cellWidth = this.getColumnWidth(col);
-            const btnX = x + VISUAL_CONFIG.NOTE.PADDING;
-            const btnY = y + VISUAL_CONFIG.NOTE.PADDING;
-            const btnW = cellWidth - VISUAL_CONFIG.NOTE.PADDING * 2;
-            const btnH = this.cellHeight - VISUAL_CONFIG.NOTE.PADDING * 2;
-
-            // Fill with darker version of color
-            const pressedColor = this.adjustBrightness(cell.color, VISUAL_CONFIG.NOTE.PRESSED_BRIGHTNESS_ADJUST);
-            this.ctx.fillStyle = pressedColor;
-            this.ctx.beginPath();
-            this.ctx.roundRect(btnX, btnY, btnW, btnH, VISUAL_CONFIG.NOTE.RADIUS);
-            this.ctx.fill();
-
-            // Bold border for pressed state
-            this.ctx.strokeStyle = COLOR_ALPHA.BLACK(VISUAL_CONFIG.NOTE.BORDER_OPACITY_PRESSED);
-            this.ctx.lineWidth = VISUAL_CONFIG.NOTE.BORDER_WIDTH;
-            this.ctx.beginPath();
-            this.ctx.roundRect(btnX, btnY, btnW, btnH, VISUAL_CONFIG.NOTE.RADIUS);
-            this.ctx.stroke();
-
-            // Redraw note name (offset down slightly for pressed effect)
-            this.ctx.fillStyle = COLOR_ALPHA.BLACK(1);
-            const noteFontSize = Math.min(this.cellHeight * VISUAL_CONFIG.NOTE.MAX_FONT_HEIGHT, cellWidth * VISUAL_CONFIG.NOTE.MAX_FONT_WIDTH);
-            this.ctx.font = `${noteFontSize}px ${VISUAL_CONFIG.FONT_FAMILY}`;
-            this.ctx.textAlign = 'center';
-            this.ctx.textBaseline = 'middle';
-            this.ctx.fillText(
-                cell.noteName,
-                x + cellWidth / 2,
-                y + this.cellHeight / 2 + VISUAL_CONFIG.NOTE.PRESSED_OFFSET_Y,
-            );
-        }
+        // Active state is rendered directly in drawNoteCell
     }
 
     /**
@@ -523,7 +526,7 @@ export class Renderer {
     }
 
     /**
-     * Marks a cell as active (currently playing).
+     * Marks a cell as active (pressed).
      * @param {number} row - The row index of the cell
      * @param {number} col - The column index of the cell
      */
@@ -532,7 +535,7 @@ export class Renderer {
     }
 
     /**
-     * Removes a cell from the active (playing) state.
+     * Removes a cell from the active (playing) state
      * @param {number} row - The row index of the cell
      * @param {number} col - The column index of the cell
      */

@@ -64,20 +64,31 @@ button {
     background: #4CAF50;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    transition: background 0.12s ease, box-shadow 0.12s ease, transform 0.08s ease;
 }
 
 .control-btn {
-    width: 56px;
-    height: 48px;
+    width: 62px;
+    height: 52px;
     padding: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
+    font-size: 1.6rem;
     line-height: 1;
+}
+
+#record-btn {
+    background: #333333;
+    color: #e53935;
+}
+
+#record-btn:hover {
+    background: #2b2b2b;
 }
 
 #pause-btn {
@@ -133,6 +144,11 @@ button {
 
 button:hover {
     background: #45a049;
+}
+
+button:active:not(:disabled) {
+    transform: scale(0.96);
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
 }
 
 button:disabled {
