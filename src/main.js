@@ -20,6 +20,7 @@ class ColorImprovApp {
         this.audioInitialized = false;
         /** @type {PlaybackState} */
         this.state = 'STOPPED';
+        this.recording = false;
         
         // Initialize components
         this.localStorageBackend = new LocalStorageBackend();
@@ -86,6 +87,7 @@ class ColorImprovApp {
             onPause: () => this.pause(),
             onStop: () => this.stop(),
             onResume: () => this.resume(),
+            onRecord: () => this.record(),
         });
 
         // Volume control events
@@ -211,7 +213,7 @@ class ColorImprovApp {
 
             // Update state before starting render loop
             this.state = 'PLAYING';
-            this.playbackControls.setPlaying();
+            this.recording ? this.playbackControls.setRecording() : this.playbackControls.setPlaying();
             this.renderer.setPlaybackState('playing');
 
             this.audioEngine.playBackingTrack();
@@ -277,6 +279,12 @@ class ColorImprovApp {
      */
     stop() {
         this.state = 'STOPPED';
+        if (this.recording) {
+            // If stopping from recording, also reset recording state
+            this.recording = false;
+
+            // TODO: Offer user to download recording/logs
+        }
         this.playbackControls.setStopped();
         this.renderer.setPlaybackState('stopped');
         
@@ -289,6 +297,12 @@ class ColorImprovApp {
         this.renderer.render(); // Render stopped state
 
         console.log('Playback stopped.');
+    }
+
+    record() {
+        this.recording = true;
+        this.play();
+        // TODO: Implement recording, logging
     }
 
     /**

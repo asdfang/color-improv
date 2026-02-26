@@ -87,8 +87,12 @@ button {
     color: #e53935;
 }
 
-#record-btn:hover {
+#record-btn:hover:not(:disabled) {
     background: #2b2b2b;
+}
+
+#record-btn:disabled {
+    background: #666;
 }
 
 #pause-btn {
