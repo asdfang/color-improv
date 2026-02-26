@@ -57,10 +57,11 @@
                 </div>
             </div>
             <div id="instructions-and-settings">
-                <div id="instructions" aria-label="Instructions">Hover for instructions and help.
+                <div id="instructions" tabindex="0" aria-label="Instructions">Click for instructions and help.
                     <p>Let's get a feel for the 12-bar blues! <br>
                     Press keyboard keys from the appropriate row to play notes according to the current chord. <br>
                     <strong>Controls:</strong> <kbd>Space</kbd> to play/pause. <kbd>Shift</kbd>+<kbd>Esc</kbd> to stop (resets to beginning). <kbd>Shift</kbd>+<kbd>R</kbd> to record.
+                    <button id="instructions-close-btn" aria-label="Close instructions">✕</button>
                     </p>
                 </div>
                 <label for="difficulty-select">Difficulty: </label>

@@ -85,6 +85,14 @@ body {
     justify-self: end;
 }
 
+#instructions-and-settings select {
+    margin-left: 0.5rem;
+}
+
+#instructions-and-settings > label {
+    padding-left: 0.5rem;
+}
+
 button {
     padding: 0.5rem 1rem;
     background: #4CAF50;
@@ -235,6 +243,13 @@ button:disabled::after {
     overflow: visible;
     overflow-wrap: break-word;
     transition: all 0.3s ease;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+#instructions:hover {
+    background: rgba(255, 255, 255, 0.05);
 }
 
 #instructions p {
@@ -255,6 +270,29 @@ button:disabled::after {
     margin-top: 0.5rem;
 }
 
+#instructions-close-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+#instructions-close-btn:hover {
+    color: rgba(255, 255, 255, 1);
+    background: transparent;
+}
+
 @media (max-width: 768px) {
     #instructions p {
         font-size: 0.85rem;
@@ -267,7 +305,7 @@ button:disabled::after {
     }
 }
 
-#instructions:hover p,
+#instructions:focus p,
 #instructions:focus-within p {
     display: block;
 }
