@@ -4,6 +4,7 @@ export class PlaybackControls {
         this.pauseBtn = /** @type {HTMLButtonElement} */ document.getElementById('pause-btn');
         this.stopBtn = /** @type {HTMLButtonElement} */ document.getElementById('stop-btn');
         this.recordBtn = /** @type {HTMLButtonElement} */ document.getElementById('record-btn');
+        this.recordIcon = /** @type {HTMLSpanElement} */ document.querySelector('#record-btn i');
         this.recordBtnLabel = /** @type {HTMLSpanElement} */ document.getElementById('record-btn-label');
 
         this.state = 'stopped'; // 'playing', 'paused', 'stopped'
@@ -126,13 +127,17 @@ export class PlaybackControls {
 
         // Update record label text and style
         if (this.recording) {
+            this.recordBtn.style.color = '#555';
+            this.recordIcon.classList.add('animate-pulse');
             this.recordBtnLabel.textContent = 'Recording...';
             this.recordBtnLabel.style.color = '#e53935';
             this.recordBtnLabel.style.opacity = '1';
         } else {
+            this.recordBtn.style.color= ''; // Reset to CSS default
+            this.recordIcon.classList.remove('animate-pulse');
             this.recordBtnLabel.textContent = 'Record';
-            this.recordBtnLabel.style.color = ''; // Reset to CSS default
-            this.recordBtnLabel.style.opacity = ''; // Reset to CSS default
+            this.recordBtnLabel.style.color = '';
+            this.recordBtnLabel.style.opacity = '';
         }
     }
 }
