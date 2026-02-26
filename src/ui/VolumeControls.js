@@ -1,11 +1,11 @@
 export class VolumeControls {
     constructor() {
         this.backingTrackVolumeSlider = /** @type {HTMLInputElement} */ document.getElementById('backing-track-volume');
-        this.backingTrackMuteButton = /** @type {HTMLButtonElement} */ document.getElementById('backing-track-mute-button');
-        this.backingTrackResetButton = /** @type {HTMLButtonElement} */ document.getElementById('backing-track-reset-button');
+        this.backingTrackMuteButton = /** @type {HTMLButtonElement} */ document.getElementById('backing-track-mute-btn');
+        this.backingTrackResetButton = /** @type {HTMLButtonElement} */ document.getElementById('backing-track-reset-btn');
         this.samplesVolumeSlider = /** @type {HTMLInputElement} */ document.getElementById('samples-volume');
-        this.samplesMuteButton = /** @type {HTMLButtonElement} */ document.getElementById('samples-mute-button');
-        this.samplesResetButton = /** @type {HTMLButtonElement} */ document.getElementById('samples-reset-button');
+        this.samplesMuteButton = /** @type {HTMLButtonElement} */ document.getElementById('samples-mute-btn');
+        this.samplesResetButton = /** @type {HTMLButtonElement} */ document.getElementById('samples-reset-btn');
     }
 
     /**
@@ -68,11 +68,18 @@ export class VolumeControls {
     }
 
     /**
-     * Updates the mute button text based on muted state.
+     * Updates the mute button icon and color based on muted state.
      * @param {HTMLButtonElement} button 
      * @param {boolean} isMuted 
      */
     updateMuteButton(button, isMuted) {
-        button.textContent = isMuted ? '🔇' : '🔈';
+        button.innerHTML = isMuted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+        if (isMuted) {
+            button.style.backgroundColor = '#d32f2f';
+            button.style.borderColor = '#d32f2f';
+        } else {
+            button.style.backgroundColor = 'transparent';
+            button.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        }
     }
 }
