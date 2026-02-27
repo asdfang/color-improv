@@ -107,7 +107,7 @@ export class PlaybackControls {
         switch (this.state) {
             case 'playing':
                 this.playBtn.disabled = true;
-                this.pauseBtn.disabled = this.recording ? true : false; // Pause disabled during recording
+                this.pauseBtn.disabled = this.recording; // Pause disabled during recording
                 this.stopBtn.disabled = false;
                 this.recordBtn.disabled = true;
                 break;

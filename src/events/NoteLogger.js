@@ -53,7 +53,7 @@ export class NoteLogger {
      * (TODO: extended to include other inputs)
      */
     handleNoteEvent(e) {
-        const timestamp = this.timingEngine.getCurrentTime() - this.timingEngine.startTime;
+        const timestamp = this.timingEngine.getCurrentTime() - this.timingEngine.getStartTime();
         const { midiNumber, uniqueID } = e.detail;
         const position = this.timingEngine.getCurrentPosition();
 

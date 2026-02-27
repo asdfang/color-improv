@@ -154,7 +154,6 @@ button:disabled::after {
 
 #record-btn:disabled {
     background: #888;
-    border-color: #999;
     border: 2px solid #888;
 }
 

@@ -180,7 +180,6 @@ export class Renderer {
         this.drawGrid();
         this.drawChordHighlight();
         this.drawNextChordCountdown();
-        this.drawActiveCells();
     }
 
     /**
@@ -490,15 +489,6 @@ export class Renderer {
         }
 
         return next;
-    }
-
-    /**
-     * Draws overlays on currently active (playing) note cells.
-     * Active cells appear slightly darker/pressed.
-     * @private
-     */
-    drawActiveCells() {
-        // Active state is rendered directly in drawNoteCell
     }
 
     /**
