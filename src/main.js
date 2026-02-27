@@ -422,8 +422,8 @@ class ColorImprovApp {
      * Display modal with audio and log preview and download options.
      * TODO: Esc with same unsaved confirmation as close button
      * TODO: Space to click on tab focuses, instead of toggling play/pause
-     * @param {URL} recordingUrl 
-     * @param {URL} logUrl 
+     * @param {string} recordingUrl 
+     * @param {string} logUrl 
      * @param {string} logData stringified JSON of note log to preview
      */
     displayDownloadModal(recordingUrl, logUrl, logData) {
