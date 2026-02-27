@@ -419,10 +419,12 @@ class ColorImprovApp {
     }
 
     /**
-     * 
-     * @param {*} recordingUrl 
-     * @param {*} logUrl 
-     * @param {*} logData 
+     * Display modal with audio and log preview and download options.
+     * TODO: Esc with same unsaved confirmation as close button
+     * TODO: Space to click on tab focuses, instead of toggling play/pause
+     * @param {URL} recordingUrl 
+     * @param {URL} logUrl 
+     * @param {string} logData stringified JSON of note log to preview
      */
     displayDownloadModal(recordingUrl, logUrl, logData) {
         const modal = document.getElementById('download-modal');
