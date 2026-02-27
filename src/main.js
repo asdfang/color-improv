@@ -1,5 +1,7 @@
 import { AudioEngine } from '/src/audio/AudioEngine.js';
 import { TimingEngine } from '/src/timing/TimingEngine.js';
+import { RecordingEngine} from '/src/recording/RecordingEngine.js';
+import { NoteLogger } from '/src/events/NoteLogger.js';
 import { Renderer } from '/src/visual/Renderer.js';
 import { KeyboardHandler } from '/src/input/KeyboardHandler.js';
 import { PlaybackControls } from '/src/ui/PlaybackControls.js';
@@ -11,11 +13,14 @@ import { keyToGridCoordinates } from '/src/visual/grid-data.js';
 import { VISUAL_LEAD_TIME } from '/src/constants.js';
 
 // TODO: trackKey as a configurable preference
+// TODO: move DOM manipulation out of main, except for event listeners and errors?
 
 /** @typedef {'STOPPED' | 'PLAYING' | 'PAUSED'} PlaybackState */
 
 class ColorImprovApp {
     constructor() {
+        this.backingTrack = 'blues'; // Might be in PreferencesManager eventually
+
         // State variables
         this.audioInitialized = false;
         /** @type {PlaybackState} */
@@ -32,7 +37,9 @@ class ColorImprovApp {
             prefs.backingTrackVolume, prefs.samplesVolume,
             prefs.backingTrackMuted, prefs.samplesMuted
         );
-        this.timingEngine = new TimingEngine(this.audioEngine, 'blues');
+        this.timingEngine = new TimingEngine(this.audioEngine, this.backingTrack);
+        this.recordingEngine = new RecordingEngine(this.audioEngine.audioContext);
+        this.noteLogger = new NoteLogger(this.timingEngine);
 
         const canvas = document.getElementById('mainCanvas');
         if (!(canvas instanceof HTMLCanvasElement)) {
@@ -58,8 +65,10 @@ class ColorImprovApp {
             console.log('Initializing Color Improv...');
 
             this.setUpEventListeners();
-
             this.setupInstructionsTooltip();
+
+            // Connect RecordingEngine's node to Web Audio graph
+            this.audioEngine.connectMainToExternalNode(this.recordingEngine.getMediaStreamDestinationNode());
 
             // Initial volume, mute, difficulty states from preferences to set visuals
             const prefs = this.preferencesManager.getAll();
@@ -278,18 +287,23 @@ class ColorImprovApp {
      * Stop playback, timing engine, and render loop.
      * Can be called from playing or paused state.
      * Deactivates keyboard input and resets renderer state.
+     * If stopping from recording, prepares audio and log for download.
      */
-    stop() {
+    async stop() {
         this.state = 'STOPPED';
-        if (this.recording) {
-            // If stopping from recording, also reset recording state
-            this.recording = false;
+        let recordingPromise = null;
+        let log = null;
 
-            // TODO: Offer user to download recording/logs
+        if (this.recording) {
+            // If stopping from recording, reset recording state
+            this.recording = false;
+            recordingPromise = this.recordingEngine.stop();
+            log = this.noteLogger.stop();
         }
+
+        // Clean up while waiting for recording to finalize
         this.playbackControls.setStopped();
         this.renderer.setPlaybackState('stopped');
-        
         this.audioEngine.stopAllSound();
         this.timingEngine.stop();
         this.keyboardHandler.disable();
@@ -299,14 +313,29 @@ class ColorImprovApp {
         this.renderer.render(); // Render stopped state
 
         console.log('Playback stopped.');
+
+        if (recordingPromise) {
+            const recordingBlob = await recordingPromise;
+            const recordingUrl = URL.createObjectURL(recordingBlob);
+            const logData = JSON.stringify(log, null, 2);
+            const logBlob = new Blob([logData], { type: 'application/json' });
+            const logUrl = URL.createObjectURL(logBlob);
+
+            this.displayDownloadModal(recordingUrl, logUrl, logData);
+        }
     }
 
+    /**
+     * Start recording user input along with playback. Only from stopped state.
+     * Sets recording flag, starts RecordingEngine and NoteLogger, then starts playback.
+      * Note: currently only logs note events from KeyboardHandler, but can be extended to log other inputs or MIDI devices.
+     */
     record() {
         this.recording = true;
+        this.recordingEngine.start();
+        this.noteLogger.start(this.backingTrack, this.preferencesManager.get('difficulty'));
         this.play();
-
-        console.log('Recording started.');
-        // TODO: Implement recording, logging
+        console.log('Recording and note logging started.');
     }
 
     /**
@@ -387,6 +416,115 @@ class ColorImprovApp {
                     }
                 });
             }
+    }
+
+    /**
+     * 
+     * @param {*} recordingUrl 
+     * @param {*} logUrl 
+     * @param {*} logData 
+     */
+    displayDownloadModal(recordingUrl, logUrl, logData) {
+        const modal = document.getElementById('download-modal');
+        const confirmModal = document.getElementById('confirm-close-modal');
+        const audioPreview = document.getElementById('recording-preview');
+        const logPreview = document.getElementById('note-log-preview');
+        const downloadAudioBtn = document.getElementById('download-audio-btn');
+        const downloadLogBtn = document.getElementById('download-log-btn');
+        const closeBtn = document.getElementById('close-download-modal-btn');
+
+        // Track download state
+        let audioDownloaded = false;
+        let logDownloaded = false;
+
+        if (audioPreview) audioPreview.src = recordingUrl;
+
+        // Display truncated JSON preview
+        if (logPreview) {
+            const lines = logData.split('\n');
+            const previewLines = lines.slice(0, 12);
+            const previewText = previewLines.join('\n') + (lines.length > 12 ? '\n...' : '');
+            logPreview.textContent = previewText;
+        }
+
+        if (downloadAudioBtn) {
+            downloadAudioBtn.onclick = () => {
+                const link = document.createElement('a');
+                link.href = recordingUrl;
+                link.download = `recording_${Date.now()}.webm`;
+                link.click();
+                audioDownloaded = true;
+                downloadAudioBtn.innerHTML = '<i class="fas fa-check"></i> Downloaded';
+                downloadAudioBtn.classList.add('downloaded');
+            };
+        }
+
+        if (downloadLogBtn) {
+            downloadLogBtn.onclick = () => {
+                const link = document.createElement('a');
+                link.href = logUrl;
+                link.download = `note_log_${Date.now()}.json`;
+                link.click();
+                logDownloaded = true;
+                downloadLogBtn.innerHTML = '<i class="fas fa-check"></i> Downloaded';
+                downloadLogBtn.classList.add('downloaded');
+            };
+        }
+
+        const cleanupAndClose = () => {
+            if (audioPreview) audioPreview.src = '';
+            if (logPreview) logPreview.textContent = '';
+            // Reset button states
+            if (downloadAudioBtn) {
+                downloadAudioBtn.innerHTML = '<i class="fas fa-download"></i> Download Audio';
+                downloadAudioBtn.classList.remove('downloaded');
+            }
+            if (downloadLogBtn) {
+                downloadLogBtn.innerHTML = '<i class="fas fa-download"></i> Download Note Log';
+                downloadLogBtn.classList.remove('downloaded');
+            }
+            URL.revokeObjectURL(recordingUrl);
+            URL.revokeObjectURL(logUrl);
+            modal.close();
+        };
+
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                // Check if both files have been downloaded
+                if (!audioDownloaded || !logDownloaded) {
+                    // Show confirmation modal
+                    const unsavedList = document.getElementById('unsaved-list');
+                    const unsavedItems = [];
+                    if (!audioDownloaded) unsavedItems.push('Audio recording');
+                    if (!logDownloaded) unsavedItems.push('Note log');
+                    if (unsavedList) {
+                        unsavedList.textContent = `Not yet downloaded: ${unsavedItems.join(', ')}`;
+                    }
+
+                    const confirmYesBtn = document.getElementById('confirm-close-yes-btn');
+                    const confirmCancelBtn = document.getElementById('confirm-close-cancel-btn');
+
+                    if (confirmYesBtn) {
+                        confirmYesBtn.onclick = () => {
+                            confirmModal.close();
+                            cleanupAndClose();
+                        };
+                    }
+
+                    if (confirmCancelBtn) {
+                        confirmCancelBtn.onclick = () => {
+                            confirmModal.close();
+                        };
+                    }
+
+                    confirmModal.showModal();
+                } else {
+                    cleanupAndClose();
+                }
+            };
+        }
+
+        modal.showModal();
     }
 
     /**

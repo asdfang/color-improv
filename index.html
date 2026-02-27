@@ -75,5 +75,44 @@
         </div>
         <canvas id="mainCanvas" aria-label="Interactive musical grid"></canvas>
     </div>
+    <dialog id="download-modal">
+        <div class="modal-header">
+            <h2>Download Your Recording</h2>
+            <p>Your recording and note log are ready! Click the buttons below to download.</p>
+        </div>
+        <div class="modal-content">
+            <div class="modal-section audio-section">
+                <h3>Audio Recording</h3>
+                <div class="audio-preview-container">
+                    <audio id="recording-preview" controls controlsList="nodownload noplaybackrate"></audio>
+                </div>
+                <button id="download-audio-btn" class="download-btn"><i class="fas fa-download"></i> Download Audio</button>
+            </div>
+            <div class="modal-section log-section">
+                <h3>Note Log</h3>
+                <div class="log-preview-container">
+                    <pre id="note-log-preview"></pre>
+                    <div class="log-preview-fade"></div>
+                </div>
+                <button id="download-log-btn" class="download-btn"><i class="fas fa-download"></i> Download Note Log</button>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="close-download-modal-btn" class="close-btn"><i class="fas fa-times"></i> Close</button>
+        </div>
+    </dialog>
+    <dialog id="confirm-close-modal">
+        <div class="modal-header">
+            <h2>Unsaved Files</h2>
+        </div>
+        <div class="modal-content confirm-content">
+            <p>You haven't downloaded all your files yet. Are you sure you want to close?</p>
+            <p id="unsaved-list"></p>
+        </div>
+        <div class="modal-footer confirm-footer">
+            <button id="confirm-close-cancel-btn" class="cancel-btn">Go Back</button>
+            <button id="confirm-close-yes-btn" class="close-btn">Close Anyway</button>
+        </div>
+    </dialog>
 </body>
 </html>
