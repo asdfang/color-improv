@@ -394,31 +394,17 @@ class ColorImprovApp {
     }
 
     setupInstructionsTooltip() {
-            // Set up instructions close button
-            const closeBtn = document.getElementById('instructions-close-btn');
-            const instructionsDiv = document.getElementById('instructions');
-            if (closeBtn && instructionsDiv) {
-                closeBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const tooltip = instructionsDiv.querySelector('p');
-                    if (tooltip) tooltip.style.display = 'none';
-                });
-                // Re-show tooltip on click of instructions text
-                instructionsDiv.addEventListener('click', function(e) {
-                    if (e.target !== closeBtn) {
-                        const tooltip = instructionsDiv.querySelector('p');
-                        if (tooltip) tooltip.style.display = 'block';
-                    }
-                });
-                // Close tooltip when clicking anywhere else
-                document.addEventListener('click', function(e) {
-                    if (!instructionsDiv.contains(e.target)) {
-                        const tooltip = instructionsDiv.querySelector('p');
-                        if (tooltip) tooltip.style.display = 'none';
-                    }
-                });
-            }
+        const instructionsBtn = document.getElementById('instructions');
+        const dialog = document.getElementById('instructions-dialog');
+        const closeBtn = document.getElementById('instructions-close-btn');
+        if (!instructionsBtn || !dialog || !closeBtn) return;
+
+        instructionsBtn.addEventListener('click', () => dialog.showModal());
+        closeBtn.addEventListener('click', () => dialog.close());
+        // Close when clicking the backdrop
+        dialog.addEventListener('click', (e) => {
+            if (e.target === dialog) dialog.close();
+        });
     }
 
     /**

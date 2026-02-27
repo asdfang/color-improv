@@ -63,13 +63,7 @@
                 </div>
             </div>
             <div id="instructions-and-settings">
-                <div id="instructions" tabindex="0" aria-label="Instructions">Click for instructions and help.
-                    <p>Let's get a feel for the 12-bar blues! <br>
-                    Press keyboard keys from the appropriate row to play notes according to the current chord. <br>
-                    <strong>Controls:</strong> <kbd>Space</kbd> to play/pause. <kbd>Shift</kbd>+<kbd>Esc</kbd> to stop (resets to beginning). <kbd>Shift</kbd>+<kbd>R</kbd> to record.
-                    <button id="instructions-close-btn" aria-label="Close instructions">✕</button>
-                    </p>
-                </div>
+                <div id="instructions" tabindex="0" aria-label="Show instructions">Click for instructions and help.</div>
                 <label for="difficulty-select">Difficulty: </label>
                 <select id="difficulty-select" aria-label="Select difficulty level...">
                     <option value="easy" selected>Easy (both helpers)</option>
@@ -81,6 +75,20 @@
         </div>
         <canvas id="mainCanvas" aria-label="Interactive musical grid"></canvas>
     </div>
+    <dialog id="instructions-dialog" aria-labelledby="instructions-dialog-title">
+        <div class="modal-header">
+            <h2 id="instructions-dialog-title">Instructions</h2>
+        </div>
+        <div class="modal-content">
+            <p>Let's get a feel for the 12-bar blues! <br>
+            Press keyboard keys from the appropriate row to play notes according to the current chord. <br>
+            <strong>Controls:</strong> <kbd>Space</kbd> to play/pause. <kbd>Shift</kbd>+<kbd>Esc</kbd> to stop (resets to beginning). <kbd>Shift</kbd>+<kbd>R</kbd> to record.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button id="instructions-close-btn" class="cancel-btn">Close</button>
+        </div>
+    </dialog>
     <dialog id="download-modal" aria-modal="true" aria-labelledby="download-modal-title">
         <div class="modal-header">
             <h2 id="download-modal-title">Download Your Recording</h2>

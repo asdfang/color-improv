@@ -174,11 +174,9 @@ button:disabled::after {
 }
 
 #instructions {
-    position: relative;
     text-align: left;
     color: rgba(255, 255, 255, 1.0);
     font-size: 1.0rem;
-    overflow: visible;
     overflow-wrap: break-word;
     transition: all 0.3s ease;
     cursor: pointer;
@@ -190,50 +188,16 @@ button:disabled::after {
     background: rgba(255, 255, 255, 0.05);
 }
 
-#instructions p {
-    display: none;
-    margin: 0;
-    position: absolute;
-    background: rgba(0, 0, 0, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
-    padding: 1rem;
-    z-index: 1000;
-    top: 100%;
-    right: 0;
-    white-space: normal;
-    width: max-content;
-    max-width: 90vw;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    margin-top: 0.5rem;
+#instructions-dialog {
+    max-width: 480px;
 }
 
-#instructions-close-btn {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    padding: 0;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.7);
-    cursor: pointer;
-    font-size: 1.2rem;
-    line-height: 1;
-}
-
-#instructions-close-btn:hover {
-    color: rgba(255, 255, 255, 1);
-    background: transparent;
-}
-
-#instructions:focus p,
-#instructions:focus-within p {
+#instructions-dialog .modal-content {
     display: block;
+}
+
+#instructions-dialog p {
+    line-height: 1.6;
 }
 
 kbd {
@@ -245,17 +209,6 @@ kbd {
     font-size: 0.9em;
 }
 
-@media (max-width: 768px) {
-    #instructions p {
-        font-size: 0.85rem;
-    }
-}
-
-@media (max-width: 480px) {
-    #instructions p {
-        font-size: 0.75rem;
-    }
-}
 
 /** || PLAYBACK CONTROLS */
 #playback-controls {
