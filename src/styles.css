@@ -148,6 +148,10 @@ button:disabled::after {
     border: 2px solid #666666;
 }
 
+#record-btn.recording {
+    color: #555;
+}
+
 #record-btn:hover:not(:disabled) {
     background: #2b2b2b;
 }
@@ -165,6 +169,11 @@ button:disabled::after {
 
 .animate-pulse {
     animation: pulse 3s ease-out infinite;
+}
+
+#record-btn-label.recording {
+    color: #e53935;
+    opacity: 1;
 }
 
 #pause-btn {
@@ -191,7 +200,7 @@ button:disabled::after {
     background: #888;
 }
 
-.volume-btn {
+.volume-control-btn {
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.3);
     padding: 0;
@@ -212,7 +221,7 @@ button:disabled::after {
     text-align: center; 
 }
 
-.volume-btn-label {
+.volume-control-btn-label {
     font-size: 0.7rem;
     margin-top: 0.25rem;
 }
