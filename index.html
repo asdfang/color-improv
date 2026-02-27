@@ -81,9 +81,9 @@
         </div>
         <canvas id="mainCanvas" aria-label="Interactive musical grid"></canvas>
     </div>
-    <dialog id="download-modal">
+    <dialog id="download-modal" aria-modal="true" aria-labelledby="download-modal-title">
         <div class="modal-header">
-            <h2>Download Your Recording</h2>
+            <h2 id="download-modal-title">Download Your Recording</h2>
             <p>Your recording and note log are ready! Click the buttons below to download.</p>
         </div>
         <div class="modal-content">
@@ -107,9 +107,9 @@
             <button id="close-download-modal-btn" class="close-btn"><i class="fas fa-times"></i> Close</button>
         </div>
     </dialog>
-    <dialog id="confirm-close-modal">
+    <dialog id="confirm-close-modal" aria-modal="true" aria-labelledby="confirm-close-modal-title">
         <div class="modal-header">
-            <h2>Unsaved Files</h2>
+            <h2 id="confirm-close-modal-title">Unsaved Files</h2>
         </div>
         <div class="modal-content confirm-content">
             <p>You haven't downloaded all your files yet. Are you sure you want to close?</p>
