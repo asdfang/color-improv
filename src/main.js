@@ -393,6 +393,9 @@ class ColorImprovApp {
         }
     }
 
+    /**
+     * Set up instructions tooltip/modal with open and close event listeners.
+     */
     setupInstructionsTooltip() {
         const instructionsBtn = document.getElementById('instructions');
         const dialog = document.getElementById('instructions-dialog');
