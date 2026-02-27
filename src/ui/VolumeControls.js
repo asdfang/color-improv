@@ -73,10 +73,10 @@ export class VolumeControls {
      * @param {boolean} isMuted 
      */
     updateMuteButton(button, isMuted) {
-        if (isMuted) {
-            button.classList.add('is-muted');
-        } else {
-            button.classList.remove('is-muted');
+        button.classList.toggle('is-muted', isMuted);
+        const label = button.parentElement.querySelector('.mute-btn-label');
+        if (label && label.tagName === 'SPAN') {
+            label.textContent = isMuted ? 'Unmute' : 'Mute';
         }
     }
 }

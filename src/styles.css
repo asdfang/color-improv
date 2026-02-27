@@ -62,7 +62,7 @@ button:disabled::after {
     align-items: center;
 }
 
-span .btn-label {
+.btn-label {
     display: block;
     font-size: 1.0rem;
     margin-top: 0.5rem;
