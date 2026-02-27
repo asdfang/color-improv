@@ -7,7 +7,6 @@ export class NoteLogger {
     constructor(timingEngine) {
         // Use TimingEngine as central clock
         this.timingEngine = timingEngine;
-        this.loggingStartTime = null;
         this.events = [];
         this.backingTrack = null;
         this.difficulty = null;
@@ -22,17 +21,12 @@ export class NoteLogger {
      * @param {string} difficulty the difficulty level (hard/medium/easy)
      */
     start(backingTrack, difficulty) {
-        this.loggingStartTime = this.timingEngine.getCurrentTime();
         this.events = []; // Clear previous logs
         this.backingTrack = backingTrack;
         this.difficulty = difficulty;
         
-        document.addEventListener('notestart', /** @param {CustomEvent} e */ (e) => {
-            this.handleNoteEvent(e);
-        });
-        document.addEventListener('noteend', /** @param {CustomEvent} e */ (e) => {
-            this.handleNoteEvent(e);
-        });
+        document.addEventListener('notestart', this.handleNoteEvent);
+        document.addEventListener('noteend', this.handleNoteEvent);
     }
 
     /**
@@ -42,22 +36,24 @@ export class NoteLogger {
     stop() {
         document.removeEventListener('notestart', this.handleNoteEvent);
         document.removeEventListener('noteend', this.handleNoteEvent);
-        this.backingTrack = null;
-        this.difficulty = null;
-        return {
+
+        const log = {
             backingTrack: this.backingTrack,
             difficulty: this.difficulty,
             events: this.events,
-        };
+        }
+        this.backingTrack = null;
+        this.difficulty = null;
+        return log;
     }
 
     /**
-     * Collects note events with timing, then logs them.
+     * Collects note events with elapsed time from beginning of backing track, then logs them.
      * @param {CustomEvent & {type: 'notestart'|'noteend'}} e note event from KeyboardHandler
      * (TODO: extended to include other inputs)
      */
     handleNoteEvent(e) {
-        const timestamp = this.timingEngine.getCurrentTime() - this.loggingStartTime;
+        const timestamp = this.timingEngine.getCurrentTime() - this.timingEngine.startTime;
         const { midiNumber, uniqueID } = e.detail;
         const position = this.timingEngine.getCurrentPosition();
 
