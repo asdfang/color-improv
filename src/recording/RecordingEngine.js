@@ -66,7 +66,7 @@ export class RecordingEngine {
     /**
      * Stops recording and returns a Promise that resolves to the recorded audio as a Blob.
       * If recording is not active, resolves to null.
-     * @returns {Promise<Blob|null>} Promise resolving to the recorded audio Blob, or null if not recording
+      * @returns {Promise<Blob|null>} Promise resolving to the recorded audio Blob, or null if not recording
       * @throws {Error} if an error occurs during stopping/recording
       * Note: The Blob is created from the collected chunks when the MediaRecorder's `stop` event fires.
      */
