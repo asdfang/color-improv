@@ -1,3 +1,5 @@
+import mime from 'mime-types';
+
 import { AudioEngine } from '/src/audio/AudioEngine.js';
 import { TimingEngine } from '/src/timing/TimingEngine.js';
 import { RecordingEngine} from '/src/recording/RecordingEngine.js';
@@ -321,13 +323,8 @@ class ColorImprovApp {
                 this.showError('Failed to finalize recording. Please try again.');
                 return;
             }
-            
-            const recordingUrl = URL.createObjectURL(recordingBlob);
-            const logData = JSON.stringify(log, null, 2);
-            const logBlob = new Blob([logData], { type: 'application/json' });
-            const logUrl = URL.createObjectURL(logBlob);
 
-            this.displayDownloadModal(recordingUrl, logUrl, logData);
+            this.displayDownloadModal(recordingBlob, log);
         }
     }
 
@@ -428,11 +425,10 @@ class ColorImprovApp {
      * Display modal with audio and log preview and download options.
      * TODO: Esc with same unsaved confirmation as close button
      * TODO: Space to click on tab focuses, instead of toggling play/pause
-     * @param {string} recordingUrl 
-     * @param {string} logUrl 
-     * @param {string} logData stringified JSON of note log to preview
+     * @param {*} recordingBlob blob containing the recorded audio data from RecordingEngine
+     * @param {*} logObject raw log data from NoteLogger
      */
-    displayDownloadModal(recordingUrl, logUrl, logData) {
+    displayDownloadModal(recordingBlob, logObject) {
         const modal = document.getElementById('download-modal');
         const confirmModal = document.getElementById('confirm-close-modal');
         const audioPreview = document.getElementById('recording-preview');
@@ -440,6 +436,16 @@ class ColorImprovApp {
         const downloadAudioBtn = document.getElementById('download-audio-btn');
         const downloadLogBtn = document.getElementById('download-log-btn');
         const closeBtn = document.getElementById('close-download-modal-btn');
+
+        const recordingUrl = URL.createObjectURL(recordingBlob);
+        let recordingExt = mime.extension(recordingBlob.type) || 'webm';
+        // Force better compatability with common browsers
+        if (recordingExt === 'weba') recordingExt = 'webm';
+        if (recordingExt === 'mp4')  recordingExt = 'm4a';
+
+        const logData = JSON.stringify(logObject, null, 2);
+        const logBlob = new Blob([logData], { type: 'application/json' });
+        const logUrl = URL.createObjectURL(logBlob);
 
         // Track download state
         let audioDownloaded = false;
@@ -459,7 +465,7 @@ class ColorImprovApp {
             downloadAudioBtn.onclick = () => {
                 const link = document.createElement('a');
                 link.href = recordingUrl;
-                link.download = `recording_${Date.now()}.webm`;
+                link.download = `recording_${Date.now()}.${recordingExt}`;
                 link.click();
                 audioDownloaded = true;
                 downloadAudioBtn.innerHTML = '<i class="fas fa-check"></i> Downloaded';
