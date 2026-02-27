@@ -316,6 +316,12 @@ class ColorImprovApp {
 
         if (recordingPromise) {
             const recordingBlob = await recordingPromise;
+            if (!recordingBlob) {
+                console.error('Recording failed to finalize.');
+                this.showError('Failed to finalize recording. Please try again.');
+                return;
+            }
+            
             const recordingUrl = URL.createObjectURL(recordingBlob);
             const logData = JSON.stringify(log, null, 2);
             const logBlob = new Blob([logData], { type: 'application/json' });
