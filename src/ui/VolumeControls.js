@@ -73,13 +73,10 @@ export class VolumeControls {
      * @param {boolean} isMuted 
      */
     updateMuteButton(button, isMuted) {
-        button.innerHTML = isMuted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
         if (isMuted) {
-            button.style.backgroundColor = '#d32f2f';
-            button.style.borderColor = '#d32f2f';
+            button.classList.add('is-muted');
         } else {
-            button.style.backgroundColor = 'transparent';
-            button.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            button.classList.remove('is-muted');
         }
     }
 }

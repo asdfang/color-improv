@@ -127,17 +127,15 @@ export class PlaybackControls {
 
         // Update record label text and style
         if (this.recording) {
-            this.recordBtn.style.color = '#555';
+            this.recordBtn.classList.add('recording');
             this.recordIcon.classList.add('animate-pulse');
+            this.recordBtnLabel.classList.add('recording');
             this.recordBtnLabel.textContent = 'Recording...';
-            this.recordBtnLabel.style.color = '#e53935';
-            this.recordBtnLabel.style.opacity = '1';
         } else {
-            this.recordBtn.style.color= ''; // Reset to CSS default
+            this.recordBtn.classList.remove('recording');
             this.recordIcon.classList.remove('animate-pulse');
+            this.recordBtnLabel.classList.remove('recording');
             this.recordBtnLabel.textContent = 'Record';
-            this.recordBtnLabel.style.color = '';
-            this.recordBtnLabel.style.opacity = '';
         }
     }
 }

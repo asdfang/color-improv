@@ -16,11 +16,14 @@
                 <div class="volume-group">
                     <label for="backing-track-volume">Backing Track: </label>
                     <input type="range" id="backing-track-volume" min="0" max="1" step="0.01" value="0">
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <button id="backing-track-mute-btn" class="volume-control-btn mute-btn" aria-label="Mute backing track"><i class="fas fa-volume-xmark"></i></button>
+                    <div class="btn-wrapper">
+                        <button id="backing-track-mute-btn" class="volume-control-btn mute-btn" aria-label="Mute backing track">
+                            <i class="fas fa-volume-xmark"></i>
+                            <i class="fas fa-volume-up"></i>
+                        </button>
                         <span class="btn-label volume-control-btn-label mute-btn-label">Mute</span>
                     </div>
-                    <div style="display: flex; flex-direction: column; align-items: center;">
+                    <div class="btn-wrapper">
                         <button id="backing-track-reset-btn" class="volume-control-btn reset-btn" type="button" aria-label="Reset backing track volume"><i class="fas fa-undo"></i></button>
                         <span class="btn-label volume-control-btn-label reset-btn-label">Reset</span>
                     </div>
@@ -28,30 +31,33 @@
                 <div class="volume-group">
                     <label for="samples-volume">Trumpet: </label>
                     <input type="range" id="samples-volume" min="0" max="1" step="0.01" value="0">
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <button id="samples-mute-btn" class="volume-control-btn mute-btn" aria-label="Mute trumpet"><i class="fas fa-volume-xmark"></i></button>
+                    <div class="btn-wrapper">
+                        <button id="samples-mute-btn" class="volume-control-btn mute-btn" aria-label="Mute trumpet">
+                            <i class="fas fa-volume-xmark"></i>
+                            <i class="fas fa-volume-up"></i>
+                        </button>
                         <span class="btn-label volume-control-btn-label mute-btn-label">Mute</span>
                     </div>
-                    <div style="display: flex; flex-direction: column; align-items: center;">
+                    <div class="btn-wrapper">
                         <button id="samples-reset-btn" class="volume-control-btn reset-btn" type="button" aria-label="Reset trumpet volume"><i class="fas fa-undo"></i></button>
                         <span class="btn-label volume-control-btn-label reset-btn-label">Reset</span>
                     </div>
                 </div>
             </div>
             <div id="playback-controls">
-                <div style="display: flex; flex-direction: column; align-items: center;">
+                <div class="btn-wrapper">
                     <button id="play-btn" class="playback-btn" aria-label="Play" title="Play (Space)"><i class="fas fa-play"></i></button>
                     <span class="btn-label playback-btn-label">Play</span>
                 </div>
-                <div style="display: flex; flex-direction: column; align-items: center;">
+                <div class="btn-wrapper">
                     <button id="pause-btn" class="playback-btn" aria-label="Pause" title="Pause (Space)"><i class="fas fa-pause"></i></button>
                     <span class="btn-label playback-btn-label">Pause</span>
                 </div>
-                <div style="display: flex; flex-direction: column; align-items: center;">
+                <div class="btn-wrapper">
                     <button id="stop-btn" class="playback-btn stop" aria-label="Stop" title="Stop (Shift+Esc)"><i class="fas fa-stop"></i></button>
                     <span class="btn-label playback-btn-label">Stop</span>
                 </div>
-                <div style="display: flex; flex-direction: column; align-items: center;">
+                <div class="btn-wrapper">
                     <button id="record-btn" class="playback-btn" aria-label="Record" title="Record (Shift+R)"><i class="fas fa-circle"></i></button>
                     <span id="record-btn-label" class="btn-label playback-btn-label">Record</span>
                 </div>
