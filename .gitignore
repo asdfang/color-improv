@@ -1,3 +1,8 @@
 node_modules/
 dist/
 .DS_Store
+
+# Firebase temporary files
+.firebase/
+firebase-debug.log*
+.runtimeconfig.json
