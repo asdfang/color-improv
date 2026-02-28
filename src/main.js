@@ -1,5 +1,3 @@
-import mime from 'mime-types';
-
 import { AudioEngine } from '/src/audio/AudioEngine.js';
 import { TimingEngine } from '/src/timing/TimingEngine.js';
 import { RecordingEngine} from '/src/recording/RecordingEngine.js';
@@ -12,10 +10,11 @@ import { DifficultyControls } from '/src/ui/DifficultyControls.js';
 import { LocalStorageBackend } from '/src/api/LocalStorageBackend.js';
 import { PreferencesManager } from '/src/preferences/PreferencesManager.js';
 import { keyToGridCoordinates } from '/src/visual/grid-data.js';
+import { InstructionsDialog } from '/src/ui/InstructionsDialog.js';
+import { DownloadModal } from '/src/ui/DownloadModal.js';
 import { VISUAL_LEAD_TIME } from '/src/constants.js';
 
 // TODO: trackKey as a configurable preference
-// TODO: move DOM manipulation out of main, except for event listeners and errors?
 
 /** @typedef {'STOPPED' | 'PLAYING' | 'PAUSED'} PlaybackState */
 
@@ -54,6 +53,10 @@ class ColorImprovApp {
         this.volumeControls = new VolumeControls();
         this.difficultyControls = new DifficultyControls();
 
+        // DOM manipulation helpers
+        this.instructionsDialog = new InstructionsDialog();
+        this.downloadModal = new DownloadModal();
+
         this.errorElement = /** @type {HTMLElement} */ (document.getElementById('error-message'));
         this.animationFrameId = null;
     }
@@ -67,7 +70,6 @@ class ColorImprovApp {
             console.log('Initializing Color Improv...');
 
             this.setUpEventListeners();
-            this.setupInstructionsTooltip();
 
             // Connect RecordingEngine's node to Web Audio graph
             this.audioEngine.connectMainToExternalNode(this.recordingEngine.getMediaStreamDestinationNode());
@@ -94,6 +96,9 @@ class ColorImprovApp {
      * Set up event listeners for UI controls and input handling.
      */
     setUpEventListeners() {
+        // Instructions dialog events
+        this.instructionsDialog.setupEventListeners();
+
         // Control button events
         this.playbackControls.enable({
             onPlay: () => this.play(),
@@ -324,7 +329,9 @@ class ColorImprovApp {
                 return;
             }
 
-            this.displayDownloadModal(recordingBlob, log);
+            this.downloadModal.showModal(recordingBlob, log);
+
+            console.log('Recording finalized and ready for download.');
         }
     }
 
@@ -391,143 +398,6 @@ class ColorImprovApp {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
-    }
-
-    /**
-     * Set up instructions tooltip/modal with open and close event listeners.
-     */
-    setupInstructionsTooltip() {
-        const instructionsBtn = document.getElementById('instructions');
-        const dialog = document.getElementById('instructions-dialog');
-        const closeBtn = document.getElementById('instructions-close-btn');
-        if (!instructionsBtn || !dialog || !closeBtn) return;
-
-        instructionsBtn.addEventListener('click', () => dialog.showModal());
-        closeBtn.addEventListener('click', () => dialog.close());
-        // Close when clicking the backdrop
-        dialog.addEventListener('click', (e) => {
-            if (e.target === dialog) dialog.close();
-        });
-    }
-
-    /**
-     * Display modal with audio and log preview and download options.
-     * TODO: Esc with same unsaved confirmation as close button
-     * TODO: Space to click on tab focuses, instead of toggling play/pause
-     * @param {*} recordingBlob blob containing the recorded audio data from RecordingEngine
-     * @param {*} logObject raw log data from NoteLogger
-     */
-    displayDownloadModal(recordingBlob, logObject) {
-        const modal = document.getElementById('download-modal');
-        const confirmModal = document.getElementById('confirm-close-modal');
-        const audioPreview = document.getElementById('recording-preview');
-        const logPreview = document.getElementById('note-log-preview');
-        const downloadAudioBtn = document.getElementById('download-audio-btn');
-        const downloadLogBtn = document.getElementById('download-log-btn');
-        const closeBtn = document.getElementById('close-download-modal-btn');
-
-        const recordingUrl = URL.createObjectURL(recordingBlob);
-        let recordingExt = mime.extension(recordingBlob.type) || 'webm';
-        // Force better compatability with common browsers
-        if (recordingExt === 'weba') recordingExt = 'webm';
-        if (recordingExt === 'mp4')  recordingExt = 'm4a';
-
-        const logData = JSON.stringify(logObject, null, 2);
-        const logBlob = new Blob([logData], { type: 'application/json' });
-        const logUrl = URL.createObjectURL(logBlob);
-
-        // Track download state
-        let audioDownloaded = false;
-        let logDownloaded = false;
-
-        if (audioPreview) audioPreview.src = recordingUrl;
-
-        // Display truncated JSON preview
-        if (logPreview) {
-            const lines = logData.split('\n');
-            const previewLines = lines.slice(0, 12);
-            const previewText = previewLines.join('\n') + (lines.length > 12 ? '\n...' : '');
-            logPreview.textContent = previewText;
-        }
-
-        if (downloadAudioBtn) {
-            downloadAudioBtn.onclick = () => {
-                const link = document.createElement('a');
-                link.href = recordingUrl;
-                link.download = `recording_${Date.now()}.${recordingExt}`;
-                link.click();
-                audioDownloaded = true;
-                downloadAudioBtn.innerHTML = '<i class="fas fa-check"></i> Downloaded';
-                downloadAudioBtn.classList.add('downloaded');
-            };
-        }
-
-        if (downloadLogBtn) {
-            downloadLogBtn.onclick = () => {
-                const link = document.createElement('a');
-                link.href = logUrl;
-                link.download = `note_log_${Date.now()}.json`;
-                link.click();
-                logDownloaded = true;
-                downloadLogBtn.innerHTML = '<i class="fas fa-check"></i> Downloaded';
-                downloadLogBtn.classList.add('downloaded');
-            };
-        }
-
-        const cleanupAndClose = () => {
-            if (audioPreview) audioPreview.src = '';
-            if (logPreview) logPreview.textContent = '';
-            // Reset button states
-            if (downloadAudioBtn) {
-                downloadAudioBtn.innerHTML = '<i class="fas fa-download"></i> Download Audio';
-                downloadAudioBtn.classList.remove('downloaded');
-            }
-            if (downloadLogBtn) {
-                downloadLogBtn.innerHTML = '<i class="fas fa-download"></i> Download Note Log';
-                downloadLogBtn.classList.remove('downloaded');
-            }
-            URL.revokeObjectURL(recordingUrl);
-            URL.revokeObjectURL(logUrl);
-            modal.close();
-        };
-
-        if (closeBtn) {
-            closeBtn.onclick = () => {
-                // Check if both files have been downloaded
-                if (!audioDownloaded || !logDownloaded) {
-                    // Show confirmation modal
-                    const unsavedList = document.getElementById('unsaved-list');
-                    const unsavedItems = [];
-                    if (!audioDownloaded) unsavedItems.push('Audio recording');
-                    if (!logDownloaded) unsavedItems.push('Note log');
-                    if (unsavedList) {
-                        unsavedList.textContent = `Not yet downloaded: ${unsavedItems.join(', ')}`;
-                    }
-
-                    const confirmYesBtn = document.getElementById('confirm-close-yes-btn');
-                    const confirmCancelBtn = document.getElementById('confirm-close-cancel-btn');
-
-                    if (confirmYesBtn) {
-                        confirmYesBtn.onclick = () => {
-                            confirmModal.close();
-                            cleanupAndClose();
-                        };
-                    }
-
-                    if (confirmCancelBtn) {
-                        confirmCancelBtn.onclick = () => {
-                            confirmModal.close();
-                        };
-                    }
-
-                    confirmModal.showModal();
-                } else {
-                    cleanupAndClose();
-                }
-            };
-        }
-
-        modal.showModal();
     }
 
     /**
