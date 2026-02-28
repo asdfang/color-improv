@@ -7,6 +7,17 @@
  */
 
 // ============================================================================
+// VISUAL CONSTANTS
+// ============================================================================
+
+/**
+ * Visual lead time for renderer to anticipate beat progression.
+ * Adds this much time ahead when calculating visual beat position,
+ * creating a visual "lead" effect for smoother animations.
+ */
+export const VISUAL_LEAD_TIME = 0.1; // seconds (100 ms)
+
+// ============================================================================
 // AUDIO CONSTANTS
 // ============================================================================
 
@@ -32,7 +43,8 @@ export const AUDIO_CONFIG = {
     format: 'mp3',
 
     volumes: {
-        SAMPLES_MASTER_GAIN_DEFAULT: 0.8,
+        MAIN_GAIN_DEFAULT: 1.0,
+        SAMPLES_GAIN_DEFAULT: 0.8,
         BACKING_TRACK_GAIN_DEFAULT: 0.6,
         NOTE_FADE_TIME_DEFAULT: 0.35, // seconds
     },
@@ -108,7 +120,7 @@ export const KEY_MAPPINGS = {
 export const PREFERENCE_DEFAULTS = {
     difficulty: 'easy', // | 'medium' | 'hard'
     backingTrackVolume: AUDIO_CONFIG.volumes.BACKING_TRACK_GAIN_DEFAULT,
-    samplesVolume: AUDIO_CONFIG.volumes.SAMPLES_MASTER_GAIN_DEFAULT,
+    samplesVolume: AUDIO_CONFIG.volumes.SAMPLES_GAIN_DEFAULT,
     backingTrackMuted: false,
     samplesMuted: false,
 }

@@ -1,5 +1,7 @@
 import { AudioEngine } from '/src/audio/AudioEngine.js';
 import { TimingEngine } from '/src/timing/TimingEngine.js';
+import { RecordingEngine} from '/src/recording/RecordingEngine.js';
+import { NoteLogger } from '/src/events/NoteLogger.js';
 import { Renderer } from '/src/visual/Renderer.js';
 import { KeyboardHandler } from '/src/input/KeyboardHandler.js';
 import { PlaybackControls } from '/src/ui/PlaybackControls.js';
@@ -8,15 +10,23 @@ import { DifficultyControls } from '/src/ui/DifficultyControls.js';
 import { LocalStorageBackend } from '/src/api/LocalStorageBackend.js';
 import { PreferencesManager } from '/src/preferences/PreferencesManager.js';
 import { keyToGridCoordinates } from '/src/visual/grid-data.js';
+import { InstructionsDialog } from '/src/ui/InstructionsDialog.js';
+import { DownloadModal } from '/src/ui/DownloadModal.js';
+import { VISUAL_LEAD_TIME } from '/src/constants.js';
+
+// TODO: trackKey as a configurable preference
 
 /** @typedef {'STOPPED' | 'PLAYING' | 'PAUSED'} PlaybackState */
 
 class ColorImprovApp {
     constructor() {
+        this.backingTrack = 'blues'; // Might be in PreferencesManager eventually
+
         // State variables
         this.audioInitialized = false;
         /** @type {PlaybackState} */
         this.state = 'STOPPED';
+        this.recording = false;
         
         // Initialize components
         this.localStorageBackend = new LocalStorageBackend();
@@ -28,7 +38,9 @@ class ColorImprovApp {
             prefs.backingTrackVolume, prefs.samplesVolume,
             prefs.backingTrackMuted, prefs.samplesMuted
         );
-        this.timingEngine = new TimingEngine(this.audioEngine, 'blues');
+        this.timingEngine = new TimingEngine(this.audioEngine, this.backingTrack);
+        this.recordingEngine = new RecordingEngine(this.audioEngine.audioContext);
+        this.noteLogger = new NoteLogger(this.timingEngine);
 
         const canvas = document.getElementById('mainCanvas');
         if (!(canvas instanceof HTMLCanvasElement)) {
@@ -40,6 +52,10 @@ class ColorImprovApp {
         this.playbackControls = new PlaybackControls();
         this.volumeControls = new VolumeControls();
         this.difficultyControls = new DifficultyControls();
+
+        // DOM manipulation helpers
+        this.instructionsDialog = new InstructionsDialog();
+        this.downloadModal = new DownloadModal();
 
         this.errorElement = /** @type {HTMLElement} */ (document.getElementById('error-message'));
         this.animationFrameId = null;
@@ -54,6 +70,9 @@ class ColorImprovApp {
             console.log('Initializing Color Improv...');
 
             this.setUpEventListeners();
+
+            // Connect RecordingEngine's node to Web Audio graph
+            this.audioEngine.connectMainToExternalNode(this.recordingEngine.getMediaStreamDestinationNode());
 
             // Initial volume, mute, difficulty states from preferences to set visuals
             const prefs = this.preferencesManager.getAll();
@@ -77,12 +96,16 @@ class ColorImprovApp {
      * Set up event listeners for UI controls and input handling.
      */
     setUpEventListeners() {
+        // Instructions dialog events
+        this.instructionsDialog.setupEventListeners();
+
         // Control button events
         this.playbackControls.enable({
             onPlay: () => this.play(),
             onPause: () => this.pause(),
             onStop: () => this.stop(),
             onResume: () => this.resume(),
+            onRecord: () => this.record(),
         });
 
         // Volume control events
@@ -139,7 +162,7 @@ class ColorImprovApp {
             return this.audioEngine.setBackingTrackVolume(volume);
         } else if (source === 'samples') {
             this.preferencesManager.set('samplesVolume', volume);
-            return this.audioEngine.setSamplesMasterVolume(volume);
+            return this.audioEngine.setSamplesVolume(volume);
         } else console.warn(`Unknown source '${source}' for volume change.`);
     }
 
@@ -181,7 +204,7 @@ class ColorImprovApp {
             const defaults = this.preferencesManager.getDefaults();
             this.preferencesManager.set('samplesVolume', defaults.samplesVolume);
             this.preferencesManager.set('samplesMuted', defaults.samplesMuted);
-            this.audioEngine.setSamplesMasterVolume(defaults.samplesVolume);
+            this.audioEngine.setSamplesVolume(defaults.samplesVolume);
             this.audioEngine.setSamplesMuted(defaults.samplesMuted);
             this.volumeControls.setVolume('samples', defaults.samplesVolume);
             this.volumeControls.setMuted('samples', defaults.samplesMuted);
@@ -208,7 +231,7 @@ class ColorImprovApp {
 
             // Update state before starting render loop
             this.state = 'PLAYING';
-            this.playbackControls.setPlaying();
+            this.recording ? this.playbackControls.setRecording() : this.playbackControls.setPlaying();
             this.renderer.setPlaybackState('playing');
 
             this.audioEngine.playBackingTrack();
@@ -271,12 +294,23 @@ class ColorImprovApp {
      * Stop playback, timing engine, and render loop.
      * Can be called from playing or paused state.
      * Deactivates keyboard input and resets renderer state.
+     * If stopping from recording, prepares audio and log for download.
      */
-    stop() {
+    async stop() {
         this.state = 'STOPPED';
+        let recordingPromise = null;
+        let log = null;
+
+        if (this.recording) {
+            // If stopping from recording, reset recording state
+            this.recording = false;
+            recordingPromise = this.recordingEngine.stop();
+            log = this.noteLogger.stop();
+        }
+
+        // Clean up while waiting for recording to finalize
         this.playbackControls.setStopped();
         this.renderer.setPlaybackState('stopped');
-        
         this.audioEngine.stopAllSound();
         this.timingEngine.stop();
         this.keyboardHandler.disable();
@@ -286,6 +320,32 @@ class ColorImprovApp {
         this.renderer.render(); // Render stopped state
 
         console.log('Playback stopped.');
+
+        if (recordingPromise) {
+            const recordingBlob = await recordingPromise;
+            if (!recordingBlob) {
+                console.error('Recording failed to finalize.');
+                this.showError('Failed to finalize recording. Please try again.');
+                return;
+            }
+
+            this.downloadModal.showModal(recordingBlob, log);
+
+            console.log('Recording finalized and ready for download.');
+        }
+    }
+
+    /**
+     * Start recording user input along with playback. Only from stopped state.
+     * Sets recording flag, starts RecordingEngine and NoteLogger, then starts playback.
+      * Note: currently only logs note events from KeyboardHandler, but can be extended to log other inputs or MIDI devices.
+     */
+    record() {
+        this.recording = true;
+        this.recordingEngine.start();
+        this.noteLogger.start(this.backingTrack, this.preferencesManager.get('difficulty'));
+        this.play();
+        console.log('Recording and note logging started.');
     }
 
     /**
@@ -294,7 +354,7 @@ class ColorImprovApp {
      */
     startRenderLoop() {
         const loop = () => {
-            const position = this.timingEngine.getCurrentPosition();
+            const position = this.timingEngine.getCurrentPosition(VISUAL_LEAD_TIME);
             const difficulty = this.preferencesManager.get('difficulty');
 
             switch (difficulty) {
