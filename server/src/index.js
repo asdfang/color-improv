@@ -1,27 +1,25 @@
+import 'dotenv/config';
 import express from 'express';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { prisma } from './lib/prisma.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 
-app.post('/api/echo', (req, res) => {
-    res.json({
-        message: 'You sent me:',
-        data: req.body,
+app.post('/api/users', async (req, res) => {
+    const { email, name } = req.body;
+
+    const user = await prisma.user.create({
+        data: { email, name },
     });
+
+    res.json(user);
 });
 
-app.get('/api/secret', (req, res) => {
-    res.json({ secret: process.env.SECRET_MESSAGE });
-});
-
-app.get('/api/health', (req, res) => {
-    // res.json({ status: 'ok', message: 'Server is running!' });
-    res.send('Hello world.');
+app.get('/api/users', async (req, res) => {
+    const users = await prisma.user.findMany();
+    res.json(users);
 });
 
 app.listen(PORT, () => {
