@@ -1,10 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import { prisma } from './lib/prisma.js';
-import { hashPassword, comparePassword } from './utils/password.js';
-import { generateToken, verifyToken } from './utils/jwt.js';
-import { requireAuth } from './middleware/auth.js';
+import authRoutes from './routes/auth.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -12,72 +9,15 @@ const PORT = process.env.PORT || 3001;
 app.use(express.json());
 app.use(cookieParser());
 
-app.post('/api/users', async (req, res) => {
-    const { email, name, password } = req.body;
-
-    const passwordHash = await hashPassword(password);
-
-    const user = await prisma.user.create({
-        data: {
-            email,
-            name,
-            passwordHash
-        },
-    });
-
-    res.json(user);
-
-    const { password: _, ...userWithoutPassword } = userWithoutPassword;
-    res.json(userWithoutPassword);
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok' });
 });
 
-app.get('/api/users', async (req, res) => {
-    const users = await prisma.user.findMany();
-    res.json(users);
-});
+app.use('/api/auth', authRoutes);
 
-app.post('/api/login', async (req, res) => {
-    const { email, password } = req.body;
-
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-        return res.status(401).json({error: 'Invalid email or password'});
-    }
-
-    const isValidPassword = await comparePassword(password, user.passwordHash);
-    if (!isValidPassword) {
-        return res.status(401).json({error: 'Invalid email or password'});
-    }
-
-    // User authenticated, generate JWT
-    const token = generateToken(user.id);
-
-    // Set token in secure cookie
-    res.cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    res.json({
-        message: `Hello, ${user.name}! Login successful`,
-        token,
-        user: {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-        },
-    });
-});
-
-app.get('/api/me', requireAuth, async (req, res) => {
-    const user = await prisma.user.findUnique({
-        where: { id: req.userId },
-        select: { id: true, email: true, name: true },
-    });
-
-    res.json(user);
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'Internal server error' });
 });
 
 app.listen(PORT, () => {
