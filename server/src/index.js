@@ -1,9 +1,10 @@
 import 'dotenv/config';
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import { prisma } from './lib/prisma.js';
 import { hashPassword, comparePassword } from './utils/password.js';
 import { generateToken, verifyToken } from './utils/jwt.js';
-import cookieParser from 'cookie-parser';
+import { requireAuth } from './middleware/auth.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -68,6 +69,15 @@ app.post('/api/login', async (req, res) => {
             name: user.name,
         },
     });
+});
+
+app.get('/api/me', requireAuth, async (req, res) => {
+    const user = await prisma.user.findUnique({
+        where: { id: req.userId },
+        select: { id: true, email: true, name: true },
+    });
+
+    res.json(user);
 });
 
 app.listen(PORT, () => {
