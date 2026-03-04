@@ -3,11 +3,13 @@ import express from 'express';
 import { prisma } from './lib/prisma.js';
 import { hashPassword, comparePassword } from './utils/password.js';
 import { generateToken, verifyToken } from './utils/jwt.js';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.post('/api/users', async (req, res) => {
     const { email, name, password } = req.body;
@@ -48,6 +50,14 @@ app.post('/api/login', async (req, res) => {
 
     // User authenticated, generate JWT
     const token = generateToken(user.id);
+
+    // Set token in secure cookie
+    res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     res.json({
         message: `Hello, ${user.name}! Login successful`,
