@@ -11,7 +11,7 @@ export class AudioEngine {
      * Initializes the AudioEngine, creating AudioContext and SampleLoader.
      * Call initialize() after user interaction to prepare for playback.
      */
-    constructor(backingTrackInitialVolume, samplesInitialVolume, backingTrackInitialMuted, samplesInitialMuted) {
+    constructor() {
         // Initialize AudioContext immediately to decode samples - state is 'suspended' until user interaction
         const AudioCtx = /** @type {typeof AudioContext} */ (window.AudioContext || window.webkitAudioContext);
         this.audioContext = new AudioCtx();
@@ -31,10 +31,10 @@ export class AudioEngine {
         this.backingTrackGain = null;       // GainNode for backing track volume control
 
         // Volume state -- takes in constructor parameters
-        this.backingTrackDesiredVolume = backingTrackInitialVolume; // Holds slider value
-        this.backingTrackMuted = backingTrackInitialMuted;
-        this.samplesDesiredVolume = samplesInitialVolume; // Holds slider value
-        this.samplesMuted = samplesInitialMuted;
+        this.backingTrackDesiredVolume = 0; // Holds slider value
+        this.backingTrackMuted = false;
+        this.samplesDesiredVolume = 0; // Holds slider value
+        this.samplesMuted = false;
 
         // Connect gain nodes to destination immediately (connect source nodes to gain nodes later)
         // Main gain for future overall control/rerouting.
@@ -50,13 +50,6 @@ export class AudioEngine {
         this.backingTrackGain.gain.value = sliderToGain(this.backingTrackDesiredVolume);
         this.backingTrackGain.connect(this.mainGain);
 
-        // If initially muted, set gains to 0
-        if (this.backingTrackMuted) this.backingTrackGain.gain.value = 0;
-        if (this.samplesMuted) this.samplesGain.gain.value = 0;
-
-        // Debug/seek offset (for syncing timing when seeking via setDebugTime)
-        this.seekOffset = 0;
-
         // Callback when backing track ends
         this.onEnded = null;
 
@@ -71,6 +64,9 @@ export class AudioEngine {
         // Preloading samples and backing track in parallel
         this.samplesLoadingPromise = this.preloadSamples();
         this.backingTrackCanPlayThroughPromise = this.setUpBackingTrack();
+
+        // Debug/seek offset (for syncing timing when seeking via setDebugTime)
+        this.seekOffset = 0;
     }
 
     /**

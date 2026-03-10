@@ -5,6 +5,7 @@
  */
 
 import { PREFERENCE_DEFAULTS } from "/src/constants.js";
+import { debounce } from "/src/utils.js";
 
 export class PreferencesManager {
     constructor(storageBackend) {
@@ -18,7 +19,10 @@ export class PreferencesManager {
 
         this.storageBackend = storageBackend;
         this.preferences = this.load();
-        this.persistTimerId = null;
+
+        this.debounceSave = debounce(() => {
+            this.storageBackend.save(this.preferences);
+        }, 500); // Shorter 500ms debounce for LocalStorage writes
     }
 
     /**
@@ -67,15 +71,23 @@ export class PreferencesManager {
         if (validatedValue === undefined) return undefined;
         this.preferences[key] = validatedValue;
 
-        // Debounce saving by 500ms to avoid excessive writes
-        if (this.persistTimerId) clearTimeout(this.persistTimerId);
-
-        this.persistTimerId = setTimeout(() => {
-            this.storageBackend.save(this.preferences);
-            this.persistTimerId = null;
-        }, 500);
+        this.debounceSave();
 
         return validatedValue;
+    }
+
+    /**
+     * Validates and sets multiple preferences from an input object, then persists to storage with debouncing.
+     * @param {object} newPreferences 
+     * @returns 
+     */
+    setAll(newPreferences) {
+        const sanitizedData = this.sanitizeObject(newPreferences, this.schema);
+        if (sanitizedData) {
+            this.preferences = { ...PREFERENCE_DEFAULTS, ...sanitizedData };
+            this.debounceSave();
+            return this.getAll();
+        }
     }
 
     /**
