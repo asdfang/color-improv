@@ -13,7 +13,12 @@ router.post('/register', async (req, res) => {
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-        return res.status(400).json({ error: 'Email already registered' });
+        return res.status(409).json({
+            error: {
+                code: 'EMAIL_TAKEN',
+                message: 'Email already registered',
+            }
+        });
     }
 
     const passwordHash = await hashPassword(password);
@@ -37,12 +42,22 @@ router.post('/login', async (req, res) => {
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-        return res.status(401).json({ error: 'Invalid email or password' });
+        return res.status(401).json({
+            error: {
+                code: 'INVALID_CREDENTIALS',
+                message: 'Invalid email or password',
+            }
+        });
     }
 
     const isValidPassword = await comparePassword(password, user.passwordHash);
     if (!isValidPassword) {
-        return res.status(401).json({ error: 'Invalid email or password' });
+        return res.status(401).json({
+            error: {
+                code: 'INVALID_CREDENTIALS',
+                message: 'Invalid email or password',
+            }
+        });
     }
 
     sendAuthCookie(res, user.id);
