@@ -7,12 +7,16 @@ import { KeyboardHandler } from '/src/input/KeyboardHandler.js';
 import { PlaybackControls } from '/src/ui/PlaybackControls.js';
 import { VolumeControls } from '/src/ui/VolumeControls.js';
 import { DifficultyControls } from '/src/ui/DifficultyControls.js';
+import { AuthControls } from '/src/ui/AuthControls.js';
 import { LocalStorageBackend } from '/src/api/LocalStorageBackend.js';
+import { AuthService } from '/src/api/AuthService.js';
+import { ServerBackend } from '/src/api/ServerBackend.js';
 import { PreferencesManager } from '/src/preferences/PreferencesManager.js';
 import { keyToGridCoordinates } from '/src/visual/grid-data.js';
-import { InstructionsDialog } from '/src/ui/InstructionsDialog.js';
+import { SimpleDialogs } from '/src/ui/SimpleDialogs.js';
 import { DownloadModal } from '/src/ui/DownloadModal.js';
 import { VISUAL_LEAD_TIME } from '/src/constants.js';
+import { debounce } from '/src/utils.js';
 
 // TODO: trackKey as a configurable preference
 
@@ -28,62 +32,91 @@ class ColorImprovApp {
         this.state = 'STOPPED';
         this.recording = false;
         
-        // Initialize components
-        this.localStorageBackend = new LocalStorageBackend();
-        this.preferencesManager = new PreferencesManager(this.localStorageBackend);
-
-        // Exception: AudioEngine needs initial volume and muted states immediately
-        const prefs = this.preferencesManager.getAll();
-        this.audioEngine = new AudioEngine(
-            prefs.backingTrackVolume, prefs.samplesVolume,
-            prefs.backingTrackMuted, prefs.samplesMuted
-        );
+        // Initialize core components
+        this.audioEngine = new AudioEngine();
         this.timingEngine = new TimingEngine(this.audioEngine, this.backingTrack);
         this.recordingEngine = new RecordingEngine(this.audioEngine.audioContext);
         this.noteLogger = new NoteLogger(this.timingEngine);
-
         const canvas = document.getElementById('mainCanvas');
         if (!(canvas instanceof HTMLCanvasElement)) {
             throw new Error('Main canvas element not found');
         }
         this.renderer = new Renderer(canvas);
         
+        // UI components
         this.keyboardHandler = new KeyboardHandler(this.audioEngine);
         this.playbackControls = new PlaybackControls();
         this.volumeControls = new VolumeControls();
         this.difficultyControls = new DifficultyControls();
-
-        // DOM manipulation helpers
-        this.instructionsDialog = new InstructionsDialog();
+        this.authControls = new AuthControls();
+        this.simpleDialogs = new SimpleDialogs(); // Instructions and conflict dialogs
         this.downloadModal = new DownloadModal();
-
         this.errorElement = /** @type {HTMLElement} */ (document.getElementById('error-message'));
         this.animationFrameId = null;
+
+        // Preference storage and auth
+        this.currentUser = null;
+        this.authService = new AuthService();
+        this.localStorageBackend = new LocalStorageBackend(); // Use localStorage as primary persistence layer
+        this.preferencesManager = new PreferencesManager(this.localStorageBackend);
+        this.serverBackend = new ServerBackend(); // Sync to server when user is authenticated
+
+        // Debounced server sync
+        this.debouncedServerSave = debounce(async () => {
+            if (!this.currentUser) return;
+            const preferences = this.preferencesManager.getAll();
+            try {
+                await this.serverBackend.save(preferences);
+            } catch (error) {
+                console.warn('Failed to sync preferences to server.', error);
+            }
+        }, 2000);
+
+        // Listen for preference changes to trigger server sync
+        this.preferencesManager.onChange = () => {
+            this.debouncedServerSave();
+        };
     }
-    
+
     /**
      * Initialize the main application: event listeners, renderer.
      * Note: AudioEngine initialization must be triggered by user interaction; done in play(), not here.
      */
-    init() {
+    async init() {
         try {
             console.log('Initializing Color Improv...');
 
+            // Fire check if user is authenticated
+            const authCheck = this.authService.getCurrentUser();
+
             this.setUpEventListeners();
+
+            // Optimistic initialization of preferences from LocalStorage
+            const preferences = this.preferencesManager.getAll();
+            this.applyPreferences(preferences);
 
             // Connect RecordingEngine's node to Web Audio graph
             this.audioEngine.connectMainToExternalNode(this.recordingEngine.getMediaStreamDestinationNode());
 
-            // Initial volume, mute, difficulty states from preferences to set visuals
-            const prefs = this.preferencesManager.getAll();
-            this.volumeControls.setVolume('backingTrack', prefs.backingTrackVolume);
-            this.volumeControls.setVolume('samples', prefs.samplesVolume);
-            this.volumeControls.setMuted('backingTrack', prefs.backingTrackMuted);
-            this.volumeControls.setMuted('samples', prefs.samplesMuted);
-            this.difficultyControls.setDifficulty(prefs.difficulty);
-
             // Render initial stopped grid before playback starts
             this.renderer.render();
+
+            try {
+                // If user authenticated, update preferences from server (without conflict dialog)
+                this.currentUser = await authCheck;
+                if (this.currentUser) {
+                    this.authControls.setLoggedIn(true);
+                    const serverPreferences = await this.serverBackend.load();
+                    this.applyPreferences(serverPreferences);
+                    this.preferencesManager.setAll(serverPreferences);
+
+                    console.log('User authenticated on initialization. Preferences automatically loaded from server.')
+                } else {
+                    console.log('No authenticated user on initialization. Using local preferences.');
+                }
+            } catch (error) {
+                console.warn('Could not check auth or load server preferences. Continuing to initialize with local preferences.', error);
+            }
 
             console.log('Color Improv initialized successfully.');
         } catch (error) {
@@ -97,7 +130,7 @@ class ColorImprovApp {
      */
     setUpEventListeners() {
         // Instructions dialog events
-        this.instructionsDialog.setupEventListeners();
+        this.simpleDialogs.setupInstructionsDialog();
 
         // Control button events
         this.playbackControls.enable({
@@ -123,6 +156,13 @@ class ColorImprovApp {
         // Backing track end callback
         this.audioEngine.onEnded = () => this.stop();
 
+        // Authentication control events
+        this.authControls.enable({
+            onRegister: async (email, name, password) => await this.register(email, name, password),
+            onLogin: async (email, password) => await this.login(email, password),
+            onLogout: async () => await this.logout(),
+        });
+
         // Note events from KeyboardHandler
         document.addEventListener('notestart', /** @param {CustomEvent} e */ (e) => {
             const { row, col } = keyToGridCoordinates(e.detail.uniqueID);
@@ -142,12 +182,40 @@ class ColorImprovApp {
     }
 
     /**
-     * Update difficulty preference based on user selection. Render loop checks difficulty when updating visuals.
+     * Apply preferences to the application, updating components.
+     * Does not update preferences themselves: assumes they are up-to-date in PreferencesManager.
+     * @param {object} preferences 
+     */
+    applyPreferences(preferences) {
+        if (preferences.backingTrackVolume !== undefined) {
+            this.setVolume('backingTrack', preferences.backingTrackVolume);
+            this.audioEngine.setBackingTrackVolume(preferences.backingTrackVolume);
+        }
+        if (preferences.samplesVolume !== undefined) {
+            this.setVolume('samples', preferences.samplesVolume);
+            this.audioEngine.setSamplesVolume(preferences.samplesVolume);
+        }
+        if (preferences.backingTrackMuted !== undefined) {
+            this.volumeControls.setMuted('backingTrack', preferences.backingTrackMuted);
+            this.audioEngine.setBackingTrackMuted(preferences.backingTrackMuted);
+        }
+        if (preferences.samplesMuted !== undefined) {
+            this.volumeControls.setMuted('samples', preferences.samplesMuted);
+            this.audioEngine.setSamplesMuted(preferences.samplesMuted);
+        }
+        if (preferences.difficulty !== undefined) {
+            this.setDifficulty(preferences.difficulty);
+            // Render loop checks difficulty, no need to update other components here
+        }
+    }
+
+    /**
+     * Update difficulty preference. Render loop checks difficulty when updating visuals.
      * @param {string} newDifficulty 'easy' | 'medium' | 'hard'
      */
     setDifficulty(newDifficulty) {
-        // Only need to update PreferencesManager; HTML select already updated from user interaction
         this.preferencesManager.set('difficulty', newDifficulty);
+        this.difficultyControls.setDifficulty(newDifficulty);
     }
 
     /**
@@ -156,12 +224,13 @@ class ColorImprovApp {
      * @param {number} volume from 0 to 1
      */
     setVolume(source, volume) {
-        // Visual state automatic with sliders
         if (source === 'backingTrack') {
             this.preferencesManager.set('backingTrackVolume', volume);
+            this.volumeControls.setVolume('backingTrack', volume);
             return this.audioEngine.setBackingTrackVolume(volume);
         } else if (source === 'samples') {
             this.preferencesManager.set('samplesVolume', volume);
+            this.volumeControls.setVolume('samples', volume);
             return this.audioEngine.setSamplesVolume(volume);
         } else console.warn(`Unknown source '${source}' for volume change.`);
     }
@@ -398,6 +467,59 @@ class ColorImprovApp {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
+    }
+
+    async register(email, name, password) {
+        console.log('Registering user...'); // Debug log
+        this.currentUser = await this.authService.register(email, name, password)
+
+        try {
+            // Keep current preferences, save to server
+            const preferences = this.preferencesManager.getAll();
+            await this.serverBackend.save(preferences);
+        } catch (error) {
+            console.warn('Failed to save local preferences to server after registration.', error);
+        }
+    }
+
+    async login(email, password) {
+        console.log('Logging in user...'); // Debug log
+        this.currentUser = await this.authService.login(email, password);
+        this.authControls.setLoggedIn(true);
+
+        // Load preferences from server; if different, ask user if they want to overwrite local preferences or keep them
+        const serverPreferences = await this.serverBackend.load();
+        const localPreferences = this.preferencesManager.getAll();
+
+        if (Object.keys(serverPreferences).every(key => serverPreferences[key] === localPreferences[key])) {
+            console.log('Server preferences match local preferences. No action needed.');
+            return;
+        } else {
+            this.simpleDialogs.showConflictDialog({
+                onLocalWins: async () => {
+                    try {
+                        await this.serverBackend.save(localPreferences);
+                        console.log('User chose to keep local preferences. Saved to server.');
+                    } catch (error) {
+                        console.warn('Failed to save local preferences to server after login.', error);
+                    }
+                },
+                onServerWins: () => {
+                    // User chose to use server preferences: apply them and update local preferences
+                    this.applyPreferences(serverPreferences);
+                    this.preferencesManager.setAll(serverPreferences);
+                    console.log('User chose to use server preferences. Applied and saved locally.');
+                }
+            });
+        }
+    }
+
+    async logout() {
+        console.log('Logging out user...'); // Debug log
+        this.currentUser = null;
+        await this.authService.logout();
+        this.authControls.setLoggedIn(false);
+        // Keep current preferences
     }
 
     /**

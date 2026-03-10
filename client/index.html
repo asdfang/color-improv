@@ -151,6 +151,18 @@
             <button id="close-download-modal-btn" class="close-btn"><i class="fas fa-times"></i> Close</button>
         </div>
     </dialog>
+    <dialog id="conflict-dialog" aria-modal="true" aria-labelledby="conflict-dialog-title">
+        <div class="modal-header">
+            <h2 id="conflict-dialog-title">Settings Conflict!</h2>
+        </div>
+        <div class="modal-content sync-content">
+            <p>Your saved account settings differ with the current settings. Which would you like to use?</p>
+        </div>
+        <div class="modal-footer conflict-footer">
+            <button id="conflict-local-btn" class="conflict-btn">Keep Current Settings</button>
+            <button id="conflict-server-btn" class="conflict-btn">Load Account Settings</button>
+        </div>
+    </dialog>
     <dialog id="confirm-close-modal" aria-modal="true" aria-labelledby="confirm-close-modal-title">
         <div class="modal-header">
             <h2 id="confirm-close-modal-title">Unsaved Files</h2>

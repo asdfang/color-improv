@@ -381,9 +381,32 @@ dialog::backdrop {
     line-height: 1.6;
 }
 
+/* CONFLICT DIALOG */
+#conflict-dialog {
+    max-width: 400px;
+}
+
+#conflict-dialog .modal-footer {
+    padding: 1 rem;
+    justify-content: center;
+}
+
 /* AUTH DIALOG */
 #auth-dialog {
     max-width: 400px;
+}
+
+.auth-feedback {
+    margin: 0 0 1rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid #c62828;
+    border-radius: 6px;
+    background: rgba(198, 40, 40, 0.12);
+    color: #ff8a80;
+}
+
+.auth-feedback p {
+    margin: 0;
 }
 
 .form-group {
