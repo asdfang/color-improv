@@ -9,11 +9,14 @@ export class ServerBackend {
         }
 
         const data = await response.json();
+        data.preferences.difficulty = data.preferences.difficulty.toLowerCase();
+        console.log('Preferences loaded from server:', data.preferences); // Debug log
 
         return data.preferences;
     }
 
     async save(preferences) {
+        preferences.difficulty = preferences.difficulty.toUpperCase();
         const response = await fetch('/api/preferences', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -26,6 +29,8 @@ export class ServerBackend {
         }
 
         const data = await response.json();
+        data.preferences.difficulty = data.preferences.difficulty.toLowerCase();
+        console.log('Preferences saved to server:', data.preferences); // Debug log
 
         return data.preferences;
     }
