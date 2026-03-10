@@ -63,6 +63,11 @@
                 </div>
             </div>
             <div id="instructions-and-settings">
+                <div id="auth-controls" aria-label="User authentication controls">
+                    <button id="register-btn" class="auth-btn">Register</button>
+                    <button id="login-btn" class="auth-btn">Login</button>
+                    <button id="logout-btn" class="auth-btn">Logout</button>
+                </div>
                 <div id="instructions" tabindex="0" aria-label="Show instructions">Click for instructions and help.</div>
                 <label for="difficulty-select">Difficulty: </label>
                 <select id="difficulty-select" aria-label="Select difficulty level...">
@@ -75,6 +80,33 @@
         </div>
         <canvas id="mainCanvas" aria-label="Interactive musical grid"></canvas>
     </div>
+    <dialog id="auth-dialog" aria-modal="true" aria-labelledby="auth-dialog-title">
+        <div class="modal-header">
+            <h2 id="auth-dialog-title">Register</h2>
+        </div>
+        <div class="modal-content">
+            <form id="auth-form">
+                <div class="form-group">
+                    <label for="email-input">Email:</label>
+                    <input type="email" id="email-input" name="email" required>
+                </div>
+                <div id="auth-feedback" class="auth-feedback" role="alert" aria-live="polite" hidden>
+                    <p id="auth-feedback-message"></p>
+                </div>
+                <div class="form-group">
+                    <label for="password-input">Password:</label>
+                    <input type="password" id="password-input" name="password" minlength="6" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" id="auth-submit-btn" class="auth-submit-btn">Register</button>
+                    <button type="button" id="auth-cancel-btn" class="cancel-btn">Cancel</button>
+                </div>
+                <div class="switch-auth">
+                    <span id="switch-auth-label">Already have an account?</span><a href="#" id="switch-auth-link">Log in.</a>
+                </div>
+            </form>
+        </div>
+    </dialog>
     <dialog id="instructions-dialog" aria-labelledby="instructions-dialog-title">
         <div class="modal-header">
             <h2 id="instructions-dialog-title">Instructions</h2>
