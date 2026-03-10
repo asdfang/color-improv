@@ -20,9 +20,11 @@ export class PreferencesManager {
         this.storageBackend = storageBackend;
         this.preferences = this.load();
 
-        this.debounceSave = debounce(() => {
+        this.debouncedSave = debounce(() => {
             this.storageBackend.save(this.preferences);
         }, 500); // Shorter 500ms debounce for LocalStorage writes
+
+        this.onChange = null;
     }
 
     /**
@@ -71,7 +73,8 @@ export class PreferencesManager {
         if (validatedValue === undefined) return undefined;
         this.preferences[key] = validatedValue;
 
-        this.debounceSave();
+        this.debouncedSave();
+        if (this.onChange) this.onChange();
 
         return validatedValue;
     }
@@ -85,7 +88,9 @@ export class PreferencesManager {
         const sanitizedData = this.sanitizeObject(newPreferences, this.schema);
         if (sanitizedData) {
             this.preferences = { ...PREFERENCE_DEFAULTS, ...sanitizedData };
-            this.debounceSave();
+            this.debouncedSave();
+            if (this.onChange) this.onChange();
+
             return this.getAll();
         }
     }
@@ -96,7 +101,6 @@ export class PreferencesManager {
      * @returns {object} sanitized object, or undefined if nothing was valid
      */
     sanitizeObject(input, schema) {
-        console.log('Sanitizing input:', input);
         if (typeof input !== 'object' || input === null) return undefined;
 
         const result = {};
@@ -110,7 +114,9 @@ export class PreferencesManager {
             }
         }
 
-        return Object.keys(result).length ? result : undefined;
+        const sanitized = Object.keys(result).length ? result : undefined;
+
+        return sanitized;
     }
 
     /**
