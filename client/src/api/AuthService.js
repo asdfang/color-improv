@@ -1,4 +1,19 @@
+class AuthApiError extends Error {
+    constructor(message, code, status) {
+        super(message);
+        this.name = 'AuthApiError';
+        this.code = code;
+        this.status = status;
+    }
+}
+
 export class AuthService {
+    buildAuthError(data, fallbackMessage, status) {
+        const code = data?.error?.code || data?.code;
+        const message = data?.error?.message || data?.error || data?.message || fallbackMessage;
+        return new AuthApiError(message, code, status);
+    }
+
     async register(email, name, password) {
         const response = await fetch('/api/auth/register', {
             method: 'POST',
@@ -8,7 +23,7 @@ export class AuthService {
 
         if (!response.ok) {
             const data = await response.json();
-            throw new Error(data.error || 'Registration failed');
+            throw this.buildAuthError(data, 'Registration failed', response.status);
         }
 
         const data = await response.json();
@@ -25,7 +40,7 @@ export class AuthService {
 
         if (!response.ok) {
             const data = await response.json();
-            throw new Error(data.error || 'Login failed');
+            throw this.buildAuthError(data, 'Login failed', response.status);
         }
 
         const data = await response.json();
@@ -40,7 +55,7 @@ export class AuthService {
     }
 
     async getCurrentUser() {
-        const response = await fetch('/api/auth/user', {
+        const response = await fetch('/api/auth/me', {
             credentials: 'include',
         });
 
