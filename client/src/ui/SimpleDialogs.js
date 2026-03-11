@@ -15,12 +15,16 @@ export class SimpleDialogs {
 
     /**
      * Set up instructions dialog with open/close listeners.
+     * @param {object} callbacks - expects onDialogOpen()
      */
-    setupInstructionsDialog() {
+    setupInstructionsDialog(callbacks) {
         if (!this.instructionsBtn || !this.instructionsDialog || !this.closeBtn) return;
         if (!this.conflictDialog || !this.localWinsBtn || !this.serverWinsBtn) return;
 
-        this.instructionsBtn.addEventListener('click', () => this.instructionsDialog.showModal());
+        this.instructionsBtn.addEventListener('click', () => {
+            callbacks.onDialogOpen();
+            this.instructionsDialog.showModal();
+        });
         this.closeBtn.addEventListener('click', () => this.instructionsDialog.close());
 
         // Close when clicking the backdrop

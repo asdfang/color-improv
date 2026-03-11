@@ -35,6 +35,7 @@ export class KeyboardHandler {
     handleKeyDown(event) {
         if (event.repeat) return; // Ignore key auto-repeats
         if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return; // Let browser shortcuts through
+        if (document.querySelector('dialog[open]')) return; // Don't capture input when a dialog is open  
         
         const mapping = KEY_MAPPINGS[event.code];
         if (!mapping) return; // Not a mapped key
@@ -53,7 +54,7 @@ export class KeyboardHandler {
 
     handleKeyUp(event) {
         const mapping = KEY_MAPPINGS[event.code];
-        if (!mapping) return; // Not a mapped key
+        if (!mapping || document.querySelector('dialog[open]')) return; // Not a mapped key or dialog is open
         const { midiNumber } = mapping;
 
         event.preventDefault(); // Prevent default browser actions like scrolling

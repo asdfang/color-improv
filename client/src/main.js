@@ -129,8 +129,10 @@ class ColorImprovApp {
      * Set up event listeners for UI controls and input handling.
      */
     setUpEventListeners() {
-        // Instructions dialog events
-        this.simpleDialogs.setupInstructionsDialog();
+        // Instructions/conflict dialog events
+        this.simpleDialogs.setupInstructionsDialog({
+            onDialogOpen: () => this.keyboardHandler.releaseAllKeys(),
+        });
 
         // Control button events
         this.playbackControls.enable({
@@ -161,6 +163,7 @@ class ColorImprovApp {
             onRegister: async (email, name, password) => await this.register(email, name, password),
             onLogin: async (email, password) => await this.login(email, password),
             onLogout: async () => await this.logout(),
+            onDialogOpen: () => this.keyboardHandler.releaseAllKeys(),
         });
 
         // Note events from KeyboardHandler

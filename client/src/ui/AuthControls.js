@@ -27,16 +27,22 @@ export class AuthControls {
         this.switchAuthLink = /** @type {HTMLAnchorElement} */ document.getElementById('switch-auth-link');
     }
 
+    /**
+     * 
+     * @param {object} callbacks - expects onRegister(email, name, password), onLogin(email, password), onLogout(), onDialogOpen()
+     */
     enable(callbacks) {
         this.registerButton.addEventListener('click', () => {
             this.setDialogMode('register');
             this.clearFeedback();
+            callbacks.onDialogOpen();
             this.authDialog.showModal();
         });
 
         this.loginButton.addEventListener('click', () => {
             this.setDialogMode('login');
             this.clearFeedback();
+            callbacks.onDialogOpen();
             this.authDialog.showModal();
         });
 

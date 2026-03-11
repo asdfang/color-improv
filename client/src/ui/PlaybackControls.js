@@ -38,6 +38,7 @@ export class PlaybackControls {
 
         // Keyboard shortcut: Spacebar to toggle play/pause (disabled when recording)
         document.addEventListener('keydown', (e) => {
+            if (document.querySelector('dialog[open]')) return; // Don't capture input when a dialog is open
             if (e.code !== 'Space') return;
             if (e.repeat) return;
             if (this.recording) return;
@@ -53,6 +54,7 @@ export class PlaybackControls {
 
         // Keyboard shortcut: Shift+Esc to stop (hard reset)
         document.addEventListener('keydown', (e) => {
+            if (document.querySelector('dialog[open]')) return; // Don't capture input when a dialog is open
             if (e.code !== 'Escape' || !e.shiftKey) return;
             if (e.repeat) return;
             const target = e.target;
@@ -65,6 +67,7 @@ export class PlaybackControls {
 
         // Keyboard shortcut: Shift+R to start recording (from stopped state only)
         document.addEventListener('keydown', (e) => {
+            if (document.querySelector('dialog[open]')) return; // Don't capture input when a dialog is open
             if (e.code !== 'KeyR' || !e.shiftKey) return;
             if (e.repeat) return;
             const target = e.target;
