@@ -1,11 +1,11 @@
 export class VolumeControls {
     constructor() {
-        this.backingTrackVolumeSlider = /** @type {HTMLInputElement} */ document.getElementById('backing-track-volume');
-        this.backingTrackMuteButton = /** @type {HTMLButtonElement} */ document.getElementById('backing-track-mute-btn');
-        this.backingTrackResetButton = /** @type {HTMLButtonElement} */ document.getElementById('backing-track-reset-btn');
-        this.samplesVolumeSlider = /** @type {HTMLInputElement} */ document.getElementById('samples-volume');
-        this.samplesMuteButton = /** @type {HTMLButtonElement} */ document.getElementById('samples-mute-btn');
-        this.samplesResetButton = /** @type {HTMLButtonElement} */ document.getElementById('samples-reset-btn');
+        this.backingTrackVolumeSlider = /** @type {HTMLInputElement} */ (document.getElementById('backing-track-volume'));
+        this.backingTrackMuteButton = /** @type {HTMLButtonElement} */ (document.getElementById('backing-track-mute-btn'));
+        this.backingTrackResetButton = /** @type {HTMLButtonElement} */ (document.getElementById('backing-track-reset-btn'));
+        this.samplesVolumeSlider = /** @type {HTMLInputElement} */ (document.getElementById('samples-volume'));
+        this.samplesMuteButton = /** @type {HTMLButtonElement} */ (document.getElementById('samples-mute-btn'));
+        this.samplesResetButton = /** @type {HTMLButtonElement} */ (document.getElementById('samples-reset-btn'));
     }
 
     /**
@@ -16,12 +16,12 @@ export class VolumeControls {
      * onMuteToggle should return the new muted state (boolean) after toggling
      */
     enable(callbacks) {
-        this.backingTrackVolumeSlider.addEventListener('input', (e) => {
-            callbacks.onVolumeChange('backingTrack', e.target.valueAsNumber);
+        this.backingTrackVolumeSlider.addEventListener('input', () => {
+            callbacks.onVolumeChange('backingTrack', this.backingTrackVolumeSlider.valueAsNumber);
         });
 
-        this.samplesVolumeSlider.addEventListener('input', (e) => {
-            callbacks.onVolumeChange('samples', e.target.valueAsNumber);
+        this.samplesVolumeSlider.addEventListener('input', () => {
+            callbacks.onVolumeChange('samples', this.samplesVolumeSlider.valueAsNumber);
         });
 
         this.backingTrackMuteButton.addEventListener('click', () => {

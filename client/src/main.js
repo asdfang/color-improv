@@ -550,4 +550,4 @@ const app = new ColorImprovApp();
 app.init();
 
 // Expose app to window for debugging in console
-window.app = app;
+// window.app = app;

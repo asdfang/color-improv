@@ -1,30 +1,30 @@
 export class AuthControls {
     constructor() {
         // Outside dialog
-        this.authContainer = /** @type {HTMLDivElement} */ document.getElementById('auth-controls');
-        this.registerButton = /** @type {HTMLButtonElement} */ document.getElementById('register-btn');
-        this.loginButton = /** @type {HTMLButtonElement} */ document.getElementById('login-btn');
-        this.logoutButton = /** @type {HTMLButtonElement} */ document.getElementById('logout-btn');
+        this.authContainer = /** @type {HTMLDivElement} */ (document.getElementById('auth-controls'));
+        this.registerButton = /** @type {HTMLButtonElement} */ (document.getElementById('register-btn'));
+        this.loginButton = /** @type {HTMLButtonElement} */ (document.getElementById('login-btn'));
+        this.logoutButton = /** @type {HTMLButtonElement} */ (document.getElementById('logout-btn'));
         this.isLoggedIn = false;
 
         // Inside dialog
-        this.authDialog = /** @type {HTMLDialogElement} */ document.getElementById('auth-dialog');
-        this.authForm = /** @type {HTMLFormElement} */ document.getElementById('auth-form');
-        this.dialogTitle = /** @type {HTMLHeadingElement} */ document.getElementById('auth-dialog-title');
-        this.nameGroup = /** @type {HTMLDivElement} */ document.getElementById('name-form-group');
+        this.authDialog = /** @type {HTMLDialogElement} */ (document.getElementById('auth-dialog'));
+        this.authForm = /** @type {HTMLFormElement} */ (document.getElementById('auth-form'));
+        this.dialogTitle = /** @type {HTMLHeadingElement} */ (document.getElementById('auth-dialog-title'));
+        this.nameGroup = /** @type {HTMLDivElement} */ (document.getElementById('name-form-group'));
         this.dialogState = null; // 'register' or 'login'
 
-        this.emailInput = /** @type {HTMLInputElement} */ document.getElementById('email-input');
-        this.nameInput = /** @type {HTMLInputElement} */ document.getElementById('name-input');
-        this.passwordInput = /** @type {HTMLInputElement} */ document.getElementById('password-input');
+        this.emailInput = /** @type {HTMLInputElement} */ (document.getElementById('email-input'));
+        this.nameInput = /** @type {HTMLInputElement} */ (document.getElementById('name-input'));
+        this.passwordInput = /** @type {HTMLInputElement} */ (document.getElementById('password-input'));
 
-        this.authSubmitButton = /** @type {HTMLButtonElement} */ document.getElementById('auth-submit-btn');
-        this.authCancelButton = /** @type {HTMLButtonElement} */ document.getElementById('auth-cancel-btn');
-        this.authFeedback = /** @type {HTMLDivElement} */ document.getElementById('auth-feedback');
-        this.authFeedbackMessage = /** @type {HTMLParagraphElement} */ document.getElementById('auth-feedback-message');
+        this.authSubmitButton = /** @type {HTMLButtonElement} */ (document.getElementById('auth-submit-btn'));
+        this.authCancelButton = /** @type {HTMLButtonElement} */ (document.getElementById('auth-cancel-btn'));
+        this.authFeedback = /** @type {HTMLDivElement} */ (document.getElementById('auth-feedback'));
+        this.authFeedbackMessage = /** @type {HTMLParagraphElement} */ (document.getElementById('auth-feedback-message'));
 
-        this.switchAuthLabel = /** @type {HTMLSpanElement} */ document.getElementById('switch-auth-label');
-        this.switchAuthLink = /** @type {HTMLAnchorElement} */ document.getElementById('switch-auth-link');
+        this.switchAuthLabel = /** @type {HTMLSpanElement} */ (document.getElementById('switch-auth-label'));
+        this.switchAuthLink = /** @type {HTMLAnchorElement} */ (document.getElementById('switch-auth-link'));
     }
 
     /**

@@ -1,11 +1,11 @@
 export class PlaybackControls {
     constructor() {
-        this.playBtn = /** @type {HTMLButtonElement} */ document.getElementById('play-btn');
-        this.pauseBtn = /** @type {HTMLButtonElement} */ document.getElementById('pause-btn');
-        this.stopBtn = /** @type {HTMLButtonElement} */ document.getElementById('stop-btn');
-        this.recordBtn = /** @type {HTMLButtonElement} */ document.getElementById('record-btn');
-        this.recordIcon = /** @type {HTMLSpanElement} */ document.querySelector('#record-btn i');
-        this.recordBtnLabel = /** @type {HTMLSpanElement} */ document.getElementById('record-btn-label');
+        this.playBtn = /** @type {HTMLButtonElement} */ (document.getElementById('play-btn'));
+        this.pauseBtn = /** @type {HTMLButtonElement} */ (document.getElementById('pause-btn'));
+        this.stopBtn = /** @type {HTMLButtonElement} */ (document.getElementById('stop-btn'));
+        this.recordBtn = /** @type {HTMLButtonElement} */ (document.getElementById('record-btn'));
+        this.recordIcon = /** @type {HTMLSpanElement} */ (document.querySelector('#record-btn i'));
+        this.recordBtnLabel = /** @type {HTMLSpanElement} */ (document.getElementById('record-btn-label'));
 
         this.state = 'stopped'; // 'playing', 'paused', 'stopped'
         this.recording = false;

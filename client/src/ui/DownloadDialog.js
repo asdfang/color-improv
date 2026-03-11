@@ -10,8 +10,8 @@ export class DownloadDialog {
         this.downloadLogBtn = /** @type {HTMLButtonElement} */ (document.getElementById('download-log-btn'));
         this.closeBtn = /** @type {HTMLButtonElement} */ (document.getElementById('close-download-dialog-btn'));
         this.unsavedList = /** @type {HTMLDivElement} */ (document.getElementById('unsaved-list'));
-        this.confirmYesBtn = document.getElementById('confirm-close-yes-btn');
-        this.confirmCancelBtn = document.getElementById('confirm-close-cancel-btn');
+        this.confirmYesBtn = /** @type {HTMLButtonElement} */ (document.getElementById('confirm-close-yes-btn'));
+        this.confirmCancelBtn = /** @type {HTMLButtonElement} */ (document.getElementById('confirm-close-cancel-btn'));
     }
 
     /**
