@@ -1,29 +1,29 @@
 import mime from 'mime-types';
 
-export class DownloadModal {
+export class DownloadDialog {
     constructor() {
-        this.modal = /** @type {HTMLDialogElement} */ (document.getElementById('download-modal'));
-        this.confirmModal = /** @type {HTMLDialogElement} */ (document.getElementById('confirm-close-modal'));
+        this.dialog = /** @type {HTMLDialogElement} */ (document.getElementById('download-dialog'));
+        this.confirmDialog = /** @type {HTMLDialogElement} */ (document.getElementById('confirm-close-dialog'));
         this.audioPreview = /** @type {HTMLAudioElement} */ (document.getElementById('recording-preview'));
         this.logPreview = /** @type {HTMLTextAreaElement} */ (document.getElementById('note-log-preview'));
         this.downloadAudioBtn = /** @type {HTMLButtonElement} */ (document.getElementById('download-audio-btn'));
         this.downloadLogBtn = /** @type {HTMLButtonElement} */ (document.getElementById('download-log-btn'));
-        this.closeBtn = /** @type {HTMLButtonElement} */ (document.getElementById('close-download-modal-btn'));
+        this.closeBtn = /** @type {HTMLButtonElement} */ (document.getElementById('close-download-dialog-btn'));
         this.unsavedList = /** @type {HTMLDivElement} */ (document.getElementById('unsaved-list'));
         this.confirmYesBtn = document.getElementById('confirm-close-yes-btn');
         this.confirmCancelBtn = document.getElementById('confirm-close-cancel-btn');
     }
 
     /**
-     * Display modal with audio and log preview and download options.
+     * Display dialog with audio and log preview and download options.
      * TODO: Esc with same unsaved confirmation as close button
      * TODO: Space to click on tab focuses, instead of toggling play/pause
      * @param {*} recordingBlob blob containing the recorded audio data from RecordingEngine
      * @param {*} logObject raw log data from NoteLogger
      */
-    showModal(recordingBlob, logObject) {
-        if (!this.modal || !this.confirmModal) {
-            console.error('DownloadModal: Modal elements not found');
+    showDialog(recordingBlob, logObject) {
+        if (!this.dialog || !this.confirmDialog) {
+            console.error('DownloadDialog: Dialog elements not found');
             return;
         }
 
@@ -89,14 +89,14 @@ export class DownloadModal {
             }
             URL.revokeObjectURL(recordingUrl);
             URL.revokeObjectURL(logUrl);
-            this.modal.close();
+            this.dialog.close();
         };
 
         if (this.closeBtn) {
             this.closeBtn.onclick = () => {
                 // Check if both files have been downloaded
                 if (!audioDownloaded || !logDownloaded) {
-                    // Show confirmation modal
+                    // Show confirmation dialog
                     const unsavedItems = [];
                     if (!audioDownloaded) unsavedItems.push('Audio recording');
                     if (!logDownloaded) unsavedItems.push('Note log');
@@ -106,24 +106,24 @@ export class DownloadModal {
 
                     if (this.confirmYesBtn) {
                         this.confirmYesBtn.onclick = () => {
-                            this.confirmModal.close();
+                            this.confirmDialog.close();
                             cleanupAndClose();
                         };
                     }
 
                     if (this.confirmCancelBtn) {
                         this.confirmCancelBtn.onclick = () => {
-                            this.confirmModal.close();
+                            this.confirmDialog.close();
                         };
                     }
 
-                    this.confirmModal.showModal();
+                    this.confirmDialog.showModal();
                 } else {
                     cleanupAndClose();
                 }
             };
         }
 
-        this.modal.showModal();
+        this.dialog.showModal();
     }
 }

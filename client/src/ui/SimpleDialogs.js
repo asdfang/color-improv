@@ -9,8 +9,6 @@ export class SimpleDialogs {
         this.conflictDialog = /** @type {HTMLDialogElement} */ (document.getElementById('conflict-dialog'));
         this.localWinsBtn = /** @type {HTMLButtonElement} */ (document.getElementById('conflict-local-btn'));
         this.serverWinsBtn = /** @type {HTMLButtonElement} */ (document.getElementById('conflict-server-btn'));
-
-        this.setupInstructionsDialog();
     }
 
     /**

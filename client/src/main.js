@@ -14,7 +14,7 @@ import { ServerBackend } from '/src/api/ServerBackend.js';
 import { PreferencesManager } from '/src/preferences/PreferencesManager.js';
 import { keyToGridCoordinates } from '/src/visual/grid-data.js';
 import { SimpleDialogs } from '/src/ui/SimpleDialogs.js';
-import { DownloadModal } from '/src/ui/DownloadModal.js';
+import { DownloadDialog } from '/src/ui/DownloadDialog.js';
 import { VISUAL_LEAD_TIME } from '/src/constants.js';
 import { debounce } from '/src/utils.js';
 
@@ -50,7 +50,7 @@ class ColorImprovApp {
         this.difficultyControls = new DifficultyControls();
         this.authControls = new AuthControls();
         this.simpleDialogs = new SimpleDialogs(); // Instructions and conflict dialogs
-        this.downloadModal = new DownloadModal();
+        this.downloadDialog = new DownloadDialog();
         this.errorElement = /** @type {HTMLElement} */ (document.getElementById('error-message'));
         this.animationFrameId = null;
 
@@ -401,7 +401,7 @@ class ColorImprovApp {
                 return;
             }
 
-            this.downloadModal.showModal(recordingBlob, log);
+            this.downloadDialog.showDialog(recordingBlob, log);
 
             console.log('Recording finalized and ready for download.');
         }
