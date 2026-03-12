@@ -45,10 +45,9 @@ model Recording {
   userId            String
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   title             String
-  audioFilename     String    // Pointer to the audio file in storage
-  eventLogFilename  String    // Pointer to the event log file in storage
+  baseFilename      String    // Filename without extension; audio and event log differ by extension
   durationSeconds   Float
   fileSizeBytes     Int
-  audioMimeType     String
+  audioMimeType     String    // For audio file extension; event log is always application/json
   createdAt         DateTime  @default(now())
 }
