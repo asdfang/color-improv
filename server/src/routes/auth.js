@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma.js';
 import { hashPassword, comparePassword } from '../utils/password.js';
 import { sendAuthCookie, clearAuthCookie } from '../utils/auth.js';
 import { requireAuth } from '../middleware/auth.js';
-import { validateRegisterBody } from '../utils/validation.js';
+import { validateRegisterBody, validateLoginBody } from '../utils/validation.js';
 
 // Mounted at /api/auth
 const router = express.Router();
@@ -41,7 +41,9 @@ router.post('/register', async (req, res) => {
 
 // POST /api/auth/login - Authenticate user and issue token
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+    const result = validateLoginBody(req.body);
+    if (!result.valid) return res.status(400).json({ error: result.error });
+    const { email, password } = result.data;
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {

@@ -77,6 +77,22 @@ export function validateRegisterBody({ email, name, password } = {}) {
     };
 }
 
+export function validateLoginBody({ email, password } = {}) {
+    const emailResult = validateEmail(email);
+    if (!emailResult.valid) return emailResult;
+
+    const passwordResult = validateRequiredString(password, 'Password', 6);
+    if (!passwordResult.valid) return passwordResult;
+
+    return {
+        valid: true,
+        data: {
+            email: emailResult.data,
+            password: passwordResult.data
+        }
+    };
+}
+
 export function validatePreferencesBody({ difficulty, backingTrackVolume, samplesVolume, backingTrackMuted, samplesMuted } = {}) {
     const difficultyResult = validateDifficulty(difficulty);
     if (!difficultyResult.valid) return difficultyResult;
