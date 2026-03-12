@@ -460,7 +460,7 @@ class ColorImprovApp {
     }
 
     async register(email, name, password) {
-        this.currentUser = await this.authService.register(email, name, password)
+        this.currentUser = await this.authService.register(email, name, password);
 
         try {
             // Keep current preferences, save to server
