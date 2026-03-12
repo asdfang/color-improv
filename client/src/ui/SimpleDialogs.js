@@ -8,6 +8,7 @@ export class SimpleDialogs {
         // Conflict dialog
         this.conflictDialog = /** @type {HTMLDialogElement} */ (document.getElementById('conflict-dialog'));
         this.localWinsBtn = /** @type {HTMLButtonElement} */ (document.getElementById('conflict-local-btn'));
+        this.serverWinsBtn = /** @type {HTMLButtonElement} */ (document.getElementById('conflict-server-btn'));
         this.conflictDialog.addEventListener('cancel', (e) => {
             e.preventDefault(); // User explicitly chooses which wins
         });
