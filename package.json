@@ -6,6 +6,6 @@
   },
   "scripts": {
     "build": "cd client && npm install && npm run build && cd ../server && npm install && npx prisma generate",
-    "start": "cd server && npx prisma migrate deploy && node src/index.js"
+    "start": "cd server && npx prisma migrate deploy && npx tsx src/index.js"
   }
 }
