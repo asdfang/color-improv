@@ -13,7 +13,10 @@ export class AudioEngine {
      */
     constructor() {
         // Initialize AudioContext immediately to decode samples - state is 'suspended' until user interaction
-        const AudioCtx = /** @type {typeof AudioContext} */ (window.AudioContext || window.webkitAudioContext);
+        const AudioCtx = window.AudioContext || /** @type {Window & { webkitAudioContext?: typeof AudioContext }} */ (window).webkitAudioContext;
+        if (!AudioCtx) {
+            throw new Error('Web Audio API is not supported in this browser.');
+        }
         this.audioContext = new AudioCtx();
 
         // Initialize SampleLoader with the AudioContext
@@ -75,7 +78,6 @@ export class AudioEngine {
      */
     async preloadSamples() {
         try {
-            const loadSamplesStartTime = performance.now();
             this.samples = await this.sampleLoader.loadTrumpetSamples(
                 AUDIO_CONFIG.samples, AUDIO_CONFIG.paths.SAMPLES_BASE, AUDIO_CONFIG.format
             );
@@ -96,8 +98,6 @@ export class AudioEngine {
      */
     async setUpBackingTrack() {
         try {
-            const loadBackingTrackStartTime = performance.now();
-
             // Create HTML5 Audio element to hold backing track
             this.backingTrackElement = new Audio(AUDIO_CONFIG.getBackingTrackPath('blues')); // TODO: avoid hardcoding
             this.backingTrackElement.loop = false;
