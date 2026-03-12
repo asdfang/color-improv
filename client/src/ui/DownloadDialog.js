@@ -6,9 +6,7 @@ export class DownloadDialog {
         this.downloadDialog = /** @type {HTMLDialogElement} */ (document.getElementById('download-dialog'));
         this.confirmDialog = /** @type {HTMLDialogElement} */ (document.getElementById('confirm-close-dialog'));
         this.audioPreview = /** @type {HTMLAudioElement} */ (document.getElementById('recording-preview'));
-        this.logPreview = /** @type {HTMLTextAreaElement} */ (document.getElementById('note-log-preview'));
-        this.downloadAudioBtn = /** @type {HTMLButtonElement} */ (document.getElementById('download-audio-btn'));
-        this.downloadLogBtn = /** @type {HTMLButtonElement} */ (document.getElementById('download-log-btn'));
+        this.logPreview = /** @type {HTMLPreElement} */ (document.getElementById('note-log-preview'));
         this.downloadZipBtn = /** @type {HTMLButtonElement} */ (document.getElementById('download-zip-btn'));
         this.downloadBtnLabel = /** @type {HTMLSpanElement} */ (document.getElementById('download-btn-label'));
         this.closeBtn = /** @type {HTMLButtonElement} */ (document.getElementById('close-download-dialog-btn'));
@@ -53,8 +51,16 @@ export class DownloadDialog {
             return;
         }
 
+        const previewLineLimit = 24;
+        const lines = logData.split('\n');
+        const isTruncated = lines.length > previewLineLimit;
+        const previewText = isTruncated
+            ? `${lines.slice(0, previewLineLimit).join('\n')}\n\n… Preview truncated. Download ZIP to view full JSON.`
+            : logData;
+
         this.audioPreview.src = recordingUrl;
-        this.logPreview.textContent = logData;
+        this.logPreview.textContent = previewText;
+        this.logPreview.scrollTop = 0;
     }
 
     /**
@@ -93,11 +99,23 @@ export class DownloadDialog {
             zip.file('note_log.json', logBlob);
             const zipBlob = await zip.generateAsync({ type: 'blob' });
 
+            if (state.zipUrl) {
+                URL.revokeObjectURL(state.zipUrl);
+                state.zipUrl = undefined;
+            }
+
             const link = document.createElement('a');
             state.zipUrl = URL.createObjectURL(zipBlob);
             link.href = state.zipUrl;
             link.download = `color_improv_${Date.now()}.zip`;
             link.click();
+
+            const createdZipUrl = state.zipUrl;
+            window.setTimeout(() => {
+                if (state.zipUrl !== createdZipUrl) return;
+                URL.revokeObjectURL(createdZipUrl);
+                state.zipUrl = undefined;
+            }, 1000);
 
             state.zipDownloaded = true;
             this.setZipButtonState(true);
