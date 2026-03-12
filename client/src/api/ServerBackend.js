@@ -4,13 +4,13 @@ export class ServerBackend {
             credentials: 'include',
         });
 
+        if (response.status === 401) return null; // Not logged in
         if (!response.ok) {
-            return null;
+            throw new Error('Failed to load preferences');
         }
 
         const data = await response.json();
         data.preferences.difficulty = data.preferences.difficulty.toLowerCase();
-        console.log('Preferences loaded from server:', data.preferences); // Debug log
 
         return data.preferences;
     }
@@ -30,7 +30,6 @@ export class ServerBackend {
 
         const data = await response.json();
         data.preferences.difficulty = data.preferences.difficulty.toLowerCase();
-        console.log('Preferences saved to server:', data.preferences); // Debug log
 
         return data.preferences;
     }

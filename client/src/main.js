@@ -84,8 +84,6 @@ class ColorImprovApp {
      */
     async init() {
         try {
-            console.log('Initializing Color Improv...');
-
             // Fire check if user is authenticated
             const authCheck = this.authService.getCurrentUser();
 
@@ -107,12 +105,12 @@ class ColorImprovApp {
                 if (this.currentUser) {
                     this.authControls.setLoggedIn(true);
                     const serverPreferences = await this.serverBackend.load();
+                    if (!serverPreferences) {
+                        console.warn('No preferences found on server during initialization, using local.');
+                        return;
+                    }
                     this.applyPreferences(serverPreferences);
                     this.preferencesManager.setAll(serverPreferences);
-
-                    console.log('User authenticated on initialization. Preferences automatically loaded from server.')
-                } else {
-                    console.log('No authenticated user on initialization. Using local preferences.');
                 }
             } catch (error) {
                 console.warn('Could not check auth or load server preferences. Continuing to initialize with local preferences.', error);
@@ -310,8 +308,6 @@ class ColorImprovApp {
             this.timingEngine.start();
             this.keyboardHandler.enable();
             this.startRenderLoop();
-
-            console.log('Playback started.');
         } catch (error) {
             console.error('Failed to play:', error);
             this.showError('Failed to start playback. Please try again or refresh the page.');
@@ -340,8 +336,6 @@ class ColorImprovApp {
         this.stopRenderLoop();
         this.renderer.clearActiveCells(); // Probably redundant
         this.renderer.render(); // Render paused state
-
-        console.log('Playback paused.');
     }
 
     /**
@@ -358,8 +352,6 @@ class ColorImprovApp {
         this.timingEngine.resume();
         this.keyboardHandler.enable();
         this.startRenderLoop();
-
-        console.log('Playback resumed.');
     }
 
     /**
@@ -391,8 +383,6 @@ class ColorImprovApp {
         this.renderer.setCurrentChord(null);        
         this.renderer.render(); // Render stopped state
 
-        console.log('Playback stopped.');
-
         if (recordingPromise) {
             const recordingBlob = await recordingPromise;
             if (!recordingBlob) {
@@ -402,8 +392,6 @@ class ColorImprovApp {
             }
 
             this.downloadDialog.showDialog(recordingBlob, log);
-
-            console.log('Recording finalized and ready for download.');
         }
     }
 
@@ -417,7 +405,6 @@ class ColorImprovApp {
         this.recordingEngine.start();
         this.noteLogger.start(this.backingTrack, this.preferencesManager.get('difficulty'));
         this.play();
-        console.log('Recording and note logging started.');
     }
 
     /**
@@ -473,7 +460,6 @@ class ColorImprovApp {
     }
 
     async register(email, name, password) {
-        console.log('Registering user...'); // Debug log
         this.currentUser = await this.authService.register(email, name, password)
 
         try {
@@ -486,23 +472,33 @@ class ColorImprovApp {
     }
 
     async login(email, password) {
-        console.log('Logging in user...'); // Debug log
         this.currentUser = await this.authService.login(email, password);
         this.authControls.setLoggedIn(true);
 
-        // Load preferences from server; if different, ask user if they want to overwrite local preferences or keep them
-        const serverPreferences = await this.serverBackend.load();
-        const localPreferences = this.preferencesManager.getAll();
+        // Load preferences from server
+        let serverPreferences;
+        try {
+            serverPreferences = await this.serverBackend.load();
+        } catch (error) {
+            console.warn('Failed to load preferences from server after login, using local.', error);
+            return;
+        }
 
+        if (!serverPreferences) {
+            console.warn('Should have received preferences from server after login but got null, using local.');
+            return;
+        }
+
+        // Compare server preferences with local preferences, prompt user to resolve conflicts if they differ
+        const localPreferences = this.preferencesManager.getAll();
         if (Object.keys(serverPreferences).every(key => serverPreferences[key] === localPreferences[key])) {
-            console.log('Server preferences match local preferences. No action needed.');
+            // No conflicts, no action needed
             return;
         } else {
             this.simpleDialogs.showConflictDialog({
                 onLocalWins: async () => {
                     try {
                         await this.serverBackend.save(localPreferences);
-                        console.log('User chose to keep local preferences. Saved to server.');
                     } catch (error) {
                         console.warn('Failed to save local preferences to server after login.', error);
                     }
@@ -511,14 +507,12 @@ class ColorImprovApp {
                     // User chose to use server preferences: apply them and update local preferences
                     this.applyPreferences(serverPreferences);
                     this.preferencesManager.setAll(serverPreferences);
-                    console.log('User chose to use server preferences. Applied and saved locally.');
                 }
             });
         }
     }
 
     async logout() {
-        console.log('Logging out user...'); // Debug log
         this.currentUser = null;
         await this.authService.logout();
         this.authControls.setLoggedIn(false);
