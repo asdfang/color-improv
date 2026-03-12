@@ -110,7 +110,6 @@ class ColorImprovApp {
                         return;
                     }
                     this.applyPreferences(serverPreferences);
-                    this.preferencesManager.setAll(serverPreferences);
                 }
             } catch (error) {
                 console.warn('Could not check auth or load server preferences. Continuing to initialize with local preferences.', error);
@@ -183,24 +182,24 @@ class ColorImprovApp {
     }
 
     /**
-     * Apply preferences to the application, updating components.
-     * Does not update preferences themselves: assumes they are up-to-date in PreferencesManager.
+     * Apply preferences to the application, updating components and PreferencesManager.
+     * Syncs all preference values to UI controls, audio engine, and local storage.
      * @param {object} preferences 
      */
     applyPreferences(preferences) {
         if (preferences.backingTrackVolume !== undefined) {
             this.setVolume('backingTrack', preferences.backingTrackVolume);
-            this.audioEngine.setBackingTrackVolume(preferences.backingTrackVolume);
         }
         if (preferences.samplesVolume !== undefined) {
             this.setVolume('samples', preferences.samplesVolume);
-            this.audioEngine.setSamplesVolume(preferences.samplesVolume);
         }
         if (preferences.backingTrackMuted !== undefined) {
+            this.preferencesManager.set('backingTrackMuted', preferences.backingTrackMuted);
             this.volumeControls.setMuted('backingTrack', preferences.backingTrackMuted);
             this.audioEngine.setBackingTrackMuted(preferences.backingTrackMuted);
         }
         if (preferences.samplesMuted !== undefined) {
+            this.preferencesManager.set('samplesMuted', preferences.samplesMuted);
             this.volumeControls.setMuted('samples', preferences.samplesMuted);
             this.audioEngine.setSamplesMuted(preferences.samplesMuted);
         }
