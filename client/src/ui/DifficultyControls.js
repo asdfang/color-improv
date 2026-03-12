@@ -12,7 +12,6 @@ export class DifficultyControls {
         this.difficultySelect.addEventListener('change', () => {
             const newDifficulty = this.normalizeDifficulty(this.difficultySelect.value);
             callbacks.onDifficultyChange(newDifficulty);
-            console.log(`Difficulty changed to ${newDifficulty}`);
         });
     }
 

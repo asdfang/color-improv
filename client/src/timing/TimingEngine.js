@@ -34,8 +34,6 @@ export class TimingEngine {
         this.startTime = this.audioEngine.getCurrentTime();
         this.isPlaying = true;
         this.totalPausedDuration = 0;
-
-        console.log(`TimingEngine started at AudioContext time ${this.startTime.toFixed(2)}s`);
     }
 
     /**

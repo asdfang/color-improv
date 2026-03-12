@@ -15,8 +15,6 @@ export class AudioEngine {
         // Initialize AudioContext immediately to decode samples - state is 'suspended' until user interaction
         const AudioCtx = /** @type {typeof AudioContext} */ (window.AudioContext || window.webkitAudioContext);
         this.audioContext = new AudioCtx();
-        console.log(`AudioEngine: AudioContext created. State: ${this.audioContext.state}`);
-        console.log(`AudioEngine: Sample rate: ${this.audioContext.sampleRate}Hz`);    
 
         // Initialize SampleLoader with the AudioContext
         this.sampleLoader = new SampleLoader(this.audioContext);
@@ -77,14 +75,12 @@ export class AudioEngine {
      */
     async preloadSamples() {
         try {
-            console.log('AudioEngine: Preloading samples...');
             const loadSamplesStartTime = performance.now();
             this.samples = await this.sampleLoader.loadTrumpetSamples(
                 AUDIO_CONFIG.samples, AUDIO_CONFIG.paths.SAMPLES_BASE, AUDIO_CONFIG.format
             );
 
             this.samplesLoaded = true;
-            console.log(`AudioEngine: All samples preloaded successfully in ${(performance.now() - loadSamplesStartTime).toFixed(2)}ms.`);
         } catch (error) {
             console.error('Error preloading samples in AudioEngine:', error);
             this.samplesLoadingError = error; // Store error for handling in initialize()
@@ -100,7 +96,6 @@ export class AudioEngine {
      */
     async setUpBackingTrack() {
         try {
-            console.log('AudioEngine: Setting up backing track...');
             const loadBackingTrackStartTime = performance.now();
 
             // Create HTML5 Audio element to hold backing track
@@ -113,7 +108,6 @@ export class AudioEngine {
 
             // Listen for track end to reset app
             this.backingTrackElement.addEventListener('ended', () => {
-                console.log('AudioEngine: Backing track ended');
                 if (this.onEnded) this.onEnded();
             });
 
@@ -122,8 +116,6 @@ export class AudioEngine {
                 // Wait for canplaythrough event to ensure track is fully buffered
                 this.backingTrackElement.addEventListener('canplaythrough', () => {
                     this.backingTrackCanPlayThrough = true;
-
-                    console.log(`AudioEngine: Backing track ready to play through in ${(performance.now() - loadBackingTrackStartTime).toFixed(2)}ms.`);
                     resolve();
                 }, { once: true });
                 this.backingTrackElement.addEventListener('error', reject, { once: true });
@@ -156,15 +148,12 @@ export class AudioEngine {
         // Resume AudioContext if suspended (requires user gesture)
         if (this.audioContext.state === 'suspended') {
             await this.audioContext.resume();
-            console.log(`AudioEngine: AudioContext resumed. State: ${this.audioContext.state}`);
         }
 
         // Check if AudioContext is successfully running
         if (this.audioContext.state !== 'running') {
             throw new Error(`AudioEngine initialization failed, failed to resume AudioContext: ${this.audioContext.state}`);
         }
-    
-        console.log('AudioEngine: Initialization complete, ready for playback.');
     }
 
     /**
@@ -308,7 +297,6 @@ export class AudioEngine {
         }
 
         const playPromise = this.backingTrackElement.play();
-        console.log('AudioEngine: Start time: ', this.audioContext.currentTime);
         return {
             startTime: this.audioContext.currentTime,
             playPromise
@@ -482,7 +470,6 @@ export class AudioEngine {
             this.backingTrackElement.currentTime = seconds;
             // Adjust seekOffset so getCurrentTime() returns the desired position
             this.seekOffset = seconds - this.audioContext.currentTime;
-            console.log(`AudioEngine DEBUG: Seeking to ${seconds}s, seekOffset=${this.seekOffset.toFixed(3)}`);
         }
     }
 
@@ -493,7 +480,5 @@ export class AudioEngine {
             await this.audioContext.close();
             this.audioContext = null;
         }
-
-        console.log('AudioEngine: Disposed and AudioContext closed.');
     }
 }
