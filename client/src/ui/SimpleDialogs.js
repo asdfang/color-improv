@@ -8,7 +8,9 @@ export class SimpleDialogs {
         // Conflict dialog
         this.conflictDialog = /** @type {HTMLDialogElement} */ (document.getElementById('conflict-dialog'));
         this.localWinsBtn = /** @type {HTMLButtonElement} */ (document.getElementById('conflict-local-btn'));
-        this.serverWinsBtn = /** @type {HTMLButtonElement} */ (document.getElementById('conflict-server-btn'));
+        this.conflictDialog.addEventListener('cancel', (e) => {
+            e.preventDefault(); // User explicitly chooses which wins
+        });
     }
 
     /**
@@ -17,7 +19,6 @@ export class SimpleDialogs {
      */
     setupInstructionsDialog(callbacks) {
         if (!this.instructionsBtn || !this.instructionsDialog || !this.closeBtn) return;
-        if (!this.conflictDialog || !this.localWinsBtn || !this.serverWinsBtn) return;
 
         this.instructionsBtn.addEventListener('click', () => {
             callbacks.onDialogOpen();
@@ -36,10 +37,9 @@ export class SimpleDialogs {
      * @param {object} callbacks - expects onLocalWins and onServerWins
      */
     showConflictDialog(callbacks) {
+        if (!this.conflictDialog || !this.localWinsBtn || !this.serverWinsBtn) return;
+
         this.conflictDialog.showModal();
-        this.conflictDialog.addEventListener('cancel', (e) => {
-            e.preventDefault(); // User explicitly chooses which wins
-        });
 
         this.localWinsBtn.onclick = () => {
             callbacks.onLocalWins();
