@@ -1,6 +1,10 @@
 import mime from 'mime-types';
 import JSZip from 'jszip';
 
+/**
+ * Handles the download dialog UI, including rendering previews, managing download state, and confirming unsaved downloads.
+ * TODO: This class is doing heavy lifting - the preparation for download could be refactored out.
+ */
 export class DownloadDialog {
     constructor() {
         this.downloadDialog = /** @type {HTMLDialogElement} */ (document.getElementById('download-dialog'));
@@ -95,6 +99,7 @@ export class DownloadDialog {
 
         this.downloadZipBtn.onclick = async () => {
             const zip = new JSZip();
+            // TODO: Investigate file size discrepancies with JSZip
             zip.file(`recording.${state.recordingExt}`, recordingBlob);
             zip.file('note_log.json', logBlob);
             const zipBlob = await zip.generateAsync({ type: 'blob' });
