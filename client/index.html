@@ -136,7 +136,6 @@
                 <div class="audio-preview-container">
                     <audio id="recording-preview" controls controlsList="nodownload noplaybackrate"></audio>
                 </div>
-                <button id="download-audio-btn" class="download-btn"><i class="fas fa-download"></i> Download Audio</button>
             </div>
             <div class="dialog-section log-section">
                 <h3>Note Log</h3>
@@ -144,10 +143,14 @@
                     <pre id="note-log-preview"></pre>
                     <div class="log-preview-fade"></div>
                 </div>
-                <button id="download-log-btn" class="download-btn"><i class="fas fa-download"></i> Download Note Log</button>
             </div>
         </div>
         <div class="dialog-footer">
+            <button id="download-zip-btn" class="download-btn">
+                <i class="fas fa-download" aria-hidden="true"></i>
+                <i class="fas fa-check" aria-hidden="true"></i>
+                <span id="download-btn-label">Download All (ZIP)</span>
+            </button>
             <button id="close-download-dialog-btn" class="close-btn"><i class="fas fa-times"></i> Close</button>
         </div>
     </dialog>
@@ -165,11 +168,10 @@
     </dialog>
     <dialog id="confirm-close-dialog" aria-modal="true" aria-labelledby="confirm-close-dialog-title">
         <div class="dialog-header">
-            <h2 id="confirm-close-dialog-title">Unsaved Files</h2>
+            <h2 id="confirm-close-dialog-title">Download Recording</h2>
         </div>
         <div class="dialog-content confirm-content">
-            <p>You haven't downloaded all your files yet. Are you sure you want to close?</p>
-            <p id="unsaved-list"></p>
+            <p>You haven't downloaded your files yet. Are you sure you want to close without downloading?</p>
         </div>
         <div class="dialog-footer confirm-footer">
             <button id="confirm-close-cancel-btn" class="cancel-btn">Go Back</button>

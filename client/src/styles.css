@@ -521,14 +521,17 @@ dialog::backdrop {
 
 #note-log-preview {
     margin: 0;
+    height: 100%;
+    box-sizing: border-box;
     padding: 0.75rem;
     font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
     font-size: 0.75rem;
     line-height: 1.4;
     color: rgba(255, 255, 255, 0.8);
     white-space: pre-wrap;
-    word-break: break-all;
-    overflow: hidden;
+    word-break: break-word;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .log-preview-fade {
@@ -551,6 +554,9 @@ dialog::backdrop {
     gap: 0.5rem;
 }
 
+.download-btn .fa-download { display: inline-block; }
+.download-btn .fa-check { display: none; }
+
 .download-btn:hover {
     background: #45a049;
 }
@@ -559,6 +565,9 @@ dialog::backdrop {
     background: #666;
     cursor: default;
 }
+
+.download-btn.downloaded .fa-download { display: none; }
+.download-btn.downloaded .fa-check { display: inline-block; }
 
 .download-btn.downloaded:hover {
     background: #666;
