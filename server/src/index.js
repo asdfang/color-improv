@@ -2,6 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import preferencesRoutes from './routes/preferences.js';
 
@@ -21,6 +23,19 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/preferences', preferencesRoutes);
+
+// SPA catch-all route
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientDistPath = path.join(__dirname, '../../client/dist');
+
+app.use(express.static(clientDistPath));
+app.get('{*path}', (req, res) => {
+    if (req.path.startsWith('/api/')) {
+        return next(); // fall through to error handler or 404
+    }
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+});
 
 app.use((err, req, res, next) => {
     console.error('Error:', err);
