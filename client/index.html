@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Learn blues improvisation through colorful, interactive musical scales">
+    <title>ColorImprov — Learn Blues Improvisation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/src/styles.css">
+    <script type="module" src="/src/main.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div id="top-panel">
+            <div id="volume-controls">
+                <div class="volume-group">
+                    <label for="backing-track-volume">Backing Track: </label>
+                    <input type="range" id="backing-track-volume" min="0" max="1" step="0.01" value="0">
+                    <div class="btn-wrapper">
+                        <button id="backing-track-mute-btn" class="volume-control-btn mute-btn" aria-label="Mute backing track">
+                            <i class="fas fa-volume-xmark"></i>
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                        <span class="btn-label volume-control-btn-label mute-btn-label">Mute</span>
+                    </div>
+                    <div class="btn-wrapper">
+                        <button id="backing-track-reset-btn" class="volume-control-btn reset-btn" type="button" aria-label="Reset backing track volume"><i class="fas fa-undo"></i></button>
+                        <span class="btn-label volume-control-btn-label reset-btn-label">Reset</span>
+                    </div>
+                </div>
+                <div class="volume-group">
+                    <label for="samples-volume">Trumpet: </label>
+                    <input type="range" id="samples-volume" min="0" max="1" step="0.01" value="0">
+                    <div class="btn-wrapper">
+                        <button id="samples-mute-btn" class="volume-control-btn mute-btn" aria-label="Mute trumpet">
+                            <i class="fas fa-volume-xmark"></i>
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                        <span class="btn-label volume-control-btn-label mute-btn-label">Mute</span>
+                    </div>
+                    <div class="btn-wrapper">
+                        <button id="samples-reset-btn" class="volume-control-btn reset-btn" type="button" aria-label="Reset trumpet volume"><i class="fas fa-undo"></i></button>
+                        <span class="btn-label volume-control-btn-label reset-btn-label">Reset</span>
+                    </div>
+                </div>
+            </div>
+            <div id="playback-controls">
+                <div class="btn-wrapper">
+                    <button id="play-btn" class="playback-btn" aria-label="Play" title="Play (Space)"><i class="fas fa-play"></i></button>
+                    <span class="btn-label playback-btn-label">Play</span>
+                </div>
+                <div class="btn-wrapper">
+                    <button id="pause-btn" class="playback-btn" aria-label="Pause" title="Pause (Space)"><i class="fas fa-pause"></i></button>
+                    <span class="btn-label playback-btn-label">Pause</span>
+                </div>
+                <div class="btn-wrapper">
+                    <button id="stop-btn" class="playback-btn stop" aria-label="Stop" title="Stop (Shift+Esc)"><i class="fas fa-stop"></i></button>
+                    <span class="btn-label playback-btn-label">Stop</span>
+                </div>
+                <div class="btn-wrapper">
+                    <button id="record-btn" class="playback-btn" aria-label="Record" title="Record (Shift+R)"><i class="fas fa-circle"></i></button>
+                    <span id="record-btn-label" class="btn-label playback-btn-label">Record</span>
+                </div>
+            </div>
+            <div id="instructions-and-settings">
+                <div id="auth-controls" aria-label="User authentication controls">
+                    <button id="register-btn" class="auth-btn">Register</button>
+                    <button id="login-btn" class="auth-btn">Login</button>
+                    <button id="logout-btn" class="auth-btn">Logout</button>
+                </div>
+                <div id="instructions" tabindex="0" aria-label="Show instructions">Click for instructions and help.</div>
+                <label for="difficulty-select">Difficulty: </label>
+                <select id="difficulty-select" aria-label="Select difficulty level...">
+                    <option value="easy" selected>Easy (both helpers)</option>
+                    <option value="medium">Medium (one helper)</option>
+                    <option value="hard">Hard (no helpers)</option>
+                </select>
+            </div>
+            <div id="error-message" role="alert" aria-live="assertive"></div>
+        </div>
+        <canvas id="mainCanvas" aria-label="Interactive musical grid"></canvas>
+    </div>
+    <dialog id="auth-dialog" aria-modal="true" aria-labelledby="auth-dialog-title">
+        <div class="dialog-header">
+            <h2 id="auth-dialog-title">Register</h2>
+        </div>
+        <div class="dialog-content">
+            <form id="auth-form">
+                <div class="form-group">
+                    <label for="email-input">Email:</label>
+                    <input type="email" id="email-input" name="email" required>
+                </div>
+                <div id="auth-feedback" class="auth-feedback" role="alert" aria-live="polite" hidden>
+                    <p id="auth-feedback-message"></p>
+                </div>
+                <div class="form-group" id="name-form-group">
+                    <label for="name-input">Name:</label>
+                    <input type="text" id="name-input" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="password-input">Password:</label>
+                    <input type="password" id="password-input" name="password" minlength="6" required>
+                </div>
+                <div class="dialog-footer">
+                    <button type="submit" id="auth-submit-btn" class="auth-submit-btn">Register</button>
+                    <button type="button" id="auth-cancel-btn" class="cancel-btn">Cancel</button>
+                </div>
+                <div class="switch-auth">
+                    <span id="switch-auth-label">Already have an account?</span><a href="#" id="switch-auth-link">Log in.</a>
+                </div>
+            </form>
+        </div>
+    </dialog>
+    <dialog id="instructions-dialog" aria-labelledby="instructions-dialog-title">
+        <div class="dialog-header">
+            <h2 id="instructions-dialog-title">Instructions</h2>
+        </div>
+        <div class="dialog-content">
+            <p>Let's get a feel for the 12-bar blues! <br>
+            Press keyboard keys from the appropriate row to play notes according to the current chord. <br>
+            <strong>Controls:</strong> <kbd>Space</kbd> to play/pause. <kbd>Shift</kbd>+<kbd>Esc</kbd> to stop (resets to beginning). <kbd>Shift</kbd>+<kbd>R</kbd> to record.
+            </p>
+        </div>
+        <div class="dialog-footer">
+            <button id="instructions-close-btn" class="cancel-btn">Close</button>
+        </div>
+    </dialog>
+    <dialog id="download-dialog" aria-modal="true" aria-labelledby="download-dialog-title">
+        <div class="dialog-header">
+            <h2 id="download-dialog-title">Download Your Recording</h2>
+            <p>Your recording and note log are ready! Click the buttons below to download.</p>
+        </div>
+        <div class="dialog-content">
+            <div class="dialog-section audio-section">
+                <h3>Audio Recording</h3>
+                <div class="audio-preview-container">
+                    <audio id="recording-preview" controls controlsList="nodownload noplaybackrate"></audio>
+                </div>
+                <button id="download-audio-btn" class="download-btn"><i class="fas fa-download"></i> Download Audio</button>
+            </div>
+            <div class="dialog-section log-section">
+                <h3>Note Log</h3>
+                <div class="log-preview-container">
+                    <pre id="note-log-preview"></pre>
+                    <div class="log-preview-fade"></div>
+                </div>
+                <button id="download-log-btn" class="download-btn"><i class="fas fa-download"></i> Download Note Log</button>
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <button id="close-download-dialog-btn" class="close-btn"><i class="fas fa-times"></i> Close</button>
+        </div>
+    </dialog>
+    <dialog id="conflict-dialog" aria-modal="true" aria-labelledby="conflict-dialog-title">
+        <div class="dialog-header">
+            <h2 id="conflict-dialog-title">Settings Conflict!</h2>
+        </div>
+        <div class="dialog-content sync-content">
+            <p>Your saved account settings differ with the current settings. Which would you like to use?</p>
+        </div>
+        <div class="dialog-footer conflict-footer">
+            <button id="conflict-local-btn" class="conflict-btn">Keep Current Settings</button>
+            <button id="conflict-server-btn" class="conflict-btn">Load Account Settings</button>
+        </div>
+    </dialog>
+    <dialog id="confirm-close-dialog" aria-modal="true" aria-labelledby="confirm-close-dialog-title">
+        <div class="dialog-header">
+            <h2 id="confirm-close-dialog-title">Unsaved Files</h2>
+        </div>
+        <div class="dialog-content confirm-content">
+            <p>You haven't downloaded all your files yet. Are you sure you want to close?</p>
+            <p id="unsaved-list"></p>
+        </div>
+        <div class="dialog-footer confirm-footer">
+            <button id="confirm-close-cancel-btn" class="cancel-btn">Go Back</button>
+            <button id="confirm-close-yes-btn" class="close-btn">Close Anyway</button>
+        </div>
+    </dialog>
+</body>
+</html>
