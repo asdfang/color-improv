@@ -17,6 +17,156 @@ export class DownloadDialog {
     }
 
     /**
+     * @param {string} mimeType
+     * @returns {string} file extension without dot
+     */
+    normalizeRecordingExtension(mimeType) {
+        let extension = mime.extension(mimeType) || 'webm';
+        // Force better compatibility with common browsers
+        if (extension === 'weba') extension = 'webm';
+        if (extension === 'mp4') extension = 'm4a';
+        return extension;
+    }
+
+    /**
+     * Toggle ZIP download button state and label.
+     * @param {boolean} isDownloaded
+     */
+    setZipButtonState(isDownloaded) {
+        if (!this.downloadZipBtn) return;
+
+        this.downloadZipBtn.classList.toggle('downloaded', isDownloaded);
+
+        if (this.downloadBtnLabel) {
+            this.downloadBtnLabel.textContent = isDownloaded ? 'Downloaded' : 'Download All (ZIP)';
+        }
+    }
+
+    /**
+     * Render audio and log previews in the dialog.
+     * @param {string} recordingUrl
+     * @param {string} logData
+     */
+    renderPreviewContent(recordingUrl, logData) {
+        if (!this.audioPreview || !this.logPreview) {
+            console.error('DownloadDialog: Missing preview elements');
+            return;
+        }
+
+        this.audioPreview.src = recordingUrl;
+        this.logPreview.textContent = logData;
+    }
+
+    /**
+     * Clean up resources and close the dialog.
+     * @param {{ zipDownloaded: boolean, zipUrl: string | undefined }} state
+     */
+    cleanupAndClose(state) {
+        if (!this.audioPreview || !this.logPreview || !this.downloadDialog) {
+            console.error('DownloadDialog: Missing elements required for cleanup');
+            return;
+        }
+
+        this.audioPreview.src = '';
+        this.logPreview.textContent = '';
+        this.setZipButtonState(false);
+
+        if (state.zipUrl) {
+            URL.revokeObjectURL(state.zipUrl);
+        }
+
+        this.downloadDialog.close();
+    }
+
+    /**
+     * Bind click event to ZIP download button to generate and download a ZIP file containing the recording and log.
+     * @param {*} recordingBlob
+     * @param {Blob} logBlob
+     * @param {{ recordingExt: string, zipDownloaded: boolean, zipUrl: string | undefined }} state
+     */
+    bindZipDownload(recordingBlob, logBlob, state) {
+        if (!this.downloadZipBtn) return;
+
+        this.downloadZipBtn.onclick = async () => {
+            const zip = new JSZip();
+            zip.file(`recording.${state.recordingExt}`, recordingBlob);
+            zip.file('note_log.json', logBlob);
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+            const link = document.createElement('a');
+            state.zipUrl = URL.createObjectURL(zipBlob);
+            link.href = state.zipUrl;
+            link.download = `color_improv_${Date.now()}.zip`;
+            link.click();
+
+            state.zipDownloaded = true;
+            this.setZipButtonState(true);
+        };
+    }
+
+    /**
+     * @param {() => void} onConfirmClose
+     */
+    openUnsavedConfirm(onConfirmClose) {
+        if (!this.confirmDialog || !this.confirmYesBtn || !this.confirmCancelBtn) {
+            console.error('DownloadDialog: Missing confirmation dialog elements');
+            return;
+        }
+
+        this.confirmYesBtn.onclick = () => {
+            this.confirmDialog.close();
+            onConfirmClose();
+        };
+
+        this.confirmCancelBtn.onclick = () => {
+            this.confirmDialog.close();
+        };
+
+        this.confirmDialog.showModal();
+    }
+
+    /**
+     * @param {{ zipDownloaded: boolean }} state
+     * @param {() => void} cleanup
+     */
+    requestClose(state, cleanup) {
+        if (this.confirmDialog.open) return;
+
+        if (state.zipDownloaded) {
+            cleanup();
+            return;
+        }
+
+        this.openUnsavedConfirm(cleanup);
+    }
+
+    /**
+     * @param {() => void} requestClose
+     */
+    bindCloseHandlers(requestClose) {
+        if (!this.closeBtn || !this.downloadDialog || !this.confirmDialog) {
+            console.error('DownloadDialog: Missing close handler elements');
+            return;
+        }
+
+        this.closeBtn.onclick = requestClose;
+
+        this.downloadDialog.onkeydown = (e) => {
+            if (e.key !== 'Escape') return;
+            e.preventDefault();
+            e.stopPropagation();
+            requestClose();
+        };
+
+        this.confirmDialog.onkeydown = (e) => {
+            if (e.key !== 'Escape') return;
+            e.preventDefault();
+            e.stopPropagation();
+            this.confirmDialog.close();
+        };
+    }
+
+    /**
      * Display dialog with audio and log preview and download options.
      * @param {*} recordingBlob blob containing the recorded audio data from RecordingEngine
      * @param {*} logObject raw log data from NoteLogger
@@ -28,110 +178,30 @@ export class DownloadDialog {
         }
 
         const recordingUrl = URL.createObjectURL(recordingBlob);
-        let recordingExt = mime.extension(recordingBlob.type) || 'webm';
-        // Force better compatability with common browsers
-        if (recordingExt === 'weba') recordingExt = 'webm';
-        if (recordingExt === 'mp4')  recordingExt = 'm4a';
-
+        const recordingExt = this.normalizeRecordingExtension(recordingBlob.type);
         const logData = JSON.stringify(logObject, null, 2);
         const logBlob = new Blob([logData], { type: 'application/json' });
-        let zipUrl;
 
-        // Track download state
-        let zipDownloaded = false;
-
-        const setZipButtonState = (isDownloaded) => {
-            if (!this.downloadZipBtn) return;
-
-            this.downloadZipBtn.classList.toggle('downloaded', isDownloaded);
-
-            if (this.downloadBtnLabel) {
-                this.downloadBtnLabel.textContent = isDownloaded ? 'Downloaded' : 'Download All (ZIP)';
-            }
+        const state = {
+            recordingExt,
+            zipDownloaded: false,
+            zipUrl: undefined,
         };
 
-        setZipButtonState(false);
+        this.setZipButtonState(false);
+        this.renderPreviewContent(recordingUrl, logData);
+        this.bindZipDownload(recordingBlob, logBlob, state);
 
-        if (this.audioPreview) this.audioPreview.src = recordingUrl;
-
-        // Display full JSON preview (scrollable via CSS)
-        if (this.logPreview) {
-            this.logPreview.textContent = logData;
-        }
-
-        if (this.downloadZipBtn) {
-            this.downloadZipBtn.onclick = async () => {
-                const zip = new JSZip();
-                zip.file(`recording.${recordingExt}`, recordingBlob);
-                zip.file(`note_log.json`, logBlob);
-                const zipBlob = await zip.generateAsync({ type: 'blob' });
-
-                const link = document.createElement('a');
-                zipUrl = URL.createObjectURL(zipBlob);
-                link.href = zipUrl;
-                link.download = `color_improv_${Date.now()}.zip`;
-                link.click();
-                zipDownloaded = true;
-                setZipButtonState(true);
-            }
-        }
-
-        const cleanupAndClose = () => {
-            if (this.audioPreview) this.audioPreview.src = '';
-            if (this.logPreview) this.logPreview.textContent = '';
-            if (this.downloadZipBtn) {
-                setZipButtonState(false);
-            }
+        const cleanup = () => {
+            this.cleanupAndClose(state);
             URL.revokeObjectURL(recordingUrl);
-            URL.revokeObjectURL(zipUrl);
-
-            this.downloadDialog.close();
         };
 
         const requestClose = () => {
-            if (this.confirmDialog.open) {
-                return;
-            }
-
-            if (!zipDownloaded) {
-                if (this.confirmYesBtn) {
-                    this.confirmYesBtn.onclick = () => {
-                        this.confirmDialog.close();
-                        cleanupAndClose();
-                    };
-                }
-
-                if (this.confirmCancelBtn) {
-                    this.confirmCancelBtn.onclick = () => {
-                        this.confirmDialog.close();
-                    };
-                }
-
-                this.confirmDialog.showModal();
-            } else {
-                cleanupAndClose();
-            }
+            this.requestClose(state, cleanup);
         };
 
-        if (this.closeBtn) {
-            this.closeBtn.onclick = requestClose;
-        }
-
-        this.downloadDialog.onkeydown = (e) => {
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                e.stopPropagation();
-                requestClose();
-            }
-        };
-
-        this.confirmDialog.onkeydown = (e) => {
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                e.stopPropagation();
-                this.confirmDialog.close();
-            }
-        };
+        this.bindCloseHandlers(requestClose);
 
         this.downloadDialog.showModal();
     }
