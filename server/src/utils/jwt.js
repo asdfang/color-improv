@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
+import requireEnv from './env.js';
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = requireEnv('JWT_SECRET');
 const JWT_EXPIRES_IN = '7d';
 
 export function generateToken(userId) {

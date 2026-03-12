@@ -1,6 +1,8 @@
 import express from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
+import { validatePreferencesBody } from '../utils/validation.js';
+import { PREFERENCE_DEFAULTS } from '../constants.js';
 
 // Mount at /api/preferences, all routes here require auth
 const router = express.Router();
@@ -13,33 +15,18 @@ router.use(requireAuth);
  */
 function toPreferencesResponse(preferences) {
     if (!preferences) return null;
-    return {
-        difficulty: preferences.difficulty,
-        backingTrackVolume: preferences.backingTrackVolume,
-        samplesVolume: preferences.samplesVolume,
-        backingTrackMuted: preferences.backingTrackMuted,
-        samplesMuted: preferences.samplesMuted,
-    };
+    return Object.fromEntries(
+        Object.keys(PREFERENCE_DEFAULTS).map(key => [key, preferences[key]])
+    );
 }
 
 // GET /api/preferences - Get current user's preferences
-// TODO: fix hardcoded default preferences?
 router.get('/', async (req, res) => {
-const userId = req.userId;
+    const userId = req.userId;
     let preferences = await prisma.userPreferences.findUnique({
         where: { userId },
     });
-    if (!preferences) {
-        preferences = {
-            difficulty: 'easy',
-            backingTrackVolume: 0.6,
-            samplesVolume: 0.8,
-            backingTrackMuted: false,
-            samplesMuted: false,
-        };
-    }
-
-    console.log('Fetched preferences for user (only returning preferences):', preferences); // Debug log
+    if (!preferences) preferences = { ...PREFERENCE_DEFAULTS };
 
     res.json({ preferences: toPreferencesResponse(preferences) });
 });
@@ -47,40 +34,37 @@ const userId = req.userId;
 // PUT /api/preferences - Update current user's preferences
 router.put('/', async (req, res) => {
     const userId = req.userId;
+
+    const result = validatePreferencesBody(req.body);
+    if (!result.valid) return res.status(400).json({ error: result.error });
+
     const {
         difficulty,
         backingTrackVolume,
         samplesVolume,
         backingTrackMuted,
         samplesMuted,
-    } = req.body;
-    
-    if (difficulty && ![ 'EASY', 'MEDIUM', 'HARD' ].includes(difficulty)) {
-        return res.status(400).json({
-            error: `Invalid difficulty value: ${difficulty}. Must be 'EASY', 'MEDIUM', or 'HARD'.`
-        });
-    }
+    } = result.data;
 
     const preferences = await prisma.userPreferences.upsert({
         where: { userId },
         update: {
-            ...(difficulty && { difficulty }),
+            ...(difficulty !== undefined && { difficulty }),
             ...(backingTrackVolume !== undefined && { backingTrackVolume }),
             ...(samplesVolume !== undefined && { samplesVolume }),
             ...(backingTrackMuted !== undefined && { backingTrackMuted }),
             ...(samplesMuted !== undefined && { samplesMuted }),
         },
         create: {
+            // Defaults provided if optional fields are missing
             userId,
-            difficulty: difficulty || 'EASY',
-            backingTrackVolume: backingTrackVolume ?? 0.6,
-            samplesVolume: samplesVolume ?? 0.8,
-            backingTrackMuted: backingTrackMuted ?? false,
-            samplesMuted: samplesMuted ?? false,
+            difficulty: difficulty ?? PREFERENCE_DEFAULTS.difficulty,
+            backingTrackVolume: backingTrackVolume ?? PREFERENCE_DEFAULTS.backingTrackVolume,
+            samplesVolume: samplesVolume ?? PREFERENCE_DEFAULTS.samplesVolume,
+            backingTrackMuted: backingTrackMuted ?? PREFERENCE_DEFAULTS.backingTrackMuted,
+            samplesMuted: samplesMuted ?? PREFERENCE_DEFAULTS.samplesMuted,
         },
     });
-
-    console.log('Updated preferences for user', userId, preferences); // Debug log
 
     res.json({ preferences: toPreferencesResponse(preferences) });
 });

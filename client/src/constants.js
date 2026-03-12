@@ -114,6 +114,7 @@ export const KEY_MAPPINGS = {
 };
 
 /**
+ * NOTE: These defaults should match PREFERENCE_DEFAULTS in server/src/constants.js.
  * Default user preferences in a flat object for simplicity.
  * Used if no preferences are saved in localStorage or account.
  */

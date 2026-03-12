@@ -3,13 +3,16 @@ import { prisma } from '../lib/prisma.js';
 import { hashPassword, comparePassword } from '../utils/password.js';
 import { sendAuthCookie, clearAuthCookie } from '../utils/auth.js';
 import { requireAuth } from '../middleware/auth.js';
+import { validateRegisterBody } from '../utils/validation.js';
 
 // Mounted at /api/auth
 const router = express.Router();
 
 // POST /api/auth/register - Register a new user
 router.post('/register', async (req, res) => {
-    const { email, name, password } = req.body;
+    const result = validateRegisterBody(req.body);
+    if (!result.valid) return res.status(400).json({ error: result.error });
+    const { email, name, password } = result.data;
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
