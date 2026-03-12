@@ -14,12 +14,13 @@ datasource db {
 }
 
 model User {
-  id           String            @id @default(cuid())
-  email        String            @unique
-  name         String
-  passwordHash String
-  createdAt    DateTime          @default(now())
-  preferences  UserPreferences?  
+  id            String            @id @default(cuid())
+  email         String            @unique
+  name          String
+  passwordHash  String
+  createdAt     DateTime          @default(now())
+  preferences   UserPreferences?
+  recordings    Recording[]
 }
 
 model UserPreferences {
@@ -37,4 +38,17 @@ enum Difficulty {
   EASY
   MEDIUM
   HARD
+}
+
+model Recording {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title             String
+  audioFilename     String    // Pointer to the audio file in storage
+  eventLogFilename  String    // Pointer to the event log file in storage
+  durationSeconds   Float
+  fileSizeBytes     Int
+  audioMimeType     String
+  createdAt         DateTime  @default(now())
 }
