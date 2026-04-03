@@ -13,7 +13,7 @@ export const StudioContext = createContext(null);
 export function StudioProvider({ children }) {
     const [studio] = useState(() => {
         const backingTrack = 'blues'; // TODO: Extract to config/preference manager
-        const audioEngine = new AudioEngine();
+        const audioEngine = new AudioEngine(backingTrack);
         const timingEngine = new TimingEngine(audioEngine, backingTrack);
         const recordingEngine = new RecordingEngine(audioEngine.audioContext);
         audioEngine.connectMainToExternalNode(recordingEngine.getMediaStreamDestinationNode());
@@ -26,6 +26,7 @@ export function StudioProvider({ children }) {
             recordingEngine,
             noteLogger,
             keyboardHandler,
+            backingTrack,
         };
     });
 

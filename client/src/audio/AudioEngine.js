@@ -11,7 +11,7 @@ export class AudioEngine {
      * Initializes the AudioEngine, creating AudioContext and SampleLoader.
      * Call initialize() after user interaction to prepare for playback.
      */
-    constructor() {
+    constructor(backingTrack) {
         // Initialize AudioContext immediately to decode samples - state is 'suspended' until user interaction
         const AudioCtx = window.AudioContext || /** @type {Window & { webkitAudioContext?: typeof AudioContext }} */ (window).webkitAudioContext;
         if (!AudioCtx) {
@@ -19,6 +19,7 @@ export class AudioEngine {
         }
         this.audioContext = new AudioCtx();
 
+        this.backingTrack = backingTrack;
         // Initialize SampleLoader with the AudioContext
         this.sampleLoader = new SampleLoader(this.audioContext);
 
@@ -99,7 +100,7 @@ export class AudioEngine {
     async setUpBackingTrack() {
         try {
             // Create HTML5 Audio element to hold backing track
-            this.backingTrackElement = new Audio(AUDIO_CONFIG.getBackingTrackPath('blues')); // TODO: avoid hardcoding
+            this.backingTrackElement = new Audio(AUDIO_CONFIG.getBackingTrackPath(this.backingTrack));
             this.backingTrackElement.loop = false;
 
             // Create and connect Web Audio API nodes: source ->  gain (already connected to destination)
