@@ -27,7 +27,7 @@ export function StudioProvider({ children }) {
             noteLogger,
             keyboardHandler,
         };
-    })
+    });
 
     return (
         <StudioContext value={studio}>
