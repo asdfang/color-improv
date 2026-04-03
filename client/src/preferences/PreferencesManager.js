@@ -1,3 +1,5 @@
+// TODO: DELETE (re-written in React)
+
 /**
  * PreferencesManager class handles loading, validating, and saving user preferences with debouncing to optimize storage writes.
  * It uses a provided storage backend (like LocalStorageBackend) to persist preferences across sessions.

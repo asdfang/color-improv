@@ -1,3 +1,5 @@
+// TODO: DELETE
+
 /**
  * LocalStorageBackend provides a simple interface to save and load preferences using the browser's localStorage.
  */

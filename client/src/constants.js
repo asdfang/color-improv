@@ -125,3 +125,11 @@ export const PREFERENCE_DEFAULTS = {
     backingTrackMuted: false,
     samplesMuted: false,
 }
+
+export const SCHEMA = {
+    difficulty: (d) => ['easy', 'medium', 'hard'].includes(d) ? d : undefined,
+    backingTrackVolume: (vol) => typeof vol === 'number' && vol >= 0 && vol <= 1 ? vol : undefined,
+    samplesVolume: (vol) => typeof vol === 'number' && vol >= 0 && vol <= 1 ? vol : undefined,
+    backingTrackMuted: (bool) => typeof bool === 'boolean' ? bool : undefined,
+    samplesMuted: (bool) => typeof bool === 'boolean' ? bool : undefined,
+}
