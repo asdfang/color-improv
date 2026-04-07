@@ -5,7 +5,8 @@ import { usePreferences } from '../contexts/PreferencesContext';
 export function usePlaybackState() {
     const [playbackState, setPlaybackState] = useState('stopped'); // 'playing' | 'paused' | 'stopped'
     const [isRecording, setIsRecording] = useState(false);
-    const [recordingResult, setRecordingResult] = useState({ recordingBlob: null, logBlob: null });
+    /** @typedef {{recordingBlob: Blob|null, logBlob: Blob|null}} RecordingResult */
+    const [recordingResult, setRecordingResult] = useState(/** @type {RecordingResult} */ ({ recordingBlob: null, logBlob: null }));
 
     const {
         audioEngine,
@@ -36,7 +37,7 @@ export function usePlaybackState() {
     const pause = () => {
         setPlaybackState('paused');
         audioEngine.pauseBackingTrack();
-        audioEngine.stopAllNotes();
+        audioEngine.stopAllSound();
         timingEngine.pause();
         keyboardHandler.disable();
     }

@@ -5,8 +5,21 @@ import { PREFERENCE_DEFAULTS, SCHEMA } from "../constants";
 
 const STORAGE_KEY = 'color-improv:prefs';
 
-export const PreferencesContext = createContext(null);
+/**                                                                                                                                                                                                                             
+ * @typedef {{
+ *   preferences: typeof PREFERENCE_DEFAULTS,
+ *   setPreference: Function,
+ *   applyAllPreferences: Function
+ * }} PreferencesContextValue                                                                                         
+ */  
+export const PreferencesContext = createContext(
+    /** @type {PreferencesContextValue | null} */
+    (null));                                         
 
+/**
+ * This provider manages user preferences, including loading/debounced saving to localStorage and validating input.
+ * @param {{ children: import('react').ReactNode }} props
+ */
 export function PreferencesProvider({ children }) {
     const [preferences, setPreferences] = useState(loadFromLocalStorage);
 
@@ -19,6 +32,7 @@ export function PreferencesProvider({ children }) {
         return () => clearTimeout(timeoutID);
     }, [preferences]);
 
+    /** @param {keyof typeof SCHEMA} key @param {any} value */
     const setPreference = (key, value) => {
         const validatedValue = key in SCHEMA
             ? SCHEMA[key](value)
@@ -29,6 +43,7 @@ export function PreferencesProvider({ children }) {
         }
     }
 
+    /** @param {object} prefs */
     const applyAllPreferences = (prefs) => {
         const sanitizedData = sanitizeObject(prefs, SCHEMA);
         setPreferences({ ...PREFERENCE_DEFAULTS, ...sanitizedData });
@@ -42,21 +57,23 @@ export function PreferencesProvider({ children }) {
 }
 
 export function usePreferences() {
-    return useContext(PreferencesContext);
+    const context = useContext(PreferencesContext);
+    if (!context) throw new Error('usePreferences must be used within a PreferencesProvider');
+    return context;
 }
 
 /**
  * Validates untrusted data (e.g. from localStorage).
  * Sanitized result can be merged with defaults for a complete preferences object:
  * { ...PREFERENCE_DEFAULTS, ...sanitizeObject(input, SCHEMA) }
- * @param {object} input object to be sanitized
- * @param {object} schema object of validator functions
- * @returns {object} sanitized object, or undefined if nothing was valid
+ * @param {Record<string, any>} input object to be sanitized
+ * @param {Record<string, Function>} schema object of validator functions
+ * @returns {Record<string, any> | undefined} sanitized object, or undefined if nothing was valid
  */
 function sanitizeObject(input, schema) {
     if (typeof input !== 'object' || input === null) return undefined;
     
-    const result = {};
+    const result = /** @type {Record<string, any>} */ ({});
     for (const [key, validator] of Object.entries(schema)) {
         if (!(key in input)) continue;
 
@@ -73,7 +90,7 @@ function sanitizeObject(input, schema) {
 
 /**
  * Loads data object from localStorage, parses from JSON, then merges sanitized data with defaults.
- * @returns {object} the merged preferences object, or an empty object if not found or on error
+ * @returns {typeof PREFERENCE_DEFAULTS} the merged preferences object, or an empty object if not found or on error
  */
 function loadFromLocalStorage() {
     const storedData = localStorage.getItem(STORAGE_KEY);
@@ -92,8 +109,8 @@ function loadFromLocalStorage() {
 
 /**
  * Saves stringified data object to localStorage.
- * @param {object} data 
- * @returns saved data if successful, otherwise undefined
+ * @param {typeof PREFERENCE_DEFAULTS} data 
+ * @returns {typeof PREFERENCE_DEFAULTS | undefined} saved data if successful, otherwise undefined
  */
 function saveToLocalStorage(data) {
     try {

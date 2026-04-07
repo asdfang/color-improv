@@ -7,9 +7,22 @@ import { RecordingEngine } from '../recording/RecordingEngine';
 import { NoteLogger } from '../events/NoteLogger';
 import { KeyboardHandler } from '../input/KeyboardHandler';
 
-export const StudioContext = createContext(null);
+/**
+ * @typedef {{
+ *    audioEngine: AudioEngine,
+ *    timingEngine: TimingEngine,
+ *    recordingEngine: RecordingEngine,
+ *    noteLogger: NoteLogger,
+ *    keyboardHandler: KeyboardHandler,
+ *    backingTrack: string
+ * }} StudioContextValue
+ */
+export const StudioContext = createContext( /** @type {StudioContextValue|null} */ (null));
 
-// This provider initializes the core studio components and provides them via context.
+/** 
+ * This provider initializes the core studio components and provides them via context.
+ * @param {{ children: import('react').ReactNode }} props
+ */
 export function StudioProvider({ children }) {
     const [studio] = useState(() => {
         const backingTrack = 'blues'; // TODO: Extract to config/preference manager
@@ -30,7 +43,7 @@ export function StudioProvider({ children }) {
         };
     });
 
-    return (
+    return (                                                                                                                                                            
         <StudioContext value={studio}>
             {children}
         </StudioContext>
@@ -38,7 +51,9 @@ export function StudioProvider({ children }) {
 }
 
 export function useStudio() {
-    return useContext(StudioContext);
+    const context = useContext(StudioContext);
+    if (!context) throw new Error('useStudio must be used within a StudioProvider');
+    return context;
 }
 
 StudioProvider.propTypes = {

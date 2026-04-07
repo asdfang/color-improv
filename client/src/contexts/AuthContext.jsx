@@ -3,8 +3,21 @@ import { createContext, useState, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { AuthService } from '../api/AuthService';
 
-export const AuthContext = createContext(null);
+/**
+ * @typedef {{
+ *    currentUser: object|null,
+ *    isLoading: boolean,
+ *    register: Function,
+ *    login: Function,
+ *    logout: Function
+ * }} AuthContextType
+ */
+export const AuthContext = createContext(/** @type {AuthContextType | null} */ (null));
 
+/**
+ * This provider manages authentication state, including current user info and auth methods.
+ * @param {{ children: import('react').ReactNode }} props
+ */
 export function AuthProvider({ children }) {
     const [authService] = useState(() => new AuthService());
     const [currentUser, setCurrentUser] = useState(null);
@@ -20,11 +33,20 @@ export function AuthProvider({ children }) {
         checkAuth();
     }, [authService]);
 
+    /**
+     * @param {string} email 
+     * @param {string} name 
+     * @param {string} password 
+     */
     const register = async (email, name, password) => {
         const user = await authService.register(email, name, password);
         setCurrentUser(user);
     };
 
+    /**
+     * @param {string} email 
+     * @param {string} password 
+     */
     const login = async (email, password) => {
         const user = await authService.login(email, password);
         setCurrentUser(user);
@@ -43,7 +65,9 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-    return useContext(AuthContext);
+    const context = useContext(AuthContext);
+    if (!context) throw new Error('useAuth must be used within an AuthProvider');
+    return context;
 }
 
 AuthProvider.propTypes = {
