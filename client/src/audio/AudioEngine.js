@@ -2,6 +2,8 @@ import { SampleLoader } from "./SampleLoader";
 import { AUDIO_CONFIG } from "/src/constants.js";
 import { clampVolume, sliderToGain } from "/src/audio/audio-utils.js";
 
+/** @typedef {import('/src/constants.js').BackingTrackKey} BackingTrackKey */
+
 /**
  * AudioEngine manages audio playback and Web Audio API interactions.
  * TODO: Constructor takes in sample list, backing track list, config options?
@@ -10,7 +12,7 @@ export class AudioEngine {
     /**
      * Initializes the AudioEngine, creating AudioContext and SampleLoader.
      * Call initialize() after user interaction to prepare for playback.
-     * @param {string} backingTrack - key for backing track to load from AUDIO_CONFIG (to be extracted to configpreference manager)
+     * @param {BackingTrackKey} backingTrack - key for backing track to load from AUDIO_CONFIG (to be extracted to configpreference manager)
      */
     constructor(backingTrack) {
         // Initialize AudioContext immediately to decode samples - state is 'suspended' until user interaction
