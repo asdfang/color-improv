@@ -1,3 +1,4 @@
+// @ts-nocheck
 // TODO: DELETE (re-written in React)
 
 /**

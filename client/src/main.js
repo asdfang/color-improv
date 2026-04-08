@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AudioEngine } from '/src/audio/AudioEngine.js';
 import { TimingEngine } from '/src/timing/TimingEngine.js';
 import { RecordingEngine} from '/src/recording/RecordingEngine.js';
