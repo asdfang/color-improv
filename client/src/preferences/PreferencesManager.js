@@ -8,6 +8,7 @@
 
 import { PREFERENCE_DEFAULTS } from "/src/constants.js";
 import { debounce } from "/src/utils.js";
+/** @typedef {import('/src/constants.js').UserPreferences} UserPreferences */
 
 export class PreferencesManager {
     constructor(storageBackend) {
@@ -31,7 +32,7 @@ export class PreferencesManager {
 
     /**
      * Loads preferences from storage, sanitizes them, and merges with defaults.
-     * @returns {object} the merged preferences object
+        * @returns {UserPreferences} the merged preferences object
      */
     load() {
         const loadedData = this.storageBackend.load();
@@ -49,7 +50,7 @@ export class PreferencesManager {
 
     /**
      * Returns a copy to prevent external mutation.
-     * @returns {object} a copy of the preferences object
+     * @returns {UserPreferences} a copy of the preferences object
      */
     getAll() {
         return { ...this.preferences };
@@ -57,7 +58,7 @@ export class PreferencesManager {
 
     /**
      * Returns a copy of the default preferences object.
-     * @returns {object} a copy of the default preferences object
+     * @returns {UserPreferences} a copy of the default preferences object
      */
     getDefaults() {
         return { ...PREFERENCE_DEFAULTS };

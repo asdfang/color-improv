@@ -59,10 +59,12 @@ export const AUDIO_CONFIG = {
         },
     },
 
+    /** @param {number} midiNumber */
     getSamplePath(midiNumber) {
         return `${this.paths.SAMPLES_BASE}${midiNumber}.${this.format}`;
     },
 
+    /** @param {keyof typeof AUDIO_CONFIG.backingTracks} trackType */
     getBackingTrackPath(trackType) {
         return `${this.paths.BACKING_TRACKS_BASE}${this.backingTracks[trackType].filename}`;
     },
@@ -118,6 +120,19 @@ export const KEY_MAPPINGS = {
  * Default user preferences in a flat object for simplicity.
  * Used if no preferences are saved in localStorage or account.
  */
+/** @typedef {'easy' | 'medium' | 'hard'} PreferenceDifficulty */
+
+/**
+ * @typedef {{
+ *   difficulty: PreferenceDifficulty,
+ *   backingTrackVolume: number,
+ *   samplesVolume: number,
+ *   backingTrackMuted: boolean,
+ *   samplesMuted: boolean,
+ * }} UserPreferences
+ */
+
+/** @type {UserPreferences} */
 export const PREFERENCE_DEFAULTS = {
     difficulty: 'easy', // | 'medium' | 'hard'
     backingTrackVolume: AUDIO_CONFIG.volumes.BACKING_TRACK_GAIN_DEFAULT,
@@ -127,9 +142,14 @@ export const PREFERENCE_DEFAULTS = {
 }
 
 export const SCHEMA = {
-    difficulty: (d) => ['easy', 'medium', 'hard'].includes(d) ? d : undefined,
+    /** @param {unknown} d */
+    difficulty: (d) => typeof d === 'string' && ['easy', 'medium', 'hard'].includes(d) ? d : undefined,
+    /** @param {unknown} vol */
     backingTrackVolume: (vol) => typeof vol === 'number' && vol >= 0 && vol <= 1 ? vol : undefined,
+    /** @param {unknown} vol */
     samplesVolume: (vol) => typeof vol === 'number' && vol >= 0 && vol <= 1 ? vol : undefined,
+    /** @param {unknown} bool */
     backingTrackMuted: (bool) => typeof bool === 'boolean' ? bool : undefined,
+    /** @param {unknown} bool */
     samplesMuted: (bool) => typeof bool === 'boolean' ? bool : undefined,
 }

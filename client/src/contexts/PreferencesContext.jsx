@@ -2,14 +2,15 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { PREFERENCE_DEFAULTS, SCHEMA } from "../constants";
+/** @typedef {import('/src/constants.js').UserPreferences} UserPreferences */
 
 const STORAGE_KEY = 'color-improv:prefs';
 
 /**                                                                                                                                                                                                                             
  * @typedef {{
- *   preferences: typeof PREFERENCE_DEFAULTS,
- *   setPreference: Function,
- *   applyAllPreferences: Function
+ *   preferences: UserPreferences,
+ *   setPreference: (key: keyof typeof SCHEMA, value: unknown) => void,
+ *   applyAllPreferences: (prefs: Partial<UserPreferences>) => void,
  * }} PreferencesContextValue                                                                                         
  */  
 export const PreferencesContext = createContext(
@@ -43,7 +44,7 @@ export function PreferencesProvider({ children }) {
         }
     }
 
-    /** @param {object} prefs */
+    /** @param {Partial<UserPreferences>} prefs */
     const applyAllPreferences = (prefs) => {
         const sanitizedData = sanitizeObject(prefs, SCHEMA);
         setPreferences({ ...PREFERENCE_DEFAULTS, ...sanitizedData });
@@ -90,7 +91,7 @@ function sanitizeObject(input, schema) {
 
 /**
  * Loads data object from localStorage, parses from JSON, then merges sanitized data with defaults.
- * @returns {typeof PREFERENCE_DEFAULTS} the merged preferences object, or an empty object if not found or on error
+ * @returns {UserPreferences} the merged preferences object, or defaults if not found or on error
  */
 function loadFromLocalStorage() {
     const storedData = localStorage.getItem(STORAGE_KEY);
@@ -109,8 +110,8 @@ function loadFromLocalStorage() {
 
 /**
  * Saves stringified data object to localStorage.
- * @param {typeof PREFERENCE_DEFAULTS} data 
- * @returns {typeof PREFERENCE_DEFAULTS | undefined} saved data if successful, otherwise undefined
+ * @param {UserPreferences} data 
+ * @returns {UserPreferences | undefined} saved data if successful, otherwise undefined
  */
 function saveToLocalStorage(data) {
     try {
