@@ -3,13 +3,22 @@
  * Note: to imitate a live improvisation, there is no ability to pause/resume while recording.
  */
 export class RecordingEngine {
+    /**
+     * @param {AudioContext} audioContext 
+     */
     constructor(audioContext) {
         this.audioContext = audioContext;
         this.mediaStreamDestination = this.audioContext.createMediaStreamDestination();
 
         // MediaRecorder created fresh on each start()
-        this.mediaRecorder = null;
-        this.chunks = [];
+        this.mediaRecorder = /** @type {MediaRecorder | null} */ (null);
+        this.chunks = /** @type {Blob[]} */ ([]);
+
+        this.isRecording = false;
+    }
+
+    isRecordingActive() {
+        return this.isRecording;
     }
 
     /**
@@ -48,6 +57,7 @@ export class RecordingEngine {
      */
     start() {
         this.chunks = []; // Clear previous recordings
+        this.isRecording = true;
         
         const mimeType = this._selectMimeType();
         const options = mimeType ? { mimeType } : {};
@@ -71,24 +81,26 @@ export class RecordingEngine {
       * Note: The Blob is created from the collected chunks when the MediaRecorder's `stop` event fires.
      */
     stop() {
-        if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
+        const mediaRecorder = this.mediaRecorder;
+        if (!mediaRecorder || mediaRecorder.state === 'inactive') {
             console.warn('RecordingEngine: stop() called but MediaRecorder is not active');
             return Promise.resolve(null);
         }
 
         return new Promise((resolve, reject) => {
-            this.mediaRecorder.onstop = () => {
+            mediaRecorder.onstop = () => {
                 // Blob is ready when `stop` event fires
-                const blob = new Blob(this.chunks, { type: this.mediaRecorder.mimeType });
+                const blob = new Blob(this.chunks, { type: mediaRecorder.mimeType });
                 this.mediaRecorder = null;
+                this.isRecording = false;
                 resolve(blob);
             };
 
-            this.mediaRecorder.onerror = (e) => {
+            mediaRecorder.onerror = (e) => {
                 reject(e.error);
             };
 
-            this.mediaRecorder.stop();
+            mediaRecorder.stop();
         });
     }
 }
