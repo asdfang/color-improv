@@ -47,22 +47,22 @@ export function PlaybackProvider({ children }) {
     
     const { preferences } = usePreferences();
 
-    const pause = useCallback(() => {
+    const pause = () => {
         audioEngine.pauseBackingTrack();
         audioEngine.stopAllSound();
         timingEngine.pause();
         keyboardHandler.disable();
 
         setPlaybackState('paused');
-    }, [audioEngine, timingEngine, keyboardHandler]);
+    };
 
-    const resume = useCallback(() => {
+    const resume = () => {
         audioEngine.playBackingTrack();
         timingEngine.resume();
         keyboardHandler.enable();
 
         setPlaybackState('playing');
-    }, [audioEngine, timingEngine, keyboardHandler]);
+    };
 
     const stop = useCallback(async () => {
         const wasRecording = recordingEngine.isRecordingActive();
@@ -94,11 +94,12 @@ export function PlaybackProvider({ children }) {
                 }
             } catch (error) {
                 console.error('Recording failed:', error);
+
             }
         }
     }, [recordingEngine, noteLogger, audioEngine, timingEngine, keyboardHandler]);
 
-    const play = useCallback(async () => {
+    const play = async () => {
         try {
             if (!audioEngine.isReady()) {
                 await audioEngine.initialize();
@@ -113,19 +114,19 @@ export function PlaybackProvider({ children }) {
 
             await stop();
         }
-    }, [audioEngine, timingEngine, keyboardHandler, stop]);
+    };
 
-    const record = useCallback(async () => {
+    const record = async () => {
         recordingEngine.start();
         noteLogger.start(backingTrack, preferences.difficulty);
 
         setIsRecording(true);
         await play();
-    }, [recordingEngine, noteLogger, play, backingTrack, preferences.difficulty]);
+    };
 
-    const clearRecordingResult = useCallback(() => {
+    const clearRecordingResult = () => {
         setRecordingResult(null);
-    }, []);
+    };
 
     useEffect(() => {
         audioEngine.setOnEnded(() => stop());
