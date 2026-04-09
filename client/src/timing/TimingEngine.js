@@ -1,13 +1,18 @@
 import {
     getBeatDuration, getBeatNumberInMeasure, getMeasureNumberInProgression, getChordInfo, getLoopsCompleted
 } from '/src/timing/progression-data.js';
-import { AUDIO_CONFIG } from '/src/constants.js';
+import { AUDIO_CONFIG, VISUAL_LEAD_TIME } from '/src/constants.js';
+/** @import { AudioEngine } from '../audio/AudioEngine.js' */
 
 /**
  * Manages timing and synchronization between audio and visual components.
  * Uses AudioEngine's clock as the central time source; does not manage playback.
  */
 export class TimingEngine {
+    /**
+     * @param {AudioEngine} audioEngine 
+     * @param {'blues'} trackKey 
+     */
     constructor(audioEngine, trackKey = 'blues') {
         this.audioEngine = audioEngine;
 
@@ -22,6 +27,36 @@ export class TimingEngine {
         this.silenceOffset = AUDIO_CONFIG.backingTracks[this.trackKey].silenceOffset;
         this.countInBeats = AUDIO_CONFIG.backingTracks[this.trackKey].countInBeats;
         this.maxLoops = AUDIO_CONFIG.backingTracks[this.trackKey].maxLoops; // for active chord highlighting
+
+        // Internal state
+        /** @type {{currentChord: string|null, nextChord: string|null, beatsUntilNextChord: number|null} | null} */
+        this.lastEmitted = null;
+        this.onBeatChange = null;
+        this.rafId = null;
+    }
+
+    /**
+     * Sets the callback function to be called when a beat change occurs.
+     * Set to null for cleanup.
+     * @param {function | null} callback 
+     */
+    setOnBeatChange(callback) {
+        this.onBeatChange = callback;
+    }
+
+    /**
+     * Uses requestAnimationFrame to check for beat changes and call the callback with information on beat changes.
+     */
+    tick() {
+        const { currentChord, nextChord, beatsUntilNextChord } = this.getCurrentPosition(VISUAL_LEAD_TIME);
+        if (this.lastEmitted === null ||
+            currentChord !== this.lastEmitted.currentChord ||
+            nextChord !== this.lastEmitted.nextChord ||
+            beatsUntilNextChord !== this.lastEmitted.beatsUntilNextChord) {
+            this.onBeatChange?.({ currentChord, nextChord, beatsUntilNextChord });
+        }
+        this.lastEmitted = { currentChord, nextChord, beatsUntilNextChord };
+        this.rafId = requestAnimationFrame(() => this.tick());
     }
 
     /**
@@ -31,9 +66,11 @@ export class TimingEngine {
         if (!this.audioEngine.isReady()) {
             throw new Error('AudioEngine is not ready. Cannot start TimingEngine.');
         }
+        if (this.isPlaying) return;
         this.startTime = this.audioEngine.getCurrentTime();
         this.isPlaying = true;
         this.totalPausedDuration = 0;
+        this.tick();
     }
 
     /**
@@ -43,15 +80,26 @@ export class TimingEngine {
         if (!this.isPlaying) return;
         this.pausedAt = this.audioEngine.getCurrentTime();
         this.isPlaying = false;
+        if (this.rafId !== null) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
+        }
     }
 
     /**
      * Stop timer, reset start time.
      */
     stop() {
+        if (!this.isPlaying) return;
         this.isPlaying = false;
         this.startTime = null;
         this.pausedAt = null;
+        if (this.rafId !== null) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
+        }
+        this.setOnBeatChange(null);
+        this.lastEmitted = null;
     }
 
     /**
@@ -68,6 +116,7 @@ export class TimingEngine {
         this.totalPausedDuration += pausedDuration;
         this.pausedAt = null;
         this.isPlaying = true;
+        this.tick();
     }
 
     /**

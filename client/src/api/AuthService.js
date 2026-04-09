@@ -1,4 +1,9 @@
 class AuthApiError extends Error {
+    /**
+     * @param {string} message 
+     * @param {string} code 
+     * @param {number} status 
+     */
     constructor(message, code, status) {
         super(message);
         this.name = 'AuthApiError';
@@ -8,12 +13,24 @@ class AuthApiError extends Error {
 }
 
 export class AuthService {
+    /**
+     * @param {any} data 
+     * @param {string} fallbackMessage 
+     * @param {number} status 
+     * @returns {AuthApiError}
+     */
     buildAuthError(data, fallbackMessage, status) {
         const code = data?.error?.code || data?.code;
         const message = data?.error?.message || data?.error || data?.message || fallbackMessage;
         return new AuthApiError(message, code, status);
     }
 
+    /**
+     * @param {string} email 
+     * @param {string} name 
+     * @param {string} password 
+     * @returns {Promise<any>}
+     */
     async register(email, name, password) {
         const response = await fetch('/api/auth/register', {
             method: 'POST',
@@ -31,6 +48,11 @@ export class AuthService {
         return data;
     }
 
+    /**
+     * @param {string} email 
+     * @param {string} password 
+     * @returns {Promise<any>}
+     */
     async login(email, password) {
         const response = await fetch('/api/auth/login', {
             method: 'POST',
@@ -55,6 +77,9 @@ export class AuthService {
         });
     }
 
+    /**
+     * @returns {Promise<any>}
+     */
     async getCurrentUser() {
         const response = await fetch('/api/auth/me', {
             credentials: 'include',

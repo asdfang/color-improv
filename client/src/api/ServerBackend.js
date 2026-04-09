@@ -1,4 +1,9 @@
+/** @typedef {import('/src/constants.js').UserPreferences} UserPreferences */
+
 export class ServerBackend {
+    /**
+     * @returns {Promise<UserPreferences | null>}
+     */
     async load() {
         const response = await fetch('/api/preferences', {
             credentials: 'include',
@@ -15,13 +20,21 @@ export class ServerBackend {
         return data.preferences;
     }
 
+    /**
+     * @param {UserPreferences} preferences
+     * @returns {Promise<UserPreferences>}
+     */
     async save(preferences) {
-        preferences.difficulty = preferences.difficulty.toUpperCase();
+        const payload = {
+            ...preferences,
+            difficulty: preferences.difficulty.toUpperCase(),
+        };
+
         const response = await fetch('/api/preferences', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify(preferences),
+            body: JSON.stringify(payload),
         });
 
         if (!response.ok) {

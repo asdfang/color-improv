@@ -30,9 +30,46 @@ export const REQUIRED_SAMPLES = [
 ];
 
 /**
+ * Backing track metadata.
+ * Add new entries here to automatically expand BackingTrackKey type.
+ */
+const BACKING_TRACKS_DATA = {
+    blues: {
+        filename: 'blues.mp3',
+        bpm: 120,
+        silenceOffset: 0.281,   // before first count-in hit
+        countInBeats: 4,        // number of count-in beats before blues progression starts
+        maxLoops: 11,           // number of loops (for active chord highlighting)
+    },
+};
+
+/** @typedef {keyof typeof BACKING_TRACKS_DATA} BackingTrackKey */
+
+/**
+ * @typedef {{
+ *   paths: {
+ *     SAMPLES_BASE: string,
+ *     BACKING_TRACKS_BASE: string,
+ *   },
+ *   samples: number[],
+ *   format: string,
+ *   volumes: {
+ *     MAIN_GAIN_DEFAULT: number,
+ *     SAMPLES_GAIN_DEFAULT: number,
+ *     BACKING_TRACK_GAIN_DEFAULT: number,
+ *     NOTE_FADE_TIME_DEFAULT: number,
+ *   },
+ *   backingTracks: typeof BACKING_TRACKS_DATA,
+ *   getSamplePath: (midiNumber: number) => string,
+ *   getBackingTrackPath: (trackType: BackingTrackKey) => string,
+ * }} AudioConfig
+ */
+
+/**
  * Audio path constants and helper functions.
  * TODO: support multiple instruments, backing tracks, formats with fallback, etc?
  * TODO: user may upload their own samples?
+ * @type {AudioConfig}
  */
 export const AUDIO_CONFIG = {
     paths: {
@@ -49,20 +86,14 @@ export const AUDIO_CONFIG = {
         NOTE_FADE_TIME_DEFAULT: 0.35, // seconds
     },
 
-    backingTracks: {
-        blues: {
-            filename: 'blues.mp3',
-            bpm: 120,
-            silenceOffset: 0.281,   // before first count-in hit
-            countInBeats: 4,        // number of count-in beats before blues progression starts
-            maxLoops: 11,           // number of loops (for active chord highlighting)
-        },
-    },
+    backingTracks: BACKING_TRACKS_DATA,
 
+    /** @param {number} midiNumber */
     getSamplePath(midiNumber) {
         return `${this.paths.SAMPLES_BASE}${midiNumber}.${this.format}`;
     },
 
+    /** @param {BackingTrackKey} trackType */
     getBackingTrackPath(trackType) {
         return `${this.paths.BACKING_TRACKS_BASE}${this.backingTracks[trackType].filename}`;
     },
@@ -118,10 +149,36 @@ export const KEY_MAPPINGS = {
  * Default user preferences in a flat object for simplicity.
  * Used if no preferences are saved in localStorage or account.
  */
+/** @typedef {'easy' | 'medium' | 'hard'} PreferenceDifficulty */
+
+/**
+ * @typedef {{
+ *   difficulty: PreferenceDifficulty,
+ *   backingTrackVolume: number,
+ *   samplesVolume: number,
+ *   backingTrackMuted: boolean,
+ *   samplesMuted: boolean,
+ * }} UserPreferences
+ */
+
+/** @type {UserPreferences} */
 export const PREFERENCE_DEFAULTS = {
     difficulty: 'easy', // | 'medium' | 'hard'
     backingTrackVolume: AUDIO_CONFIG.volumes.BACKING_TRACK_GAIN_DEFAULT,
     samplesVolume: AUDIO_CONFIG.volumes.SAMPLES_GAIN_DEFAULT,
     backingTrackMuted: false,
     samplesMuted: false,
+}
+
+export const SCHEMA = {
+    /** @param {unknown} d */
+    difficulty: (d) => typeof d === 'string' && ['easy', 'medium', 'hard'].includes(d) ? d : undefined,
+    /** @param {unknown} vol */
+    backingTrackVolume: (vol) => typeof vol === 'number' && vol >= 0 && vol <= 1 ? vol : undefined,
+    /** @param {unknown} vol */
+    samplesVolume: (vol) => typeof vol === 'number' && vol >= 0 && vol <= 1 ? vol : undefined,
+    /** @param {unknown} bool */
+    backingTrackMuted: (bool) => typeof bool === 'boolean' ? bool : undefined,
+    /** @param {unknown} bool */
+    samplesMuted: (bool) => typeof bool === 'boolean' ? bool : undefined,
 }
