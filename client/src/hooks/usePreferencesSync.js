@@ -8,7 +8,7 @@ import { ServerBackend } from '../api/ServerBackend';
  * Hook for synchronizing preferences between localStorage and server.
  * On login, checks for conflicts and provides handlers to resolve them.
  */
-export function usePreferenceSync() {
+export function usePreferencesSync() {
     const { currentUser, register, login } = useAuth();
     const { preferences, applyAllPreferences } = usePreferences();
     const [conflictingServerPreferences, setConflictingServerPreferences] = useState(/** @type {UserPreferences | null} */ (null));
