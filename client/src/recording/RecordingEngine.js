@@ -57,20 +57,21 @@ export class RecordingEngine {
      */
     start() {
         this.chunks = []; // Clear previous recordings
-        this.isRecording = true;
         
         const mimeType = this._selectMimeType();
         const options = mimeType ? { mimeType } : {};
-
+        
+        // wrap?
         this.mediaRecorder = new MediaRecorder(this.mediaStreamDestination.stream, options);
-
+        
         this.mediaRecorder.ondataavailable = (e) => {
             if (e.data.size > 0) {
                 this.chunks.push(e.data);
             }
         };
-
+        
         this.mediaRecorder.start();
+        this.isRecording = true;
     }
 
     /**

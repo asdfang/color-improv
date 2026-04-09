@@ -66,6 +66,7 @@ export class TimingEngine {
         if (!this.audioEngine.isReady()) {
             throw new Error('AudioEngine is not ready. Cannot start TimingEngine.');
         }
+        if (this.isPlaying) return;
         this.startTime = this.audioEngine.getCurrentTime();
         this.isPlaying = true;
         this.totalPausedDuration = 0;
@@ -89,6 +90,7 @@ export class TimingEngine {
      * Stop timer, reset start time.
      */
     stop() {
+        if (!this.isPlaying) return;
         this.isPlaying = false;
         this.startTime = null;
         this.pausedAt = null;
@@ -96,7 +98,7 @@ export class TimingEngine {
             cancelAnimationFrame(this.rafId);
             this.rafId = null;
         }
-        this.onBeatChange?.(null);
+        this.setOnBeatChange(null);
         this.lastEmitted = null;
     }
 
