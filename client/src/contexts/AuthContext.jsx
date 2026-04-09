@@ -25,9 +25,15 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         const checkAuth = async () => {
-            const user = await authService.getCurrentUser();
-            if (user) setCurrentUser(user);
-            setIsLoading(false);
+            try {
+                const user = await authService.getCurrentUser();
+                if (user) setCurrentUser(user);
+            }
+            catch (error) {
+                console.warn('Error checking auth status:', error);
+            } finally {
+                setIsLoading(false);
+            }
         };
 
         checkAuth();
