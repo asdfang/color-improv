@@ -12,10 +12,10 @@ const STORAGE_KEY = 'color-improv:prefs';
  *   setPreference: (key: keyof typeof SCHEMA, value: unknown) => void,
  *   applyAllPreferences: (prefs: Partial<UserPreferences>) => void,
  * }} PreferencesContextValue                                                                                         
- */  
+ */
 export const PreferencesContext = createContext(
     /** @type {PreferencesContextValue | null} */
-    (null));                                         
+    (null));
 
 /**
  * This provider manages user preferences, including loading/debounced saving to localStorage and validating input.
