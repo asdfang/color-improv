@@ -42,6 +42,8 @@ import { KEY_MAPPINGS } from "/src/constants.js";
  * @typedef {NoteCellData | ScaleOrChordLabelCellData | ScaleDegreeLabelCellData | EmptyCellData} CellData
  */
 
+/** @typedef {import('/src/constants.js').KeyCode} KeyCode */
+
 // ============================================================================
 // CONSTANTS
 // ============================================================================
@@ -99,7 +101,7 @@ export const CELL_TYPE = /** @type {const} */ ({
 /**
  * Returns the grid coordinates from the KeyboardEvent.code.
  * Top three rows are mixolydian scales, bottom row is blues scale, middle rows are labels.
- * @param {string} key - The keyboard key as named in KEY_MAPPINGS in /src/constants.js
+ * @param {KeyCode} key - The keyboard key as named in KEY_MAPPINGS in /src/constants.js
  * @returns {{row: number, col: number}} - The grid coordinates of the key, with (row: 0, col: 0) as top left.
  */
 export function keyToGridCoordinates(key) {
@@ -149,7 +151,8 @@ export function buildGridData() {
     );
 
     // Build note cells from KEY_MAPPINGS
-    for (const [keyCode, mapping] of Object.entries(KEY_MAPPINGS)) {
+    for (const keyCode of /** @type {KeyCode[]} */ (Object.keys(KEY_MAPPINGS))) {
+        const mapping = KEY_MAPPINGS[keyCode];
         const { row, col } = keyToGridCoordinates(keyCode);
         const { midiNumber, noteName, scaleRoot, scaleMode, scaleDegree } = mapping;
 
