@@ -22,8 +22,14 @@ import { KEY_MAPPINGS } from "/src/constants.js";
  */
 
 /**
- * @typedef {Object} ScaleOrChordLabelCellData
- * @property {'scaleOrChordLabel'} type
+ * @typedef {Object} ScaleLabelCellData
+ * @property {'scaleLabel'} type
+ * @property {string} labelText - Text to display (may contain newlines)
+ */
+
+/**
+ * @typedef {Object} ChordLabelCellData
+ * @property {'chordLabel'} type
  * @property {string} labelText - Text to display (may contain newlines)
  */
 
@@ -39,7 +45,7 @@ import { KEY_MAPPINGS } from "/src/constants.js";
  */
 
 /**
- * @typedef {NoteCellData | ScaleOrChordLabelCellData | ScaleDegreeLabelCellData | EmptyCellData} CellData
+ * @typedef {NoteCellData | ScaleLabelCellData | ChordLabelCellData | ScaleDegreeLabelCellData | EmptyCellData} CellData
  */
 
 /** @typedef {import('/src/constants.js').KeyCode} KeyCode */
@@ -89,7 +95,8 @@ export const GRID_LAYOUT = {
  */
 export const CELL_TYPE = /** @type {const} */ ({
     NOTE: 'note',
-    SCALE_OR_CHORD_LABEL: 'scaleOrChordLabel',
+    SCALE_LABEL: 'scaleLabel',
+    CHORD_LABEL: 'chordLabel',
     SCALE_DEGREE_LABEL: 'scaleDegreeLabel',
     EMPTY: 'empty',
 });
@@ -170,14 +177,14 @@ export function buildGridData() {
     }
 
     // Chord labels (column 0). These cells display labelText with keyboard keys
-    grid[3][0] = { type: CELL_TYPE.SCALE_OR_CHORD_LABEL, labelText: 'G⁷\n(qwertyui)' };
-    grid[4][0] = { type: CELL_TYPE.SCALE_OR_CHORD_LABEL, labelText: 'F⁷\n(asdfghjk)' };
-    grid[5][0] = { type: CELL_TYPE.SCALE_OR_CHORD_LABEL, labelText: 'C⁷\n(zxcvbnm,)' };
-    grid[0][0] = { type: CELL_TYPE.SCALE_OR_CHORD_LABEL, labelText: 'Any!\n(1234567)' };
+    grid[3][0] = { type: CELL_TYPE.CHORD_LABEL, labelText: 'G⁷\n(qwertyui)' };
+    grid[4][0] = { type: CELL_TYPE.CHORD_LABEL, labelText: 'F⁷\n(asdfghjk)' };
+    grid[5][0] = { type: CELL_TYPE.CHORD_LABEL, labelText: 'C⁷\n(zxcvbnm,)' };
+    grid[0][0] = { type: CELL_TYPE.CHORD_LABEL, labelText: 'Any!\n(1234567)' };
 
     // Mixolydian scale degree labels (row 2). This cell displays labelText
     grid[2][0] = {
-        type: CELL_TYPE.SCALE_OR_CHORD_LABEL,
+        type: CELL_TYPE.SCALE_LABEL,
         labelText: 'Mixolydian\nScale Degrees',
     };
     // These cells display scale degrees
@@ -190,7 +197,7 @@ export function buildGridData() {
 
     // Blues scale degree labels (row 1). This cell displays labelText
     grid[1][0] = {
-        type: CELL_TYPE.SCALE_OR_CHORD_LABEL,
+        type: CELL_TYPE.SCALE_LABEL,
         labelText: 'Blues\nScale Degrees',
     };
     // These cells display scale degrees
