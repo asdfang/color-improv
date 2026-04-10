@@ -34,6 +34,18 @@
 
 /** @typedef {keyof typeof KEY_MAPPINGS} KeyCode */
 
+/** @typedef {typeof NOTE_EVENTS[keyof typeof NOTE_EVENTS]} NoteEventName */
+
+/**
+ * @typedef {{
+ *   uniqueID: string,
+ *   midiNumber: number,
+ *   timestamp: number,
+ * }} NoteEventDetail
+ */
+
+/** @typedef {CustomEvent<NoteEventDetail> & {type: NoteEventName}} NoteEvent */
+
 /** @typedef {'easy' | 'medium' | 'hard'} PreferenceDifficulty */
 
 /**
@@ -56,6 +68,14 @@
  * creating a visual "lead" effect for smoother animations.
  */
 export const VISUAL_LEAD_TIME = 0.1; // seconds (100 ms)
+
+/**
+ * Centralized note event names emitted by input handlers and consumed by UI/logging.
+ */
+export const NOTE_EVENTS = /** @type {const} */ ({
+    START: 'notestart',
+    END: 'noteend',
+});
 
 // ============================================================================
 // AUDIO CONSTANTS
