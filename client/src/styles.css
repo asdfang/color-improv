@@ -511,6 +511,11 @@ kbd {
 /* NoteCell */
 .note-cell {
     background: var(--cell-color);
+    transition: transform 80ms ease-out, filter 80ms ease-out;
+}
+.note-cell.pressed {
+    transform: scale(0.98);
+    filter: brightness(0.88);
 }
 
 /* 4) Dialogs */
