@@ -6,7 +6,15 @@ import PropTypes from "prop-types"
  * @param {{color: string, keyCode: KeyCode, midiNumber: number, noteName: string}} props
  */
 export function NoteCell({ color, keyCode, midiNumber, noteName }) {
-    return <div>color: {color}, keyCode: {keyCode}, midiNumber: {midiNumber}, noteName: {noteName}</div>
+    const style = /** @type {import('react').CSSProperties & {'--cell-color': string}} */ ({
+        '--cell-color': color,
+    });
+
+    return (
+        <div className="note-cell" style={style}>
+            keyCode: {keyCode}, midiNumber: {midiNumber}, noteName: {noteName}
+        </div>
+    );
 }
 
 NoteCell.propTypes = {

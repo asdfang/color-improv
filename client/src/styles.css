@@ -508,6 +508,11 @@ kbd {
 #music-grid.playback-paused  { opacity: 0.7; filter: saturate(0.7); }
 #music-grid.playback-stopped { opacity: 0.5; filter: saturate(0); }
 
+/* NoteCell */
+.note-cell {
+    background: var(--cell-color);
+}
+
 /* 4) Dialogs */
 dialog {
     font-family: var(--font-ui);
