@@ -13,7 +13,7 @@ import { KEY_MAPPINGS } from "/src/constants.js";
  * @typedef {Object} NoteCellData
  * @property {'note'} type
  * @property {string} color - HSL color string
- * @property {string} keyCode - KeyboardEvent.code
+ * @property {KeyCode} keyCode - KeyboardEvent.code
  * @property {number} midiNumber
  * @property {string} noteName
  * @property {string} scaleRoot
@@ -185,7 +185,7 @@ export function buildGridData() {
     // Mixolydian scale degree labels (row 2). This cell displays labelText
     grid[2][0] = {
         type: CELL_TYPE.SCALE_LABEL,
-        labelText: 'Mixolydian\nScale Degrees',
+        labelText: 'Mixolydian Scale Degrees',
     };
     // These cells display scale degrees
     for (const [scaleDegree, col] of Object.entries(GRID_LAYOUT.mixolydian.columns)) {
@@ -198,7 +198,7 @@ export function buildGridData() {
     // Blues scale degree labels (row 1). This cell displays labelText
     grid[1][0] = {
         type: CELL_TYPE.SCALE_LABEL,
-        labelText: 'Blues\nScale Degrees',
+        labelText: 'Blues Scale Degrees',
     };
     // These cells display scale degrees
     for (const [scaleDegree, col] of Object.entries(GRID_LAYOUT.blues.columns)) {
