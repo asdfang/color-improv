@@ -9,7 +9,7 @@
 
 #music-grid.playback-playing { opacity: 1;   filter: saturate(1) }
 #music-grid.playback-paused  { opacity: 0.7; filter: saturate(0.7); }
-#music-grid.playback-stopped { opacity: 0.5; }
+#music-grid.playback-stopped { opacity: 0.55; }
 
 #music-grid > div {
     display: flex;
@@ -27,6 +27,8 @@
     transition: transform 80ms ease-out, filter 80ms ease-out;
     cursor: pointer;
     margin: 4px;
+    font-size: 2rem;
+    color: black;
 }
 .note-cell.pressed {
     transform: scale(0.98);
@@ -50,29 +52,35 @@
     height: 22px;
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.9);
-    border: 1.5px solid rgba(255, 255, 255, 0.9);
+    border: 2.2px solid rgba(255, 255, 255, 0.9);
     color: rgba(255, 255, 255, 1);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
+    font-size: 14px;
 }
 .chord-label {
     position: relative;
+    font-size: 1.6rem;
 }
 .keyboard-hint {
     position: absolute;
-    bottom: 14px;
+    bottom: 16px;
+    font-size: 1.2rem;
+    font-style: italic;
+    color: #777;
 }
 
 /* ScaleLabelCell */
 .scale-label-cell {
     flex-direction: column;
+    font-size: 1.6rem;
 }
 
 /* ScaleDegreeLabelCell */
 .scale-degree-label-cell {
     position: relative;
+    font-size: 1.6rem;
     /* display: flex;
     justify-content: center;
     align-items: center; */
@@ -90,8 +98,8 @@
 }
 
 .blues-row {
-    padding-bottom: 20px;
+    padding-bottom: 28px;
 }
 .mixolydian-row {
-    padding-top: 20px;
+    padding-top: 28px;
 }
