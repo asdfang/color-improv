@@ -8,6 +8,7 @@ import { VolumeControl } from './components/controls/VolumeControl'; // TODO: ex
 import { PlaybackControls } from './components/controls/PlaybackControls'; // TODO: extract to TopPanel
 import { Grid } from './components/grid/Grid';
 import { AuthControls } from './components/controls/AuthControls';
+import { InstructionsButton } from './components/controls/InstructionsButton';
 import { DifficultySelect } from './components/controls/DifficultySelect';
 
 export default function App() {
@@ -41,6 +42,7 @@ export default function App() {
                 <PlaybackControls />
                 <div id="settings-panel">
                     <AuthControls />
+                    <InstructionsButton />
                     <DifficultySelect />
                 </div>
             </div>
