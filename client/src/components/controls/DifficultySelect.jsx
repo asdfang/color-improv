@@ -9,7 +9,7 @@ export function DifficultySelect() {
     };
 
     return (
-        <div className="difficulty-select">
+        <div id="difficulty-select">
             <label htmlFor="difficulty-select">Difficulty:</label>
             <select id="difficulty-select" value={preferences.difficulty} onChange={handleSelect}>
                 <option value="easy">Easy (both helpers)</option>

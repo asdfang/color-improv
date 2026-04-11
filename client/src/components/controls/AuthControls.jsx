@@ -13,7 +13,7 @@ export function AuthControls() {
     }
 
     return (
-        <div className="auth-controls">
+        <div id="auth-controls">
             {isLoggedIn ? (
                 <button onClick={logout}>Logout</button>
             ) : (

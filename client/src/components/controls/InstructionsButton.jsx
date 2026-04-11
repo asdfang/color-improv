@@ -1,6 +1,6 @@
 export function InstructionsButton() {
     return (
-        <div className="instructions-button">
+        <div id="instructions-button">
             <span>Click for instructions and help.</span>
         </div>
     );

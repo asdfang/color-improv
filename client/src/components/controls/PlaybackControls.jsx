@@ -44,7 +44,7 @@ export function PlaybackControls() {
     }, [handleKeyDown]);
 
     return (
-        <div className="playback-controls">
+        <div id="playback-controls">
             <button
                 onClick={handlePlayOrResume}
                 title={playbackState === 'paused' ? 'Resume' : 'Play'}
