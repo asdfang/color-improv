@@ -4,6 +4,7 @@ import { usePlayback } from './contexts/PlaybackContext';
 import { usePreferences } from './contexts/PreferencesContext';
 import { useStudio } from './contexts/StudioContext';
 import { usePreferencesSync } from './hooks/usePreferencesSync';
+import { PlaybackControls } from './components/controls/PlaybackControls'; // TODO: extract to TopPanel
 import { Grid } from './components/grid/Grid';
 
 export default function App() {
@@ -34,9 +35,7 @@ export default function App() {
                 <p>Current Preferences: {JSON.stringify(preferences)}</p>
                 <p>Current User: {currentUser ? currentUser.email : 'Not logged in'}</p>
                 <p>Playback State: {playbackState}</p>
-                <button onClick={play}>Play</button>
-                <button onClick={pause}>Pause</button>
-                <button onClick={stop}>Stop</button>
+                <PlaybackControls />
             </div>
             <Grid />
         </div>

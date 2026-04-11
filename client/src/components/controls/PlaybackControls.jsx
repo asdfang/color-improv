@@ -1,0 +1,55 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlay, faPause, faStop, faCircle} from '@fortawesome/free-solid-svg-icons';
+import { useCallback, useEffect } from 'react';
+import { usePlayback } from '../../contexts/PlaybackContext';
+
+export function PlaybackControls() {
+    const { playbackState, isRecording, play, resume, pause, stop, record } = usePlayback();
+
+    const canPlayOrResume = playbackState === 'stopped' || playbackState === 'paused';
+    const canPause = playbackState === 'playing' && !isRecording;
+    const canStop = playbackState === 'playing' || playbackState === 'paused';
+    const canRecord = playbackState === 'stopped';
+    
+    const handlePlayOrResume = useCallback(() => {
+        if (playbackState === 'stopped') play();
+        else if (playbackState === 'paused') resume();
+    }, [playbackState, play, resume]);
+
+    /** @type {(e: KeyboardEvent) => void} */
+    const handleKeyDown = useCallback((e) => {
+        const target = e.target;
+        if (!(target instanceof HTMLElement)) return;
+        if (["INPUT", "TEXTAREA"].includes(target.tagName)) return;
+        if (e.repeat) return;
+        
+        const { code, shiftKey } = e;
+        if (code === 'Space' && !shiftKey) {
+            e.preventDefault();
+            if (isRecording) return;
+            if (playbackState === 'playing') pause();
+            else handlePlayOrResume();
+        } else if (code === 'Space' && shiftKey) {
+            e.preventDefault();
+            if (playbackState !== 'stopped') stop();
+        } else if (code === 'KeyR' && shiftKey) {
+            e.preventDefault();
+            if (playbackState === 'stopped' && !isRecording) record();
+        }
+    }, [playbackState, isRecording, pause, stop, record, handlePlayOrResume]);
+
+    useEffect(() => {
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [handleKeyDown]);
+
+    return (
+        <div className="playback-controls">
+            <button onClick={handlePlayOrResume} disabled={!canPlayOrResume}><FontAwesomeIcon icon={faPlay} /></button>
+            <button onClick={pause} disabled={!canPause}><FontAwesomeIcon icon={faPause} /></button>
+            <button onClick={stop} disabled={!canStop}><FontAwesomeIcon icon={faStop} /></button>
+            <button onClick={record} disabled={!canRecord}><FontAwesomeIcon icon={faCircle} />
+            </button>
+        </div>
+    );
+}
