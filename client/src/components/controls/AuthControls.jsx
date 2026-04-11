@@ -15,11 +15,11 @@ export function AuthControls() {
     return (
         <div id="auth-controls">
             {isLoggedIn ? (
-                <button onClick={logout}>Logout</button>
+                <button className="btn-text" onClick={logout}>Logout</button>
             ) : (
                 <>
-                    <button onClick={handleRegister}>Register</button>
-                    <button onClick={handleLogin}>Login</button>
+                    <button className="btn-text" onClick={handleRegister}>Register</button>
+                    <button className="btn-text" onClick={handleLogin}>Login</button>
                 </>
             )}
         </div>
