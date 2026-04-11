@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useStudio } from '/src/contexts/StudioContext';
 import { usePlayback } from '/src/contexts/PlaybackContext';
 import { useActiveNotes } from '/src/hooks/useActiveNotes';
 import { NoteCell } from './NoteCell';
@@ -12,9 +13,34 @@ import { CELL_TYPE, buildGridData } from '/src/visual/grid-data.js';
 /** @typedef {import('/src/contexts/PlaybackContext.jsx').PlaybackState} PlaybackState */
 
 export function Grid() {
+    const { timingEngine } = useStudio();
     const { playbackState } = usePlayback();
     const activeNotes = useActiveNotes();
     const [gridData] = useState(() => buildGridData());
+    const [currentChord, setCurrentChord] = useState(/** @type {string | null} */ (null));
+    const [nextChord, setNextChord] = useState(/** @type {string | null} */ (null));
+    const [beatsUntilNextChord, setBeatsUntilNextChord] = useState(/** @type {number | null} */ (null));
+
+    useEffect(() => {
+        /**
+         * @param {{ currentChord: string | null, nextChord: string, beatsUntilNextChord: number | null }} data
+         */
+        const handleBeatChange = ({ currentChord, nextChord, beatsUntilNextChord }) => {
+            setCurrentChord(currentChord);
+            setNextChord(nextChord);
+            if (beatsUntilNextChord !== null && beatsUntilNextChord <= 4) {
+                setBeatsUntilNextChord(beatsUntilNextChord);
+            } else {
+                setBeatsUntilNextChord(null);
+            }
+        };
+
+        timingEngine.setOnBeatChange(handleBeatChange);
+
+        return () => {
+            timingEngine.setOnBeatChange(null);
+        };
+    });
 
     /**
      * @param {CellData} cell 
@@ -39,20 +65,29 @@ export function Grid() {
                 );
             }
             case CELL_TYPE.SCALE_LABEL: {
-                const { labelText } = cell;
+                const { label } = cell;
                 return (
                     <ScaleLabelCell
                         key={key}
-                        labelText={labelText}
+                        label={label}
                     />
                 );
             }
             case CELL_TYPE.CHORD_LABEL: {
-                const { labelText } = cell;
+                const { chordName, label, keyboardHint } = cell;
                 return (
                     <ChordLabelCell
                         key={key}
-                        labelText={labelText}
+                        chordName={chordName}
+                        label={label}
+                        keyboardHint={keyboardHint}
+                        isHighlighted={chordName !== null && chordName === currentChord}
+                        countdown={
+                            (chordName != null
+                            && chordName === nextChord)
+                            ? beatsUntilNextChord
+                            : null
+                        }
                     />
                 );
             }
