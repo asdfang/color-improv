@@ -44,19 +44,12 @@ export const PITCH_CLASS_TO_COLOR = {
 
 /**
  * Color helpers for common alpha variants.
+ * @param {number} alpha - Opacity value between 0 and 1.
+ * @returns {string} - The RGBA color string with the specified alpha.
  */
 export const COLOR_ALPHA = {
     WHITE: (alpha) => `rgba(255, 255, 255, ${alpha})`,
     BLACK: (alpha) => `rgba(0, 0, 0, ${alpha})`,
-};
-
-/**
- * Visual adjustments per playback state.
- */
-export const PLAYBACK_VISUALS = {
-    playing: { opacity: 1, desaturate: 0 },
-    paused: { opacity: 0.7, desaturate: 0.3 },
-    stopped: { opacity: 0.5, desaturate: 1 },
 };
 
 /**

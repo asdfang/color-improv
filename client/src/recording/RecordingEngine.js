@@ -61,7 +61,6 @@ export class RecordingEngine {
         const mimeType = this._selectMimeType();
         const options = mimeType ? { mimeType } : {};
         
-        // wrap?
         this.mediaRecorder = new MediaRecorder(this.mediaStreamDestination.stream, options);
         
         this.mediaRecorder.ondataavailable = (e) => {

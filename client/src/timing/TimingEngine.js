@@ -90,7 +90,6 @@ export class TimingEngine {
      * Stop timer, reset start time.
      */
     stop() {
-        if (!this.isPlaying) return;
         this.isPlaying = false;
         this.startTime = null;
         this.pausedAt = null;

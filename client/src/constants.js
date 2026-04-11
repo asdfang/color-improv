@@ -7,6 +7,62 @@
  */
 
 // ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+/** @typedef {keyof typeof BACKING_TRACKS_DATA} BackingTrackKey */
+
+/**
+ * @typedef {{
+ *   paths: {
+ *     SAMPLES_BASE: string,
+ *     BACKING_TRACKS_BASE: string,
+ *   },
+ *   samples: number[],
+ *   format: string,
+ *   volumes: {
+ *     MAIN_GAIN_DEFAULT: number,
+ *     SAMPLES_GAIN_DEFAULT: number,
+ *     BACKING_TRACK_GAIN_DEFAULT: number,
+ *     NOTE_FADE_TIME_DEFAULT: number,
+ *   },
+ *   backingTracks: typeof BACKING_TRACKS_DATA,
+ *   getSamplePath: (midiNumber: number) => string,
+ *   getBackingTrackPath: (trackType: BackingTrackKey) => string,
+ * }} AudioConfig
+ */
+
+/** @typedef {keyof typeof KEY_MAPPINGS} KeyCode */
+
+/** @typedef {typeof NOTE_EVENTS[keyof typeof NOTE_EVENTS]} NoteEventName */
+
+/**
+ * @typedef {{
+ *   uniqueID: string,
+ *   midiNumber: number,
+ *   timestamp: number,
+ * }} NoteEventDetail
+ */
+
+/** @typedef {CustomEvent<NoteEventDetail> & {type: NoteEventName}} NoteEvent */
+
+/** @typedef {'easy' | 'medium' | 'hard'} PreferenceDifficulty */
+
+/**
+ * @typedef {'C7' | 'F7' | 'G7'} ChordName
+ */
+
+/**
+ * @typedef {{
+ *   difficulty: PreferenceDifficulty,
+ *   backingTrackVolume: number,
+ *   samplesVolume: number,
+ *   backingTrackMuted: boolean,
+ *   samplesMuted: boolean,
+ * }} UserPreferences
+ */
+
+// ============================================================================
 // VISUAL CONSTANTS
 // ============================================================================
 
@@ -16,6 +72,36 @@
  * creating a visual "lead" effect for smoother animations.
  */
 export const VISUAL_LEAD_TIME = 0.1; // seconds (100 ms)
+
+/**
+ * Centralized note event names emitted by input handlers and consumed by UI/logging.
+ */
+export const NOTE_EVENTS = /** @type {const} */ ({
+    START: 'notestart',
+    END: 'noteend',
+});
+
+/**
+ * Centralized chord definitions for the 12-bar blues progression.
+ * Maps internal chord names to their display representations.
+ */
+export const CHORDS = /** @type {const} */ ({
+    C7: {
+        name: 'C7',
+        display: 'C⁷',
+        root: 'C',
+    },
+    F7: {
+        name: 'F7',
+        display: 'F⁷',
+        root: 'F',
+    },
+    G7: {
+        name: 'G7',
+        display: 'G⁷',
+        root: 'G',
+    },
+});
 
 // ============================================================================
 // AUDIO CONSTANTS
@@ -42,28 +128,6 @@ const BACKING_TRACKS_DATA = {
         maxLoops: 11,           // number of loops (for active chord highlighting)
     },
 };
-
-/** @typedef {keyof typeof BACKING_TRACKS_DATA} BackingTrackKey */
-
-/**
- * @typedef {{
- *   paths: {
- *     SAMPLES_BASE: string,
- *     BACKING_TRACKS_BASE: string,
- *   },
- *   samples: number[],
- *   format: string,
- *   volumes: {
- *     MAIN_GAIN_DEFAULT: number,
- *     SAMPLES_GAIN_DEFAULT: number,
- *     BACKING_TRACK_GAIN_DEFAULT: number,
- *     NOTE_FADE_TIME_DEFAULT: number,
- *   },
- *   backingTracks: typeof BACKING_TRACKS_DATA,
- *   getSamplePath: (midiNumber: number) => string,
- *   getBackingTrackPath: (trackType: BackingTrackKey) => string,
- * }} AudioConfig
- */
 
 /**
  * Audio path constants and helper functions.
@@ -103,7 +167,7 @@ export const AUDIO_CONFIG = {
  * Musical data linked with a keyboard key, using KeyboardEvent.code as the key.
  * Note that scale degrees reach 8 (as opposed to 1) for convenience.
  */
-export const KEY_MAPPINGS = {
+export const KEY_MAPPINGS = /** @type {const} */ ({
     // G Mixolydian scale - top row (qwertyui)
     'KeyQ': { midiNumber: 67, noteName: 'G', scaleRoot: 'G', scaleMode: 'Mixolydian', scaleDegree: '1' },
     'KeyW': { midiNumber: 69, noteName: 'A', scaleRoot: 'G', scaleMode: 'Mixolydian', scaleDegree: '2' },
@@ -142,23 +206,12 @@ export const KEY_MAPPINGS = {
     'Digit5': { midiNumber: 67, noteName: 'G', scaleRoot: 'C', scaleMode: 'Blues', scaleDegree: '5' },
     'Digit6': { midiNumber: 70, noteName: 'B♭', scaleRoot: 'C', scaleMode: 'Blues', scaleDegree: '♭7' },
     'Digit7': { midiNumber: 72, noteName: 'C', scaleRoot: 'C', scaleMode: 'Blues', scaleDegree: '8' },
-};
+});
 
 /**
  * NOTE: These defaults should match PREFERENCE_DEFAULTS in server/src/constants.js.
  * Default user preferences in a flat object for simplicity.
  * Used if no preferences are saved in localStorage or account.
- */
-/** @typedef {'easy' | 'medium' | 'hard'} PreferenceDifficulty */
-
-/**
- * @typedef {{
- *   difficulty: PreferenceDifficulty,
- *   backingTrackVolume: number,
- *   samplesVolume: number,
- *   backingTrackMuted: boolean,
- *   samplesMuted: boolean,
- * }} UserPreferences
  */
 
 /** @type {UserPreferences} */
