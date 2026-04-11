@@ -4,6 +4,7 @@
 
 import { midiToColor } from "/src/visual/color-data.js";
 import { KEY_MAPPINGS } from "/src/constants.js";
+import { CHORDS } from "/src/constants.js";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -24,13 +25,15 @@ import { KEY_MAPPINGS } from "/src/constants.js";
 /**
  * @typedef {Object} ScaleLabelCellData
  * @property {'scaleLabel'} type
- * @property {string} labelText - Text to display (may contain newlines)
+ * @property {string} label - Scale label text to display
  */
 
 /**
  * @typedef {Object} ChordLabelCellData
  * @property {'chordLabel'} type
- * @property {string} labelText - Text to display (may contain newlines)
+ * @property {string|null} chordName - The chord this label corresponds to, or null if it applies to all chords. Used for determining when to highlight the label.
+ * @property {string} label - Chord label text to display
+ * @property {string} keyboardHint - Hint text to display under the chord label for keyboard keys that play this chord
  */
 
 /**
@@ -177,15 +180,35 @@ export function buildGridData() {
     }
 
     // Chord labels (column 0). These cells display labelText with keyboard keys
-    grid[3][0] = { type: CELL_TYPE.CHORD_LABEL, labelText: 'G⁷\n(qwertyui)' };
-    grid[4][0] = { type: CELL_TYPE.CHORD_LABEL, labelText: 'F⁷\n(asdfghjk)' };
-    grid[5][0] = { type: CELL_TYPE.CHORD_LABEL, labelText: 'C⁷\n(zxcvbnm,)' };
-    grid[0][0] = { type: CELL_TYPE.CHORD_LABEL, labelText: 'Any!\n(1234567)' };
+    grid[3][0] = { 
+        type: CELL_TYPE.CHORD_LABEL,
+        chordName: 'G7',
+        label: CHORDS['G7'].display,
+        keyboardHint: '(qwertyui)',
+    };
+    grid[4][0] = { 
+        type: CELL_TYPE.CHORD_LABEL,
+        chordName: 'F7',
+        label: CHORDS['F7'].display,
+        keyboardHint: '(asdfghjk)'
+    };
+    grid[5][0] = { 
+        type: CELL_TYPE.CHORD_LABEL,
+        chordName: 'C7',
+        label: CHORDS['C7'].display,
+        keyboardHint: '(zxcvbnm,)'
+    };
+    grid[0][0] = { 
+        type: CELL_TYPE.CHORD_LABEL,
+        chordName: null,
+        label: 'Any!',
+        keyboardHint: '(1234567)',
+    };
 
     // Mixolydian scale degree labels (row 2). This cell displays labelText
     grid[2][0] = {
         type: CELL_TYPE.SCALE_LABEL,
-        labelText: 'Mixolydian Scale Degrees',
+        label: 'Mixolydian Scale Degrees',
     };
     // These cells display scale degrees
     for (const [scaleDegree, col] of Object.entries(GRID_LAYOUT.mixolydian.columns)) {
@@ -198,7 +221,7 @@ export function buildGridData() {
     // Blues scale degree labels (row 1). This cell displays labelText
     grid[1][0] = {
         type: CELL_TYPE.SCALE_LABEL,
-        labelText: 'Blues Scale Degrees',
+        label: 'Blues Scale Degrees',
     };
     // These cells display scale degrees
     for (const [scaleDegree, col] of Object.entries(GRID_LAYOUT.blues.columns)) {

@@ -49,6 +49,10 @@
 /** @typedef {'easy' | 'medium' | 'hard'} PreferenceDifficulty */
 
 /**
+ * @typedef {'C7' | 'F7' | 'G7'} ChordName
+ */
+
+/**
  * @typedef {{
  *   difficulty: PreferenceDifficulty,
  *   backingTrackVolume: number,
@@ -75,6 +79,28 @@ export const VISUAL_LEAD_TIME = 0.1; // seconds (100 ms)
 export const NOTE_EVENTS = /** @type {const} */ ({
     START: 'notestart',
     END: 'noteend',
+});
+
+/**
+ * Centralized chord definitions for the 12-bar blues progression.
+ * Maps internal chord names to their display representations.
+ */
+export const CHORDS = /** @type {const} */ ({
+    C7: {
+        name: 'C7',
+        display: 'C⁷',
+        root: 'C',
+    },
+    F7: {
+        name: 'F7',
+        display: 'F⁷',
+        root: 'F',
+    },
+    G7: {
+        name: 'G7',
+        display: 'G⁷',
+        root: 'G',
+    },
 });
 
 // ============================================================================
