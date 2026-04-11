@@ -60,11 +60,13 @@ export function VolumeControl({ source }) {
 
     return (
         <div className="volume-control">
-            <label>
+            <label htmlFor={`${source}-volume-slider`} className="volume-label">
                 {source === 'backingTrack' ? 'Backing Track' : 'Samples'}
             </label>
             <input
+                id={`${source}-volume-slider`}
                 className="volume-slider"
+                title="Volume"
                 type="range"
                 min="0"
                 max="1"
@@ -73,22 +75,18 @@ export function VolumeControl({ source }) {
                 onChange={handleVolumeChange}
             />
             <div className="mute-toggle">
-                <button onClick={handleMuteToggle}>
+                <button onClick={handleMuteToggle} title="Mute/Unmute">
                     {preferences[config.mutePreferenceKey] ? (
                         <FontAwesomeIcon icon={faVolumeMute} />
                     ) : (
                         <FontAwesomeIcon icon={faVolumeUp} />
                     )}
                 </button>
-                <label>
-                    {preferences[config.mutePreferenceKey] ? 'Muted' : 'Unmuted'}
-                </label>
             </div>
-            <div className="reset-button">
+            <div className="reset-button" title="Reset to Defaults">
                 <button onClick={handleReset}>
                     <FontAwesomeIcon icon={faUndo} />
                 </button>
-                <label>Reset</label>
             </div>
         </div>
     );

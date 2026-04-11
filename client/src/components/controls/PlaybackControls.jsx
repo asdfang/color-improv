@@ -45,11 +45,26 @@ export function PlaybackControls() {
 
     return (
         <div className="playback-controls">
-            <button onClick={handlePlayOrResume} disabled={!canPlayOrResume}><FontAwesomeIcon icon={faPlay} /></button>
-            <button onClick={pause} disabled={!canPause}><FontAwesomeIcon icon={faPause} /></button>
-            <button onClick={stop} disabled={!canStop}><FontAwesomeIcon icon={faStop} /></button>
-            <button onClick={record} disabled={!canRecord}><FontAwesomeIcon icon={faCircle} />
-            </button>
+            <button
+                onClick={handlePlayOrResume}
+                title={playbackState === 'paused' ? 'Resume' : 'Play'}
+                disabled={!canPlayOrResume}
+            ><FontAwesomeIcon icon={faPlay} /></button>
+            <button
+                onClick={pause}
+                title="Pause"
+                disabled={!canPause}
+            ><FontAwesomeIcon icon={faPause} /></button>
+            <button
+                onClick={stop}
+                title="Stop"
+                disabled={!canStop}
+            ><FontAwesomeIcon icon={faStop} /></button>
+            <button
+                onClick={record}
+                title="Record"
+                disabled={!canRecord}
+            ><FontAwesomeIcon icon={faCircle} /></button>
         </div>
     );
 }
