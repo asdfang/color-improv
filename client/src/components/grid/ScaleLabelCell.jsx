@@ -1,12 +1,12 @@
 import PropTypes from "prop-types";
 
 /**
- * @param {{labelText: string}} props
+ * @param {{label: string}} props
  */
-export function ScaleLabelCell({ labelText }) {
-    return <div>{labelText}</div>;
+export function ScaleLabelCell({ label }) {
+    return <div>{label}</div>;
 }
 
 ScaleLabelCell.propTypes = {
-    labelText: PropTypes.string.isRequired,
+    label: PropTypes.string.isRequired,
 };
