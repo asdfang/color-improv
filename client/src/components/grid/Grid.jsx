@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useStudio } from '/src/contexts/StudioContext';
+import { usePreferences } from '/src/contexts/PreferencesContext';
 import { usePlayback } from '/src/contexts/PlaybackContext';
 import { useActiveNotes } from '/src/hooks/useActiveNotes';
 import { NoteCell } from './NoteCell';
@@ -14,6 +15,7 @@ import { CELL_TYPE, buildGridData } from '/src/visual/grid-data.js';
 
 export function Grid() {
     const { timingEngine } = useStudio();
+    const { preferences } = usePreferences();
     const { playbackState } = usePlayback();
     const activeNotes = useActiveNotes();
     const [gridData] = useState(() => buildGridData());
@@ -26,13 +28,16 @@ export function Grid() {
          * @param {{ currentChord: string | null, nextChord: string, beatsUntilNextChord: number | null }} data
          */
         const handleBeatChange = ({ currentChord, nextChord, beatsUntilNextChord }) => {
-            setCurrentChord(currentChord);
-            setNextChord(nextChord);
-            if (beatsUntilNextChord !== null && beatsUntilNextChord <= 4) {
-                setBeatsUntilNextChord(beatsUntilNextChord);
-            } else {
-                setBeatsUntilNextChord(null);
-            }
+            const showCurrentChord = preferences.difficulty !== 'hard';
+            const showCountdown = preferences.difficulty === 'easy';
+            
+            setCurrentChord(showCurrentChord ? currentChord : null);
+            setNextChord(showCountdown ? nextChord : null);
+            setBeatsUntilNextChord(
+                showCountdown && (beatsUntilNextChord !== null && beatsUntilNextChord <= 4)
+                    ? beatsUntilNextChord
+                    : null
+            );
         };
 
         timingEngine.setOnBeatChange(handleBeatChange);

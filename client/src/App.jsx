@@ -7,6 +7,7 @@ import { usePreferencesSync } from './hooks/usePreferencesSync';
 import { VolumeControl } from './components/controls/VolumeControl'; // TODO: extract to TopPanel
 import { PlaybackControls } from './components/controls/PlaybackControls'; // TODO: extract to TopPanel
 import { Grid } from './components/grid/Grid';
+import { DifficultySelect } from './components/controls/DifficultySelect';
 
 export default function App() {
     const { audioEngine, timingEngine, recordingEngine, noteLogger, keyboardHandler } = useStudio();
@@ -37,6 +38,9 @@ export default function App() {
                     <VolumeControl source="samples" />
                 </div>
                 <PlaybackControls />
+                <div id="settings-panel">
+                    <DifficultySelect />
+                </div>
             </div>
             <Grid />
         </div>
