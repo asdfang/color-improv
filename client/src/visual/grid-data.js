@@ -40,7 +40,7 @@ import { CHORDS } from "/src/constants.js";
 /**
  * @typedef {Object} ScaleDegreeLabelCellData
  * @property {'scaleDegreeLabel'} type
- * @property {string} scaleName - The scale this this label corresponds to
+ * @property {string} scaleName - The scale this label corresponds to
  * @property {string} scaleDegree - Scale degree notation (e.g., '1', '♭3', '♯4')
  */
 
