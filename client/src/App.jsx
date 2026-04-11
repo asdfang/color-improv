@@ -7,6 +7,7 @@ import { usePreferencesSync } from './hooks/usePreferencesSync';
 import { VolumeControl } from './components/controls/VolumeControl'; // TODO: extract to TopPanel
 import { PlaybackControls } from './components/controls/PlaybackControls'; // TODO: extract to TopPanel
 import { Grid } from './components/grid/Grid';
+import { AuthControls } from './components/controls/AuthControls';
 import { DifficultySelect } from './components/controls/DifficultySelect';
 
 export default function App() {
@@ -39,6 +40,7 @@ export default function App() {
                 </div>
                 <PlaybackControls />
                 <div id="settings-panel">
+                    <AuthControls />
                     <DifficultySelect />
                 </div>
             </div>
