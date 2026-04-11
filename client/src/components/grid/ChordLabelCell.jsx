@@ -6,8 +6,8 @@ import PropTypes from "prop-types";
 export function ChordLabelCell({ label, keyboardHint, isHighlighted, countdown }) {
     return (
         <div className={`chord-label-cell ${isHighlighted ? 'highlighted' : ''}`}>
-            <p>{label}</p>
-            <p>{keyboardHint}</p>
+            <p className="chord-label">{label}</p>
+            <p className="keyboard-hint">{keyboardHint}</p>
             {countdown !== null && <span className="countdown">{countdown}</span>}
         </div>
     );

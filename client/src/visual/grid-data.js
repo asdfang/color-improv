@@ -25,6 +25,7 @@ import { CHORDS } from "/src/constants.js";
 /**
  * @typedef {Object} ScaleLabelCellData
  * @property {'scaleLabel'} type
+ * @property {string} scaleName - The scale this label corresponds to.
  * @property {string} label - Scale label text to display
  */
 
@@ -39,6 +40,7 @@ import { CHORDS } from "/src/constants.js";
 /**
  * @typedef {Object} ScaleDegreeLabelCellData
  * @property {'scaleDegreeLabel'} type
+ * @property {string} scaleName - The scale this this label corresponds to
  * @property {string} scaleDegree - Scale degree notation (e.g., '1', '♭3', '♯4')
  */
 
@@ -208,12 +210,14 @@ export function buildGridData() {
     // Mixolydian scale degree labels (row 2). This cell displays labelText
     grid[2][0] = {
         type: CELL_TYPE.SCALE_LABEL,
-        label: 'Mixolydian Scale Degrees',
+        scaleName: 'mixolydian',
+        label: 'Scale Degrees',
     };
     // These cells display scale degrees
     for (const [scaleDegree, col] of Object.entries(GRID_LAYOUT.mixolydian.columns)) {
         grid[2][col] = {
             type: CELL_TYPE.SCALE_DEGREE_LABEL,
+            scaleName: 'mixolydian',
             scaleDegree,
         };
     }
@@ -221,12 +225,14 @@ export function buildGridData() {
     // Blues scale degree labels (row 1). This cell displays labelText
     grid[1][0] = {
         type: CELL_TYPE.SCALE_LABEL,
-        label: 'Blues Scale Degrees',
+        scaleName: 'blues',
+        label: 'Scale Degrees',
     };
     // These cells display scale degrees
     for (const [scaleDegree, col] of Object.entries(GRID_LAYOUT.blues.columns)) {
         grid[1][col] = {
             type: CELL_TYPE.SCALE_DEGREE_LABEL,
+            scaleName: 'blues',
             scaleDegree,
         };
     }

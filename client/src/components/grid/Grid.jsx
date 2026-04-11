@@ -65,10 +65,11 @@ export function Grid() {
                 );
             }
             case CELL_TYPE.SCALE_LABEL: {
-                const { label } = cell;
+                const { scaleName, label } = cell;
                 return (
                     <ScaleLabelCell
                         key={key}
+                        scaleName={scaleName}
                         label={label}
                     />
                 );
@@ -92,11 +93,12 @@ export function Grid() {
                 );
             }
             case CELL_TYPE.SCALE_DEGREE_LABEL: {
-                const { scaleDegree } = cell;
+                const { scaleDegree, scaleName } = cell;
                 return (
                     <ScaleDegreeLabelCell
                         key={key}
                         scaleDegree={scaleDegree}
+                        scaleName={scaleName}
                     />
                 );
             }

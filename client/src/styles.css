@@ -508,9 +508,18 @@ kbd {
 #music-grid.playback-paused  { opacity: 0.7; filter: saturate(0.7); }
 #music-grid.playback-stopped { opacity: 0.5; filter: saturate(0); }
 
+#music-grid > div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 /* NoteCell */
 .note-cell {
     background: var(--cell-color);
+    /* display: flex;
+    justify-content: center;
+    align-items: center; */
     transition: transform 80ms ease-out, filter 80ms ease-out;
 }
 .note-cell.pressed {
@@ -521,6 +530,7 @@ kbd {
 /* ChordLabelCell */
 .chord-label-cell {
     position: relative;
+    flex-direction: column;
 }
 .chord-label-cell.highlighted {
     border: 4px solid rgba(255, 255, 255, 1);
@@ -536,10 +546,48 @@ kbd {
     background: rgba(0, 0, 0, 0.9);
     border: 1.5px solid rgba(255, 255, 255, 0.9);
     color: rgba(255, 255, 255, 1);
-    display: flex;
+    /* display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: center; */
     font-size: 14px;
+}
+.chord-label {
+    position: relative;
+}
+.keyboard-hint {
+    position: absolute;
+    bottom: 14px;
+}
+
+/* ScaleLabelCell */
+.scale-label-cell {
+    flex-direction: column;
+}
+
+/* ScaleDegreeLabelCell */
+.scale-degree-label-cell {
+    position: relative;
+    /* display: flex;
+    justify-content: center;
+    align-items: center; */
+}
+.scale-degree-label-cell .degree-number {
+    position: relative;
+}
+.scale-degree-label-cell .degree-number::before {
+    content: '^';
+    position: absolute;
+    top: -0.6em;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8em;
+}
+
+.blues-row {
+    padding-bottom: 20px;
+}
+.mixolydian-row {
+    padding-top: 20px;
 }
 
 /* 4) Dialogs */

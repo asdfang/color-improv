@@ -12,7 +12,7 @@ export function NoteCell({ color, keyCode, midiNumber, noteName, isActive }) {
 
     return (
         <div className={`note-cell ${isActive ? 'pressed' : ''}`} style={style}>
-            noteName: {noteName}
+            {noteName}
         </div>
     );
 }
