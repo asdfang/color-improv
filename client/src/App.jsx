@@ -4,6 +4,7 @@ import { usePlayback } from './contexts/PlaybackContext';
 import { usePreferences } from './contexts/PreferencesContext';
 import { useStudio } from './contexts/StudioContext';
 import { usePreferencesSync } from './hooks/usePreferencesSync';
+import { VolumeControl } from './components/controls/VolumeControl'; // TODO: extract to TopPanel
 import { PlaybackControls } from './components/controls/PlaybackControls'; // TODO: extract to TopPanel
 import { Grid } from './components/grid/Grid';
 
@@ -31,10 +32,10 @@ export default function App() {
     return (
         <div id="app">
             <div id="top-panel">
-                <p>React is working!</p>
-                <p>Current Preferences: {JSON.stringify(preferences)}</p>
-                <p>Current User: {currentUser ? currentUser.email : 'Not logged in'}</p>
-                <p>Playback State: {playbackState}</p>
+                <div id="volume-controls">
+                    <VolumeControl source="backingTrack" />
+                    <VolumeControl source="samples" />
+                </div>
                 <PlaybackControls />
             </div>
             <Grid />
