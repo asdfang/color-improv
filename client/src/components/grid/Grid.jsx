@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useStudio } from '/src/contexts/StudioContext';
+import { usePreferences } from '/src/contexts/PreferencesContext';
 import { usePlayback } from '/src/contexts/PlaybackContext';
 import { useActiveNotes } from '/src/hooks/useActiveNotes';
 import { NoteCell } from './NoteCell';
@@ -14,25 +15,30 @@ import { CELL_TYPE, buildGridData } from '/src/visual/grid-data.js';
 
 export function Grid() {
     const { timingEngine } = useStudio();
+    const { preferences } = usePreferences();
     const { playbackState } = usePlayback();
     const activeNotes = useActiveNotes();
     const [gridData] = useState(() => buildGridData());
     const [currentChord, setCurrentChord] = useState(/** @type {string | null} */ (null));
     const [nextChord, setNextChord] = useState(/** @type {string | null} */ (null));
     const [beatsUntilNextChord, setBeatsUntilNextChord] = useState(/** @type {number | null} */ (null));
+    const isStopped = playbackState === 'stopped';
 
     useEffect(() => {
         /**
          * @param {{ currentChord: string | null, nextChord: string, beatsUntilNextChord: number | null }} data
          */
         const handleBeatChange = ({ currentChord, nextChord, beatsUntilNextChord }) => {
-            setCurrentChord(currentChord);
-            setNextChord(nextChord);
-            if (beatsUntilNextChord !== null && beatsUntilNextChord <= 4) {
-                setBeatsUntilNextChord(beatsUntilNextChord);
-            } else {
-                setBeatsUntilNextChord(null);
-            }
+            const showCurrentChord = preferences.difficulty !== 'hard';
+            const showCountdown = preferences.difficulty === 'easy';
+            
+            setCurrentChord(showCurrentChord ? currentChord : null);
+            setNextChord(showCountdown ? nextChord : null);
+            setBeatsUntilNextChord(
+                showCountdown && (beatsUntilNextChord !== null && beatsUntilNextChord <= 4)
+                    ? beatsUntilNextChord
+                    : null
+            );
         };
 
         timingEngine.setOnBeatChange(handleBeatChange);
@@ -40,7 +46,7 @@ export function Grid() {
         return () => {
             timingEngine.setOnBeatChange(null);
         };
-    });
+    }, [timingEngine, preferences.difficulty]);
 
     /**
      * @param {CellData} cell 
@@ -82,10 +88,11 @@ export function Grid() {
                         chordName={chordName}
                         label={label}
                         keyboardHint={keyboardHint}
-                        isHighlighted={chordName !== null && chordName === currentChord}
+                        isHighlighted={!isStopped && chordName !== null && chordName === currentChord}
                         countdown={
-                            (chordName != null
-                            && chordName === nextChord)
+                            !isStopped
+                            && chordName != null
+                            && chordName === nextChord
                             ? beatsUntilNextChord
                             : null
                         }

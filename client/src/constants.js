@@ -48,6 +48,8 @@
 
 /** @typedef {'easy' | 'medium' | 'hard'} PreferenceDifficulty */
 
+/** @typedef {'backingTrack' | 'samples'} AudioSourceKey */
+
 /**
  * @typedef {'C7' | 'F7' | 'G7'} ChordName
  */

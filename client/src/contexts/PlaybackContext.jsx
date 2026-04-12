@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import { useStudio } from './StudioContext';
 import { usePreferences } from './PreferencesContext';
 import PropTypes from 'prop-types';
+/** @typedef {import('/src/constants.js').BackingTrackKey} BackingTrackKey */
 
 /**
  * @typedef {'playing' | 'paused' | 'stopped'} PlaybackState
@@ -17,12 +18,12 @@ import PropTypes from 'prop-types';
  *    playbackState: PlaybackState,
  *    isRecording: boolean,
  *    recordingResult: RecordingResult,
- *    play: Function,
- *    pause: Function,
- *    resume: Function,
- *    stop: Function,
- *    record: Function,
- *    clearRecordingResult: Function,
+ *    play: () => Promise<void>,
+ *    pause: () => void,
+ *    resume: () => void,
+ *    stop: () => Promise<void>,
+ *    record: () => Promise<void>,
+ *    clearRecordingResult: () => void,
  * }} PlaybackContextType
  */
 export const PlaybackContext = createContext(/** @type {PlaybackContextType | null} */ (null));
@@ -42,14 +43,14 @@ export function PlaybackProvider({ children }) {
         recordingEngine,
         noteLogger,
         keyboardHandler,
-        backingTrack, // TODO: extract to config/preference manager
+        backingTrack,
     } = useStudio();
     
     const { preferences } = usePreferences();
 
     const pause = () => {
         audioEngine.pauseBackingTrack();
-        audioEngine.stopAllSound();
+        audioEngine.stopAllSamples();
         timingEngine.pause();
         keyboardHandler.disable();
 

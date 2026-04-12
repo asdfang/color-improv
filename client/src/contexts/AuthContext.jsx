@@ -7,9 +7,9 @@ import { AuthService } from '../api/AuthService';
  * @typedef {{
  *    currentUser: object|null,
  *    isLoading: boolean,
- *    register: Function,
- *    login: Function,
- *    logout: Function
+ *    register: (email: string, name: string, password: string) => Promise<void>,
+ *    login: (email: string, password: string) => Promise<void>,
+ *    logout: () => Promise<void>,
  * }} AuthContextType
  */
 export const AuthContext = createContext(/** @type {AuthContextType | null} */ (null));

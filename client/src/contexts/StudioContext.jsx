@@ -6,6 +6,7 @@ import { TimingEngine } from '../timing/TimingEngine';
 import { RecordingEngine } from '../recording/RecordingEngine';
 import { NoteLogger } from '../events/NoteLogger';
 import { KeyboardHandler } from '../input/KeyboardHandler';
+/** @typedef {import('/src/constants.js').BackingTrackKey} BackingTrackKey */
 
 /**
  * @typedef {{
@@ -14,7 +15,7 @@ import { KeyboardHandler } from '../input/KeyboardHandler';
  *    recordingEngine: RecordingEngine,
  *    noteLogger: NoteLogger,
  *    keyboardHandler: KeyboardHandler,
- *    backingTrack: string
+ *    backingTrack: BackingTrackKey
  * }} StudioContextValue
  */
 export const StudioContext = createContext( /** @type {StudioContextValue|null} */ (null));
@@ -25,7 +26,7 @@ export const StudioContext = createContext( /** @type {StudioContextValue|null} 
  */
 export function StudioProvider({ children }) {
     const [studio] = useState(() => {
-        const backingTrack = 'blues'; // TODO: Extract to config/preference manager
+        const backingTrack = /** @type {BackingTrackKey} */ ('blues'); // TODO: Extract to config/preference manager
         const audioEngine = new AudioEngine(backingTrack);
         const timingEngine = new TimingEngine(audioEngine, backingTrack);
         const recordingEngine = new RecordingEngine(audioEngine.audioContext);
