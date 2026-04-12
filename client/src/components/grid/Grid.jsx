@@ -22,6 +22,7 @@ export function Grid() {
     const [currentChord, setCurrentChord] = useState(/** @type {string | null} */ (null));
     const [nextChord, setNextChord] = useState(/** @type {string | null} */ (null));
     const [beatsUntilNextChord, setBeatsUntilNextChord] = useState(/** @type {number | null} */ (null));
+    const isStopped = playbackState === 'stopped';
 
     useEffect(() => {
         /**
@@ -87,10 +88,11 @@ export function Grid() {
                         chordName={chordName}
                         label={label}
                         keyboardHint={keyboardHint}
-                        isHighlighted={chordName !== null && chordName === currentChord}
+                        isHighlighted={!isStopped && chordName !== null && chordName === currentChord}
                         countdown={
-                            (chordName != null
-                            && chordName === nextChord)
+                            !isStopped
+                            && chordName != null
+                            && chordName === nextChord
                             ? beatsUntilNextChord
                             : null
                         }
