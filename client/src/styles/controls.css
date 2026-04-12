@@ -152,10 +152,6 @@ button:disabled { cursor: not-allowed; }
     40% { opacity: 0.4; }
 }
 
-#instructions-button {
-    cursor: pointer;
-}
-
 /* Volume control slider */
 .volume-label {
     text-align: right;
@@ -247,11 +243,23 @@ button:disabled { cursor: not-allowed; }
     box-shadow: 0 0 0 3px rgba(111, 214, 118, 0.35), 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
+/* Instructions button */
+#instructions-button {
+    cursor: pointer;
+    padding: 0.3rem 0.5rem;
+    border-radius: var(--radius-sm);
+    transition: background 0.12s ease;
+}
+#instructions-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
 /* Difficulty select */
 #difficulty-select-wrapper {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    padding: 0 0.3rem;
 }
 #settings-panel select {
     background: linear-gradient(180deg, #3a3a3a, #2f2f2f);
