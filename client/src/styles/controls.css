@@ -109,13 +109,16 @@ button:disabled { cursor: not-allowed; }
     align-items: center;
     gap: 0.6rem;
 }
-.playback-btn-label {
-    font-size: 1.4rem;
-}
 .playback-btn {
     width: 72px;
     height: 72px;
     font-size: 1.3rem;
+}
+.playback-btn-label {
+    font-size: 1.4rem;
+}
+.playback-btn-label.recording {
+    color: var(--color-recording);
 }
 #play-btn {
     background: var(--color-primary);

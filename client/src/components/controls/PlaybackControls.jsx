@@ -2,6 +2,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faPause, faStop, faCircle} from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect } from 'react';
 import { usePlayback } from '../../contexts/PlaybackContext';
+import { PlaybackButton } from './PlaybackButton';
 
 export function PlaybackControls() {
     const { playbackState, isRecording, play, resume, pause, stop, record } = usePlayback();
@@ -10,6 +11,12 @@ export function PlaybackControls() {
     const canPause = playbackState === 'playing' && !isRecording;
     const canStop = playbackState === 'playing' || playbackState === 'paused';
     const canRecord = playbackState === 'stopped';
+
+    // FontAwesome Icons
+    const playIcon = <FontAwesomeIcon icon={faPlay} />;
+    const pauseIcon = <FontAwesomeIcon icon={faPause} />;
+    const stopIcon = <FontAwesomeIcon icon={faStop} />;
+    const recordIcon = <FontAwesomeIcon className={`${isRecording ? 'animate-pulse' : ''}`} icon={faCircle} />;
     
     const handlePlayOrResume = useCallback(() => {
         if (playbackState === 'stopped') play();
@@ -45,60 +52,39 @@ export function PlaybackControls() {
 
     return (
         <div id="playback-controls">
-            <div className="playback-btn-wrapper">
-                <button
-                    id="play-btn"
-                    className="btn-circle playback-btn"
-                    onClick={handlePlayOrResume}
-                    title={playbackState === 'paused' ? 'Resume' : 'Play'}
-                    disabled={!canPlayOrResume}
-                >
-                    <FontAwesomeIcon icon={faPlay} />
-                </button>
-                <span className="playback-btn-label">Play</span>
-            </div>
-            <div className="playback-btn-wrapper">
-                <button
-                    id="pause-btn"
-                    className="btn-circle playback-btn"
-                    onClick={pause}
-                    title="Pause"
-                    disabled={!canPause}
-                >
-                    <FontAwesomeIcon icon={faPause} />
-                </button>
-                <span className="playback-btn-label">Pause</span>
-            </div>
-            <div className="playback-btn-wrapper">
-                <button
-                    id="stop-btn"
-                    className="btn-circle playback-btn"
-                    onClick={stop}
-                    title="Stop"
-                    disabled={!canStop}
-                >
-                    <FontAwesomeIcon icon={faStop} />
-                </button>
-                <span className="playback-btn-label">Stop</span>
-
-            </div>
-            <div className="playback-btn-wrapper">
-                <button
-                    id="record-btn"
-                    className={`btn-circle playback-btn`}
-                    onClick={record}
-                    title="Record"
-                    disabled={!canRecord}
-                >
-                    <FontAwesomeIcon className={`${isRecording ? 'animate-pulse' : ''}`} icon={faCircle} />
-                </button>
-                <span
-                    className="playback-btn-label"
-                    style={ { color: isRecording ? 'var(--color-recording)' : '' } }
-                >
-                    {`${isRecording ? 'Recording...' : 'Record'}`}
-                </span>
-            </div>
+            <PlaybackButton 
+                id="play-btn"
+                label="Play"
+                onClick={handlePlayOrResume}
+                disabled={!canPlayOrResume}
+            >
+                {playIcon}
+            </PlaybackButton>
+            <PlaybackButton
+                id="pause-btn"
+                label="Pause"
+                onClick={pause}
+                disabled={!canPause}
+            >
+                {pauseIcon}
+            </PlaybackButton>
+            <PlaybackButton
+                id="stop-btn"
+                label="Stop"
+                onClick={stop}
+                disabled={!canStop}
+            >
+                {stopIcon}
+            </PlaybackButton>
+            <PlaybackButton
+                id="record-btn"
+                label={`${isRecording ? 'Recording...' : 'Record'}`}
+                labelClassName={`${isRecording ? 'recording' : ''}`}
+                onClick={record}
+                disabled={!canRecord}
+            >
+                {recordIcon}   
+            </PlaybackButton>
         </div>
     );
 }
