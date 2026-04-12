@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { usePreferencesSync } from '../../hooks/usePreferencesSync';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthDialog } from '../dialogs/AuthDialog';
+import { ConflictDialog } from '../dialogs/ConflictDialog';
 
 export function AuthControls() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -39,6 +40,12 @@ export function AuthControls() {
                 setOpenToRegister={setOpenToRegister}
                 onLogin={loginWithSync}
                 onRegister={registerWithSync}
+            />
+            <ConflictDialog
+                isOpen={hasConflict}
+                onClose={() => {}}
+                onChooseLocal={onChooseLocal}
+                onChooseServer={onChooseServer}
             />
         </div>
     );
