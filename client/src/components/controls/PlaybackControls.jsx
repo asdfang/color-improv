@@ -3,9 +3,13 @@ import { faPlay, faPause, faStop, faCircle} from '@fortawesome/free-solid-svg-ic
 import { useCallback, useEffect } from 'react';
 import { usePlayback } from '../../contexts/PlaybackContext';
 import { PlaybackButton } from './PlaybackButton';
+import { DownloadDialog } from '../dialogs/DownloadDialog';
 
 export function PlaybackControls() {
-    const { playbackState, isRecording, play, resume, pause, stop, record } = usePlayback();
+    const {
+        playbackState, isRecording,
+        play, resume, pause, stop, record,
+        recordingResult, clearRecordingResult} = usePlayback();
 
     const canPlayOrResume = playbackState === 'stopped' || playbackState === 'paused';
     const canPause = playbackState === 'playing' && !isRecording;
@@ -57,8 +61,7 @@ export function PlaybackControls() {
                 label="Play"
                 onClick={handlePlayOrResume}
                 disabled={!canPlayOrResume}
-            >
-                {playIcon}
+            >{playIcon}
             </PlaybackButton>
             <PlaybackButton
                 id="pause-btn"
@@ -85,6 +88,11 @@ export function PlaybackControls() {
             >
                 {recordIcon}   
             </PlaybackButton>
+            <DownloadDialog
+                isOpen={recordingResult !== null}
+                onClose={clearRecordingResult}
+                recordingResult={recordingResult}
+            />
         </div>
     );
 }

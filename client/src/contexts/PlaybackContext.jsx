@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
  */
 
 /**
- * @typedef {{recordingBlob: Blob, logBlob: Blob | null} | null} RecordingResult
+ * @typedef {{recordingBlob: Blob, logObject: object | null} | null} RecordingResult
  */
 
 /**
@@ -86,9 +86,7 @@ export function PlaybackProvider({ children }) {
                 if (recordingBlob) {
                     setRecordingResult({
                         recordingBlob,
-                        logBlob: logObject
-                            ? new Blob([JSON.stringify(logObject)], { type: 'application/json' })
-                            : null,
+                        logObject,
                     });
                 } else {
                     console.error('Recording failed: No audio blob returned');
