@@ -4,8 +4,8 @@ export function InstructionsButton() {
     }
 
     return (
-        <div id="instructions-button" onClick={handleClick}>
+        <button id="instructions-button" onClick={handleClick}>
             <span>Click for instructions and help.</span>
-        </div>
+        </button>
     );
 }

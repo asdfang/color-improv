@@ -46,7 +46,7 @@ export function Grid() {
         return () => {
             timingEngine.setOnBeatChange(null);
         };
-    });
+    }, [timingEngine, preferences.difficulty]);
 
     /**
      * @param {CellData} cell 

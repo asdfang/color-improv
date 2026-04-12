@@ -245,10 +245,10 @@ button:disabled { cursor: not-allowed; }
 
 /* Instructions button */
 #instructions-button {
-    cursor: pointer;
+    background: transparent;
     padding: 0.3rem 0.5rem;
     border-radius: var(--radius-sm);
-    transition: background 0.12s ease;
+    font-size: 1.3rem;
 }
 #instructions-button:hover {
     background: rgba(255, 255, 255, 0.1);
@@ -259,7 +259,7 @@ button:disabled { cursor: not-allowed; }
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    padding: 0 0.3rem;
+    padding: 0 0.5rem;
 }
 #settings-panel select {
     background: linear-gradient(180deg, #3a3a3a, #2f2f2f);
@@ -267,7 +267,8 @@ button:disabled { cursor: not-allowed; }
     border: 1px solid #5a5a5a;
     border-radius: 8px;
     padding: 0.4rem 2.1rem 0.4rem 0.7rem;
-    font-size: 0.9rem;
+    font-family: inherit;
+    font-size: 1.1rem;
     font-weight: 500;
     line-height: 1.2;
     appearance: none;

@@ -90,7 +90,7 @@ export function PlaybackControls() {
                     title="Record"
                     disabled={!canRecord}
                 >
-                    <FontAwesomeIcon className={`${isRecording ? 'animate-pulse' : ''}`}icon={faCircle} />
+                    <FontAwesomeIcon className={`${isRecording ? 'animate-pulse' : ''}`} icon={faCircle} />
                 </button>
                 <span
                     className="playback-btn-label"
