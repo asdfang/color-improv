@@ -35,7 +35,7 @@ const SOURCE_CONFIG = /** @type {Record<AudioSourceKey, SourceConfig>} */ ({
 export function VolumeControl({ source }) {
     const { audioEngine } = useStudio();
     const { preferences, setPreference } = usePreferences();
-
+    const isMuted = preferences[SOURCE_CONFIG[source].mutePreferenceKey];
     const config = SOURCE_CONFIG[source];
 
     /** @param {import('react').ChangeEvent<HTMLInputElement>} e */
@@ -61,7 +61,7 @@ export function VolumeControl({ source }) {
     return (
         <div className="volume-control">
             <label htmlFor={`${source}-volume-slider`} className="volume-label">
-                {source === 'backingTrack' ? 'Backing Track' : 'Samples'}
+                {source === 'backingTrack' ? 'Backing Track:' : 'Samples:'}
             </label>
             <input
                 id={`${source}-volume-slider`}
@@ -75,7 +75,11 @@ export function VolumeControl({ source }) {
                 onChange={handleVolumeChange}
             />
             <div className="mute-toggle">
-                <button onClick={handleMuteToggle} title="Mute/Unmute">
+                <button
+                    className={`btn-circle volume-btn mute-btn ${isMuted ? 'muted' : ''}`}
+                    title="Mute/Unmute"
+                    onClick={handleMuteToggle}
+                >
                     {preferences[config.mutePreferenceKey] ? (
                         <FontAwesomeIcon icon={faVolumeMute} />
                     ) : (
@@ -83,8 +87,12 @@ export function VolumeControl({ source }) {
                     )}
                 </button>
             </div>
-            <div className="reset-button" title="Reset to Defaults">
-                <button onClick={handleReset}>
+            <div className="reset-button">
+                <button
+                    className="btn-circle volume-btn"
+                    title="Reset to Defaults"
+                    onClick={handleReset}
+                >
                     <FontAwesomeIcon icon={faUndo} />
                 </button>
             </div>

@@ -46,25 +46,33 @@ export function PlaybackControls() {
     return (
         <div id="playback-controls">
             <button
+                id="play-btn"
+                className="btn-circle playback-btn"
                 onClick={handlePlayOrResume}
                 title={playbackState === 'paused' ? 'Resume' : 'Play'}
                 disabled={!canPlayOrResume}
             ><FontAwesomeIcon icon={faPlay} /></button>
             <button
+                id="pause-btn"
+                className="btn-circle playback-btn"
                 onClick={pause}
                 title="Pause"
                 disabled={!canPause}
             ><FontAwesomeIcon icon={faPause} /></button>
             <button
+                id="stop-btn"
+                className="btn-circle playback-btn"
                 onClick={stop}
                 title="Stop"
                 disabled={!canStop}
             ><FontAwesomeIcon icon={faStop} /></button>
             <button
+                id="record-btn"
+                className={`btn-circle playback-btn`}
                 onClick={record}
                 title="Record"
                 disabled={!canRecord}
-            ><FontAwesomeIcon icon={faCircle} /></button>
+            ><FontAwesomeIcon className={`${isRecording ? 'animate-pulse' : ''}`}icon={faCircle} /></button>
         </div>
     );
 }

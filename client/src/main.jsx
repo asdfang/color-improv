@@ -6,7 +6,9 @@ import { PlaybackProvider } from './contexts/PlaybackContext';
 import { PreferencesProvider } from './contexts/PreferencesContext';
 import { AuthProvider } from './contexts/AuthContext';
 
-import './styles.css';
+// import './styles.css';
+import './styles/base.css';
+import './styles/controls.css';
 import './styles/grid.css';
 
 const domNode = document.getElementById('root');
