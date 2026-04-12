@@ -99,14 +99,23 @@ button:disabled { cursor: not-allowed; }
     background: rgba(255, 255, 255, 0.1);
 }
 .volume-btn.muted {
-    background-color: var(--color-danger);
-    border-color: var(--color-danger);
+    background-color: var(--color-stop);
+    border-color: var(--color-stop);
 }
 
+.playback-btn-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+}
+.playback-btn-label {
+    font-size: 1.4rem;
+}
 .playback-btn {
     width: 72px;
     height: 72px;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
 }
 #play-btn {
     background: var(--color-primary);
@@ -115,20 +124,20 @@ button:disabled { cursor: not-allowed; }
     background: var(--color-primary-hover);
 }
 #pause-btn {
-    background: var(--color-warning);
+    background: var(--color-pause);
 }
 #pause-btn:hover:not(:disabled) {
-    background: var(--color-warning-hover);
+    background: var(--color-pause-hover);
 }
 #stop-btn {
-    background: var(--color-danger);
+    background: var(--color-stop);
 }
 #stop-btn:hover:not(:disabled) {
-    background: var(--color-danger-hover);
+    background: var(--color-stop-hover);
 }
 #record-btn {
     background: var(--color-surface-alt);
-    color: #e53935;
+    color: var(--color-recording);
     border: 2px solid var(--color-neutral);
 }
 #record-btn:hover:not(:disabled) {

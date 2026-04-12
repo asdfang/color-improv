@@ -16,13 +16,14 @@
     --color-primary-soft: #66bb6a;
     --color-primary-soft-hover: #81c784;
 
-    --color-danger: #d32f2f;
-    --color-danger-hover: #b71c1c;
-    --color-warning: #FFC107;
-    --color-warning-hover: #FFB300;
+    --color-stop: #d32f2f;
+    --color-stop-hover: #b71c1c;
+    --color-pause: #FFC107;
+    --color-pause-hover: #FFB300;
     --color-neutral: #666;
     --color-neutral-hover: #555;
 
+    --color-recording: #e53935;
     --color-disabled: #999;
 
     --radius-sm: 4px;
