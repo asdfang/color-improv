@@ -50,7 +50,7 @@ export function PlaybackProvider({ children }) {
 
     const pause = () => {
         audioEngine.pauseBackingTrack();
-        audioEngine.stopAllSound();
+        audioEngine.stopAllSamples();
         timingEngine.pause();
         keyboardHandler.disable();
 
