@@ -3,6 +3,7 @@ import { faDownload, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react';
 import { useRef, useEffect } from 'react';
 import { Dialog } from './Dialog';
+import { ConfirmCloseDialog } from './ConfirmCloseDialog';
 import PropTypes from 'prop-types';
 
 import JSZip from 'jszip';
@@ -26,6 +27,7 @@ function normalizeRecordingExtension(mimeType) {
 export function DownloadDialog({ isOpen, onClose, recordingResult }) {
     const { recordingBlob, logObject } = recordingResult || {};
     const [ hasDownloaded, setHasDownloaded ] = useState(false);
+    const [ isConfirmDialogOpen, setIsConfirmDialogOpen ] = useState(false);
     const audioRef = useRef(/** @type {HTMLAudioElement | null} */(null));
     const preRef = useRef(/** @type {HTMLPreElement | null} */(null));
 
@@ -78,37 +80,56 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
             preRef.current.textContent = logPreview;
             preRef.current.scrollTop = 0;
         }
-    });
+    }, [logObject]);
+
+    const handleClose = () => {
+        if (!hasDownloaded) {
+            setIsConfirmDialogOpen(true);
+        }
+        else {
+            onClose();
+        }
+    }
 
     return (
-        <Dialog
-            isOpen={isOpen}
-            onClose={onClose}
-            title="Download Recording"
-            closeOnBackdrop={false}
-        >
-            <p>Great performance! You can download your recording (and MIDI log) below.</p>
-            <div className="recording-preview">
-                <div className="recording-preview audio">
-                    <h3>Audio</h3>
-                    <div className="recording-preview audio wrapper">
-                        <audio ref={audioRef} controls controlsList="nodownload noplaybackrate" />
+        <>
+            <Dialog
+                isOpen={isOpen}
+                onClose={handleClose}
+                title="Download Recording"
+                closeOnBackdrop={false} // Prevent accidentally closing
+            >
+                <p>Great performance! You can download your recording (and MIDI log) below.</p>
+                <div className="recording-preview">
+                    <div className="recording-preview audio">
+                        <h3>Audio</h3>
+                        <div className="recording-preview audio wrapper">
+                            <audio ref={audioRef} controls controlsList="nodownload noplaybackrate" />
+                        </div>
+                    </div>
+                    <div className="recording-preview log">
+                        <h3>MIDI Log</h3>
+                        <div className="recording-preview log wrapper">
+                            <pre ref={preRef} />
+                        </div>
                     </div>
                 </div>
-                <div className="recording-preview log">
-                    <h3>MIDI Log</h3>
-                    <div className="recording-preview log wrapper">
-                        <pre ref={preRef} />
-                    </div>
+                <div className="download-buttons">
+                    <button className="btn-text download-btn" onClick={handleDownload}>
+                        {hasDownloaded ? <>Downloaded {checkIcon}</> : <>Download (ZIP) {downloadIcon}</>}
+                    </button>
+                    <button className="btn-text close-btn" onClick={handleClose}>Close {closeIcon}</button>
                 </div>
-            </div>
-            <div className="download-buttons">
-                <button className="btn-text download-btn" onClick={handleDownload}>
-                    {hasDownloaded ? <>Downloaded {checkIcon}</> : <>Download (ZIP) {downloadIcon}</>}
-                </button>
-                <button className="btn-text close-btn" onClick={onClose}>Close {closeIcon}</button>
-            </div>
-        </Dialog>
+            </Dialog>
+            <ConfirmCloseDialog
+                isOpen={isConfirmDialogOpen}
+                onGoBack={() => setIsConfirmDialogOpen(false)}
+                onConfirmClose={() => {
+                    setIsConfirmDialogOpen(false);
+                    onClose();
+                }}
+            />
+        </>
     );
 }
 
