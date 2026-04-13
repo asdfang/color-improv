@@ -42,10 +42,15 @@ export function AuthDialog({ isOpen, onClose, openToRegister, setOpenToRegister,
         }
     }
 
+    const handleClose = () => {
+        setFeedback('');
+        onClose();
+    }
+
     return (
         <Dialog
             isOpen={isOpen}
-            onClose={onClose}
+            onClose={handleClose}
             title={openToRegister ? 'Register' : 'Login'}
             closeOnBackdrop={true}
         >
