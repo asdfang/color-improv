@@ -20,15 +20,18 @@ export function Dialog({isOpen, onClose, title, closeOnBackdrop = false, childre
     useEffect(() => {
         const dialog = dialogRef.current;
         if (!dialog) return;
-
-        /** @param {Event} e */
-        const handleCancel = (e) => {
+        /** @param {KeyboardEvent} e */
+        const handleEscape = (e) => {
+            if (e.key !== 'Escape') return;
             e.preventDefault();
+            e.stopPropagation();
             onClose();
         };
 
-        dialog.addEventListener('cancel', handleCancel);
-        return () => dialog.removeEventListener('cancel', handleCancel);
+        dialog.addEventListener('keydown', handleEscape);
+        return () => {
+            dialog.removeEventListener('keydown', handleEscape);
+        };
     }, [onClose]);
 
     /** @param {import('react').MouseEvent<HTMLDialogElement>} e */
