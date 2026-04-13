@@ -87,6 +87,7 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
             setIsConfirmDialogOpen(true);
         }
         else {
+            setHasDownloaded(false); // Cleanup for next time dialog is opened
             onClose();
         }
     }
