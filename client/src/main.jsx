@@ -9,6 +9,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import './styles/base.css';
 import './styles/controls.css';
 import './styles/grid.css';
+import './styles/dialogs.css';
 
 const domNode = document.getElementById('root');
 const root = createRoot(domNode);

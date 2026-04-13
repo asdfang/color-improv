@@ -7,6 +7,7 @@ import PropTypes from 'prop-types';
 export function InstructionsDialog({ isOpen, onClose }) {
     return (
         <Dialog
+            id="instructions-dialog"
             isOpen={isOpen}
             onClose={onClose}
             title="Instructions"

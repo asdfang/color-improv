@@ -49,6 +49,7 @@ export function AuthDialog({ isOpen, onClose, openToRegister, setOpenToRegister,
 
     return (
         <Dialog
+            id="auth-dialog"
             isOpen={isOpen}
             onClose={handleClose}
             title={openToRegister ? 'Register' : 'Login'}

@@ -3,10 +3,17 @@ import PropTypes from 'prop-types';
 
 /**
  * 
- * @param {{isOpen: boolean, onClose: () => void, title?: string, closeOnBackdrop?: boolean, children: import('react').ReactNode}} props
- * @returns 
+ * @param {{
+ *   id?: string,
+ *   isOpen: boolean,
+ *   onClose: () => void,
+ *   title?: string,
+ *   closeOnBackdrop?: boolean,
+ *   children: import('react').ReactNode,
+ *   footer?: import('react').ReactNode
+ * }} props
  */
-export function Dialog({isOpen, onClose, title, closeOnBackdrop = false, children}) {
+export function Dialog({id='', isOpen, onClose, title, closeOnBackdrop = false, children, footer=null}) {
     const dialogRef = useRef(/** @type {HTMLDialogElement | null} */ (null));
 
     useEffect(() => {
@@ -42,25 +49,23 @@ export function Dialog({isOpen, onClose, title, closeOnBackdrop = false, childre
     return (
         <dialog
             ref={dialogRef}
+            id={id || undefined}
             className="dialog"
             onClick={handleClick}
         >
-            {title && (
-                <header>
-                    <h2>{title}</h2>
-                </header>
-            )}
-            <div className="dialog-content">
-                {children}
-            </div>
+            {title && (<header className="dialog-header"><h2>{title}</h2></header>)}
+            <div className="dialog-content">{children}</div>
+            {footer && (<footer className="dialog-footer">{footer}</footer>)}
         </dialog>
     );
 }
 
 Dialog.propTypes = {
+    id: PropTypes.string,
     isOpen: PropTypes.bool.isRequired,
     onClose: PropTypes.func.isRequired,
     title: PropTypes.string,
     closeOnBackdrop: PropTypes.bool,
-    children: PropTypes.node
+    children: PropTypes.node,
+    footer: PropTypes.node,
 };

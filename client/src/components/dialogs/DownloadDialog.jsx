@@ -92,13 +92,24 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
         }
     }
 
+    const footer = (
+        <>
+            <button className="btn-text download-btn" onClick={handleDownload}>
+                {hasDownloaded ? <>Downloaded {checkIcon}</> : <>Download (ZIP) {downloadIcon}</>}
+            </button>
+            <button className="btn-text close-btn" onClick={handleClose}>Close {closeIcon}</button>
+        </>
+    );
+
     return (
         <>
             <Dialog
+                id="download-dialog"
                 isOpen={isOpen}
                 onClose={handleClose}
                 title="Download Recording"
                 closeOnBackdrop={false} // Prevent accidentally closing
+                footer={footer}
             >
                 <p>Great performance! You can download your recording (and MIDI log) below.</p>
                 <div className="recording-preview">
@@ -114,12 +125,6 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
                             <pre ref={preRef} />
                         </div>
                     </div>
-                </div>
-                <div className="download-buttons">
-                    <button className="btn-text download-btn" onClick={handleDownload}>
-                        {hasDownloaded ? <>Downloaded {checkIcon}</> : <>Download (ZIP) {downloadIcon}</>}
-                    </button>
-                    <button className="btn-text close-btn" onClick={handleClose}>Close {closeIcon}</button>
                 </div>
             </Dialog>
             <ConfirmCloseDialog
