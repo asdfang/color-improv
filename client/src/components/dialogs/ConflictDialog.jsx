@@ -1,5 +1,7 @@
 import { Dialog } from './Dialog';
+import PropTypes from 'prop-types';
 
+/** @param {{isOpen: boolean, onClose: () => void, onChooseLocal: () => void, onChooseServer: () => void}} props */
 export function ConflictDialog({ isOpen, onClose, onChooseLocal, onChooseServer }) {
     return (
         <Dialog
@@ -20,3 +22,10 @@ export function ConflictDialog({ isOpen, onClose, onChooseLocal, onChooseServer 
 
     );
 }
+
+ConflictDialog.propTypes = {
+    isOpen: PropTypes.bool.isRequired,
+    onClose: PropTypes.func.isRequired,
+    onChooseLocal: PropTypes.func.isRequired,
+    onChooseServer: PropTypes.func.isRequired
+};
