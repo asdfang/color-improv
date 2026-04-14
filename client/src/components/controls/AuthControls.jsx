@@ -1,15 +1,26 @@
-import { useAuth } from '/src/contexts/AuthContext';
+import { useState } from 'react';
+import { usePreferencesSync } from '../../hooks/usePreferencesSync';
+import { useAuth } from '../../contexts/AuthContext';
+import { AuthDialog } from '../dialogs/AuthDialog';
+import { ConflictDialog } from '../dialogs/ConflictDialog';
 
 export function AuthControls() {
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [openToRegister, setOpenToRegister] = useState(true);
+    const {
+        registerWithSync,loginWithSync,
+        hasConflict, onChooseLocal, onChooseServer } = usePreferencesSync();
     const { currentUser, logout } = useAuth();
     const isLoggedIn = currentUser !== null;
 
     const handleRegister = () => {
-        console.log('Todo: open register auth dialog');
+        setOpenToRegister(true);
+        setIsDialogOpen(true);
     };
 
     const handleLogin = () => {
-        console.log('Todo: open login auth dialog');
+        setOpenToRegister(false);
+        setIsDialogOpen(true);
     }
 
     return (
@@ -22,6 +33,20 @@ export function AuthControls() {
                     <button className="btn-text" onClick={handleLogin}>Login</button>
                 </>
             )}
+            <AuthDialog
+                isOpen={isDialogOpen}
+                onClose={() => setIsDialogOpen(false)}
+                openToRegister={openToRegister}
+                setOpenToRegister={setOpenToRegister}
+                onLogin={loginWithSync}
+                onRegister={registerWithSync}
+            />
+            <ConflictDialog
+                isOpen={hasConflict}
+                onClose={() => {}}
+                onChooseLocal={onChooseLocal}
+                onChooseServer={onChooseServer}
+            />
         </div>
     );
 }
