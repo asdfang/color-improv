@@ -51,7 +51,7 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(zipUrl);
+        setTimeout(() => URL.revokeObjectURL(zipUrl), 100);
         setHasDownloaded(true);
     }
 
@@ -145,6 +145,6 @@ DownloadDialog.propTypes = {
     onClose: PropTypes.func.isRequired,
     recordingResult: PropTypes.shape({
         recordingBlob: PropTypes.instanceOf(Blob).isRequired,
-        logBlob: PropTypes.instanceOf(Blob),
+        logObject: PropTypes.instanceOf(Object).isRequired,
     }),
 };

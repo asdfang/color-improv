@@ -4,13 +4,14 @@ import { useStudio } from './StudioContext';
 import { usePreferences } from './PreferencesContext';
 import PropTypes from 'prop-types';
 /** @typedef {import('/src/constants.js').BackingTrackKey} BackingTrackKey */
+/** @typedef {import('/src/events/NoteLogger.js').NoteLog} NoteLog */
 
 /**
  * @typedef {'playing' | 'paused' | 'stopped'} PlaybackState
  */
 
 /**
- * @typedef {{recordingBlob: Blob, logObject: object | null} | null} RecordingResult
+ * @typedef {{recordingBlob: Blob, logObject: NoteLog} | null} RecordingResult
  */
 
 /**
@@ -67,12 +68,12 @@ export function PlaybackProvider({ children }) {
 
     const stop = useCallback(async () => {
         const wasRecording = recordingEngine.isRecordingActive();
-        let recordingPromise = null;
-        let logObject = null;
-        if (wasRecording) {
-            recordingPromise = recordingEngine.stop();
-            logObject = noteLogger.stop();
-        }
+        const recordingData = wasRecording
+            ? {
+                recordingPromise: recordingEngine.stop(),
+                logObject: noteLogger.stop(),
+            }
+            : null;
         audioEngine.stopAllSound();
         timingEngine.stop();
         keyboardHandler.disable();
@@ -80,13 +81,13 @@ export function PlaybackProvider({ children }) {
         setIsRecording(false);
         setPlaybackState('stopped');
 
-        if (recordingPromise) {
+        if (recordingData) {
             try {
-                const recordingBlob = await recordingPromise;
+                const recordingBlob = await recordingData.recordingPromise;
                 if (recordingBlob) {
                     setRecordingResult({
                         recordingBlob,
-                        logObject,
+                        logObject: recordingData.logObject,
                     });
                 } else {
                     console.error('Recording failed: No audio blob returned');
