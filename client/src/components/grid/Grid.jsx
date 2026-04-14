@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useStudio } from '/src/contexts/StudioContext';
 import { usePreferences } from '/src/contexts/PreferencesContext';
 import { usePlayback } from '/src/contexts/PlaybackContext';
@@ -8,13 +8,14 @@ import { ScaleDegreeLabelCell } from './ScaleDegreeLabelCell';
 import { ScaleLabelCell } from './ScaleLabelCell';
 import { ChordLabelCell } from './ChordLabelCell';
 import { CELL_TYPE, buildGridData } from '/src/visual/grid-data.js';
+import { dispatchNoteEvent } from '/src/utils.js';
 
 /** @typedef {import('/src/visual/grid-data.js').CellData} CellData */
 /** @typedef {import('/src/visual/grid-data.js').KeyCode} KeyCode */
 /** @typedef {import('/src/contexts/PlaybackContext.jsx').PlaybackState} PlaybackState */
 
 export function Grid() {
-    const { timingEngine } = useStudio();
+    const { audioEngine, timingEngine } = useStudio();
     const { preferences } = usePreferences();
     const { playbackState } = usePlayback();
     const activeNotes = useActiveNotes();
@@ -23,6 +24,57 @@ export function Grid() {
     const [nextChord, setNextChord] = useState(/** @type {string | null} */ (null));
     const [beatsUntilNextChord, setBeatsUntilNextChord] = useState(/** @type {number | null} */ (null));
     const isStopped = playbackState === 'stopped';
+
+    const activePointers = useRef(new Map()); // Holds pointerIDs -> keyCode
+
+    const handlePointerDown = (pointerId, keyCode, midiNumber, isActive) => {
+        activePointers.current.set(pointerId, keyCode);
+
+        // Dispatch if note cell not already active
+        if (!isActive) {
+            audioEngine.playNote(keyCode, midiNumber);
+            dispatchNoteEvent('notestart', keyCode, midiNumber);
+        }
+    };
+
+    const handlePointerEnter = (pointerId, keyCode, midiNumber, isActive) => {
+        // Dispatch if pointer initially started on a note cell and moved to previously inactive cell
+        if (activePointers.current.has(pointerId) && !isActive) {
+            audioEngine.playNote(keyCode, midiNumber);
+            activePointers.current.set(pointerId, keyCode);
+            dispatchNoteEvent('notestart', keyCode, midiNumber);
+        }
+    };
+
+    const handlePointerLeave = (pointerId, keyCode, midiNumber, isActive) => {
+        // Dispatch if pointer initially started on a note cell and moved off an active cell
+        if (activePointers.current.has(pointerId) && isActive) {
+            audioEngine.stopNote(keyCode, midiNumber);
+            activePointers.current.delete(pointerId); // Gaps between cells
+            dispatchNoteEvent('noteend', keyCode, midiNumber);
+        }
+    };
+
+    const handlePointerUpOrCancel = useCallback((pointerId, keyCode, midiNumber) => {
+        const isActive = activeNotes.has(activePointers.current.get(pointerId));
+        activePointers.current.delete(pointerId);
+
+        // Dispatch if note cell still active
+        if (isActive) {
+            audioEngine.stopNote(keyCode, midiNumber);
+            dispatchNoteEvent('noteend', keyCode, midiNumber);
+        }
+    }, [activeNotes, audioEngine]);
+
+    useEffect(() => {
+        document.addEventListener('pointerup', handlePointerUpOrCancel);
+        document.addEventListener('pointercancel', handlePointerUpOrCancel);
+
+        return () => {
+            document.removeEventListener('pointerup', handlePointerUpOrCancel);
+            document.removeEventListener('pointercancel', handlePointerUpOrCancel);
+        };
+    }, [handlePointerUpOrCancel]);
 
     useEffect(() => {
         /**
@@ -67,6 +119,10 @@ export function Grid() {
                         midiNumber={midiNumber}
                         noteName={noteName}
                         isActive={activeNotes.has(keyCode)}
+                        handlePointerDown={handlePointerDown}
+                        handlePointerEnter={handlePointerEnter}
+                        handlePointerLeave={handlePointerLeave}
+                        handlePointerUpOrCancel={handlePointerUpOrCancel}
                     />
                 );
             }
