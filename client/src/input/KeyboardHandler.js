@@ -1,4 +1,5 @@
 import { KEY_MAPPINGS, NOTE_EVENTS } from "/src/constants.js";
+import { dispatchNoteEvent } from "/src/utils.js";
 /** @import { AudioEngine } from '../audio/AudioEngine.js' */
 /** @typedef {import('/src/constants.js').NoteEventName} NoteEventName */
 
@@ -67,7 +68,7 @@ export class KeyboardHandler {
         this.audioEngine.playNote(event.code, midiNumber);
         this.activeKeys.add(event.code);
 
-        this.dispatchNoteEvent(NOTE_EVENTS.START, event.code, midiNumber);
+        dispatchNoteEvent(NOTE_EVENTS.START, event.code, midiNumber);
     }
 
     /**
@@ -87,7 +88,7 @@ export class KeyboardHandler {
         this.audioEngine.stopNote(event.code, midiNumber);
         this.activeKeys.delete(event.code);
 
-        this.dispatchNoteEvent(NOTE_EVENTS.END, event.code, midiNumber);
+        dispatchNoteEvent(NOTE_EVENTS.END, event.code, midiNumber);
     }
 
     handleVisibilityChange() {
@@ -106,27 +107,10 @@ export class KeyboardHandler {
             if (mapping) {
                 const { midiNumber } = mapping;
                 this.audioEngine.stopNote(code, midiNumber);
-                this.dispatchNoteEvent(NOTE_EVENTS.END, code, midiNumber);
+                dispatchNoteEvent(NOTE_EVENTS.END, code, midiNumber);
             }
         }
         this.activeKeys.clear();
-    }
-
-    /**
-     * Dispatches a custom note event, mainly for UI updates.
-     * @param {NoteEventName} eventName 
-     * @param {string} keyCode KeyboardEvent.code
-     * @param {number} midiNumber
-     */
-    dispatchNoteEvent(eventName, keyCode, midiNumber) {
-        const event = new CustomEvent(eventName, {
-            detail: {
-                uniqueID: keyCode,
-                midiNumber,
-                timestamp: performance.now(), // UI time
-            }
-        });
-        document.dispatchEvent(event);
     }
 
     getActiveKeys() {
