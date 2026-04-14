@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useStudio } from '/src/contexts/StudioContext';
 import { usePreferences } from '/src/contexts/PreferencesContext';
 import { usePlayback } from '/src/contexts/PlaybackContext';
@@ -13,6 +13,7 @@ import { dispatchNoteEvent } from '/src/utils.js';
 /** @typedef {import('/src/visual/grid-data.js').CellData} CellData */
 /** @typedef {import('/src/visual/grid-data.js').KeyCode} KeyCode */
 /** @typedef {import('/src/contexts/PlaybackContext.jsx').PlaybackState} PlaybackState */
+/** @typedef {{ keyCode: KeyCode, midiNumber: number }} PointerData */
 
 export function Grid() {
     const { audioEngine, timingEngine } = useStudio();
@@ -24,57 +25,88 @@ export function Grid() {
     const [nextChord, setNextChord] = useState(/** @type {string | null} */ (null));
     const [beatsUntilNextChord, setBeatsUntilNextChord] = useState(/** @type {number | null} */ (null));
     const isStopped = playbackState === 'stopped';
+    
+    const activePointers = useRef(/** @type {Map<number, PointerData>} */ (new Map()));
 
-    const activePointers = useRef(new Map()); // Holds pointerIDs -> keyCode
+    /**
+     * Triggers note when pointer enters a cell if pointer slides from another.
+     * Note: its first touch must have been a NoteCell.
+     * Note: for convenience, pointer events still use keyCode as the unqiueID.
+     * @param {number} pointerId 
+     * @param {KeyCode} keyCode 
+     * @param {number} midiNumber 
+     */
+    const handlePointerEnter = (pointerId, keyCode, midiNumber) => {
+        const isActive = activePointers.current.get(pointerId)?.keyCode === keyCode;
+        if (activePointers.current.has(pointerId) && !isActive) {
+            audioEngine.playNote(keyCode, midiNumber);
+            activePointers.current.set(pointerId, { keyCode, midiNumber });
+            dispatchNoteEvent('notestart', keyCode, midiNumber);
+        }
+    };
 
-    const handlePointerDown = (pointerId, keyCode, midiNumber, isActive) => {
-        activePointers.current.set(pointerId, keyCode);
-
-        // Dispatch if note cell not already active
+    /**
+     * Triggers note if the cell was not already playing a note.
+     * Note: for convenience, pointer events still use keyCode as the unqiueID.
+     * @param {number} pointerId 
+     * @param {KeyCode} keyCode 
+     * @param {number} midiNumber 
+     */
+    const handlePointerDown = (pointerId, keyCode, midiNumber) => {
+        const isActive = activePointers.current.get(pointerId)?.keyCode === keyCode;
+        activePointers.current.set(pointerId, { keyCode, midiNumber });
         if (!isActive) {
             audioEngine.playNote(keyCode, midiNumber);
             dispatchNoteEvent('notestart', keyCode, midiNumber);
         }
     };
 
-    const handlePointerEnter = (pointerId, keyCode, midiNumber, isActive) => {
-        // Dispatch if pointer initially started on a note cell and moved to previously inactive cell
-        if (activePointers.current.has(pointerId) && !isActive) {
-            audioEngine.playNote(keyCode, midiNumber);
-            activePointers.current.set(pointerId, keyCode);
-            dispatchNoteEvent('notestart', keyCode, midiNumber);
-        }
-    };
-
-    const handlePointerLeave = (pointerId, keyCode, midiNumber, isActive) => {
-        // Dispatch if pointer initially started on a note cell and moved off an active cell
-        if (activePointers.current.has(pointerId) && isActive) {
-            audioEngine.stopNote(keyCode, midiNumber);
-            activePointers.current.delete(pointerId); // Gaps between cells
-            dispatchNoteEvent('noteend', keyCode, midiNumber);
-        }
-    };
-
-    const handlePointerUpOrCancel = useCallback((pointerId, keyCode, midiNumber) => {
-        const isActive = activeNotes.has(activePointers.current.get(pointerId));
+    /**
+     * Stops note if cell is active when pointer released or cancelled.
+     * @param {number} pointerId 
+     * @param {KeyCode} keyCode 
+     * @param {number} midiNumber 
+     */
+    const handlePointerUpOrCancel = (pointerId, keyCode, midiNumber) => {
+        const isActive = activePointers.current.get(pointerId)?.keyCode === keyCode;
         activePointers.current.delete(pointerId);
-
-        // Dispatch if note cell still active
         if (isActive) {
             audioEngine.stopNote(keyCode, midiNumber);
             dispatchNoteEvent('noteend', keyCode, midiNumber);
         }
-    }, [activeNotes, audioEngine]);
+    }
+
+    /**
+     * Stops note if cell is active when pointer leaves the cell.
+     * @param {number} pointerId 
+     * @param {KeyCode} keyCode 
+     * @param {number} midiNumber 
+     */
+    const handlePointerLeave = (pointerId, keyCode, midiNumber) => {
+        const wasActive = activePointers.current.get(pointerId)?.keyCode === keyCode;
+        if (activePointers.current.has(pointerId) && wasActive) {
+            audioEngine.stopNote(keyCode, midiNumber);
+            dispatchNoteEvent('noteend', keyCode, midiNumber);
+        }
+    };
 
     useEffect(() => {
-        document.addEventListener('pointerup', handlePointerUpOrCancel);
-        document.addEventListener('pointercancel', handlePointerUpOrCancel);
+        /**
+         * Cleans up active pointer data if released off the grid.
+         * Note: does not need to stop a note - would have been stopped on pointerleave.
+         * @param {PointerEvent} e
+         */
+        const handleDocumentPointerUpOrCancel = (e) => {
+            activePointers.current.delete(e.pointerId);
+        }
+        document.addEventListener('pointerup', handleDocumentPointerUpOrCancel);
+        document.addEventListener('pointercancel', handleDocumentPointerUpOrCancel);
 
         return () => {
-            document.removeEventListener('pointerup', handlePointerUpOrCancel);
-            document.removeEventListener('pointercancel', handlePointerUpOrCancel);
+            document.removeEventListener('pointerup', handleDocumentPointerUpOrCancel);
+            document.removeEventListener('pointercancel', handleDocumentPointerUpOrCancel);
         };
-    }, [handlePointerUpOrCancel]);
+    }, [audioEngine]);
 
     useEffect(() => {
         /**

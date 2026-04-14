@@ -16,11 +16,21 @@ export function NoteCell({ color, keyCode, midiNumber, noteName, isActive, handl
         <div
             className={`note-cell ${isActive ? 'pressed' : ''}`}
             style={style}
-            onPointerDown={(e) => handlePointerDown(e.pointerId, keyCode, midiNumber, isActive)}
-            onPointerEnter={(e) => handlePointerEnter(e.pointerId, keyCode, midiNumber, isActive)}
-            onPointerLeave={(e) => handlePointerLeave(e.pointerId, keyCode, midiNumber, isActive)}
-            onPointerUp={(e) => handlePointerUpOrCancel(e.pointerId, keyCode, midiNumber)}
-            onPointerCancel={(e) => handlePointerUpOrCancel(e.pointerId, keyCode, midiNumber)}
+            onPointerDown={(e) => {
+                e.currentTarget.releasePointerCapture(e.pointerId);
+                handlePointerDown(e.pointerId, keyCode, midiNumber);
+            }}
+            onPointerEnter={(e) => handlePointerEnter(e.pointerId, keyCode, midiNumber)
+            }
+            onPointerLeave={(e) => handlePointerLeave(e.pointerId, keyCode, midiNumber)}
+            onPointerUp={(e) => {
+                e.stopPropagation();
+                handlePointerUpOrCancel(e.pointerId, keyCode, midiNumber);
+            }}
+            onPointerCancel={(e) => {
+                e.stopPropagation();
+                handlePointerUpOrCancel(e.pointerId, keyCode, midiNumber);
+            }}
         >
             <p className="note-name">{noteName}</p>
         </div>

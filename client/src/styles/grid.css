@@ -4,6 +4,7 @@
     grid-template-rows: repeat(var(--grid-rows), 1fr);
     grid-template-columns: minmax(80px, 180px) repeat(calc(var(--grid-cols) - 1), 1fr);
     touch-action: none;
+    -webkit-user-select: none;
     user-select: none;
 }
 
@@ -15,6 +16,12 @@
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+/* Allow text selection on label cells for copying chord/scale names, but not on note cells/gaps */
+.chord-label-cell, .scale-label-cell, .scale-degree-label-cell {
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 /* NoteCell */
@@ -36,7 +43,9 @@
 }
 .note-name {
     pointer-events: none;
+    -webkit-user-select: none;
     user-select: none;
+    -webkit-touch-callout: none;
 }
 
 /* ChordLabelCell */
