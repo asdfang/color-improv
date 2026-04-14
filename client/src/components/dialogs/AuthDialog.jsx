@@ -47,6 +47,18 @@ export function AuthDialog({ isOpen, onClose, openToRegister, setOpenToRegister,
         onClose();
     }
 
+    const footer = (
+        <button
+            className="toggle-auth-link"
+            onClick={() => {
+                setOpenToRegister(!openToRegister);
+                setFeedback('');
+            }}
+        >
+            {openToRegister ? 'Already have an account? Login here.' : "Don't have an account? Register here."}
+        </button>
+    );
+
     return (
         <Dialog
             id="auth-dialog"
@@ -54,49 +66,44 @@ export function AuthDialog({ isOpen, onClose, openToRegister, setOpenToRegister,
             onClose={handleClose}
             title={openToRegister ? 'Register' : 'Login'}
             closeOnBackdrop={true}
+            footer={footer}
         >
             <form className="auth-form" onSubmit={handleSubmit}>
-                <label>
-                    Email:
+                <div className="form-group">
+                    <label htmlFor="email">Email:</label>
                     <input
+                        id="email"
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
                     />
-                </label>
+                </div>
                 {openToRegister && (
-                    <label>
-                        Name:
+                    <div className="form-group">
+                        <label htmlFor="name">Name:</label>
                         <input
+                            id="name"
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             required
                         />
-                    </label>
+                    </div>
                 )}
-                <label>
-                    Password:
+                <div className="form-group">
+                    <label htmlFor="password">Password:</label>
                     <input
+                        id="password"
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
-                </label>
+                </div>
                 {feedback && <div className="auth-feedback">{feedback}</div>}
-                <button type="submit" className="btn">{openToRegister ? 'Register' : 'Login'}</button>
+                <button type="submit" className="btn-text">{openToRegister ? 'Register' : 'Login'}</button>
             </form>
-            <button
-                className="toggle-auth-btn"
-                onClick={() => {
-                    setOpenToRegister(!openToRegister);
-                    setFeedback('');
-                }}
-            >
-                {openToRegister ? 'Already have an account? Login here.' : "Don't have an account? Register here."}
-            </button>
         </Dialog>
     );
 }

@@ -75,7 +75,7 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
             const logLines = logJson.split('\n');
             const isTruncated = logLines.length > numPreviewLines;
             const logPreview = isTruncated
-            ? `${logLines.slice(0, numPreviewLines).join('\n')}\n\n… Download ZIP to view full JSON.`
+            ? `${logLines.slice(0, numPreviewLines).join('\n')}\n\n… Download ZIP to view full data.`
             : logJson;
             preRef.current.textContent = logPreview;
             preRef.current.scrollTop = 0;
@@ -94,7 +94,7 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
 
     const footer = (
         <>
-            <button className="btn-text download-btn" onClick={handleDownload}>
+            <button className={`btn-text download-btn ${hasDownloaded ? 'downloaded' : ''}`} onClick={handleDownload}>
                 {hasDownloaded ? <>Downloaded {checkIcon}</> : <>Download (ZIP) {downloadIcon}</>}
             </button>
             <button className="btn-text close-btn" onClick={handleClose}>Close {closeIcon}</button>
@@ -112,17 +112,18 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
                 footer={footer}
             >
                 <p>Great performance! You can download your recording (and MIDI log) below.</p>
-                <div className="recording-preview">
-                    <div className="recording-preview audio">
+                <div className="recording-sections">
+                    <div className="recording-section">
                         <h3>Audio</h3>
-                        <div className="recording-preview audio wrapper">
+                        <div className="audio-preview">
                             <audio ref={audioRef} controls controlsList="nodownload noplaybackrate" />
                         </div>
                     </div>
-                    <div className="recording-preview log">
+                    <div className="recording-section">
                         <h3>MIDI Log</h3>
-                        <div className="recording-preview log wrapper">
-                            <pre ref={preRef} />
+                        <div className="log-preview">
+                            <pre ref={preRef} id="log-pre"/>
+                            <div className="log-preview-fade" />
                         </div>
                     </div>
                 </div>
