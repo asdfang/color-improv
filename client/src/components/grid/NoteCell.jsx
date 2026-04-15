@@ -27,6 +27,7 @@ export function NoteCell({ color, keyCode, midiNumber, noteName, isActive, handl
             className={`note-cell ${isActive ? 'pressed' : ''}`}
             style={style}
             onPointerDown={(e) => {
+                e.preventDefault();
                 e.currentTarget.releasePointerCapture(e.pointerId);
                 handlePointerDown?.(e.pointerId, keyCode, midiNumber);
             }}

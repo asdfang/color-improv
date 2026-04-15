@@ -64,12 +64,13 @@ body {
     font-family: var(--font-ui);
     background: var(--color-bg);
     color: var(--color-text);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 #app {
     width: 100vw;
-    height: 100vh;
+    min-height: 100vh;
     display: grid;
     grid-template-rows: auto 1fr;
 }
