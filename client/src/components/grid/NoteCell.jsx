@@ -4,7 +4,17 @@ import { usePlayback } from "../../contexts/PlaybackContext";
 /** @typedef {import('/src/visual/grid-data.js').KeyCode} KeyCode */
 
 /**
- * @param {{color: string, keyCode: KeyCode, midiNumber: number, noteName: string, isActive: boolean, handlePointerDown: Function, handlePointerEnter: Function, handlePointerLeave: Function, handlePointerUpOrCancel: Function}} props
+ * @param {{
+ *      color: string,
+ *      keyCode: KeyCode,
+ *      midiNumber: number,
+ *      noteName: string,
+ *      isActive: boolean,
+ *      handlePointerDown: Function | null,
+ *      handlePointerEnter: Function | null,
+ *      handlePointerLeave: Function | null,
+ *      handlePointerUpOrCancel: Function | null
+ * }} props
  */
 export function NoteCell({ color, keyCode, midiNumber, noteName, isActive, handlePointerDown, handlePointerEnter, handlePointerLeave, handlePointerUpOrCancel }) {
     const { playbackState } = usePlayback();
@@ -18,17 +28,17 @@ export function NoteCell({ color, keyCode, midiNumber, noteName, isActive, handl
             style={style}
             onPointerDown={(e) => {
                 e.currentTarget.releasePointerCapture(e.pointerId);
-                handlePointerDown(e.pointerId, keyCode, midiNumber);
+                handlePointerDown?.(e.pointerId, keyCode, midiNumber);
             }}
-            onPointerEnter={(e) => handlePointerEnter(e.pointerId, keyCode, midiNumber)}
-            onPointerLeave={(e) => handlePointerLeave(e.pointerId, keyCode, midiNumber)}
+            onPointerEnter={(e) => handlePointerEnter?.(e.pointerId, keyCode, midiNumber)}
+            onPointerLeave={(e) => handlePointerLeave?.(e.pointerId, keyCode, midiNumber)}
             onPointerUp={(e) => {
                 e.stopPropagation();
-                handlePointerUpOrCancel(e.pointerId, keyCode, midiNumber);
+                handlePointerUpOrCancel?.(e.pointerId, keyCode, midiNumber);
             }}
             onPointerCancel={(e) => {
                 e.stopPropagation();
-                handlePointerUpOrCancel(e.pointerId, keyCode, midiNumber);
+                handlePointerUpOrCancel?.(e.pointerId, keyCode, midiNumber);
             }}
         >
             <p className="note-name">{noteName}</p>

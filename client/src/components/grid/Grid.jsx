@@ -25,6 +25,7 @@ export function Grid() {
     const [nextChord, setNextChord] = useState(/** @type {string | null} */ (null));
     const [beatsUntilNextChord, setBeatsUntilNextChord] = useState(/** @type {number | null} */ (null));
     const isStopped = playbackState === 'stopped';
+    const isPlaying = playbackState === 'playing';
 
     // Set up beat change listener in TimingEngine to update current/next chord and countdown based on difficulty level
     useEffect(() => {
@@ -67,10 +68,10 @@ export function Grid() {
                         midiNumber={midiNumber}
                         noteName={noteName}
                         isActive={activeNotes.has(keyCode)}
-                        handlePointerDown={handlePointerDown}
-                        handlePointerEnter={handlePointerEnter}
-                        handlePointerLeave={handlePointerLeave}
-                        handlePointerUpOrCancel={handlePointerUpOrCancel}
+                        handlePointerDown={isPlaying ? handlePointerDown : null}
+                        handlePointerEnter={isPlaying ? handlePointerEnter : null}
+                        handlePointerLeave={isPlaying ? handlePointerLeave : null}
+                        handlePointerUpOrCancel={isPlaying ? handlePointerUpOrCancel : null}
                     />
                 );
             }
