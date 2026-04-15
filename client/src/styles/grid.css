@@ -2,7 +2,7 @@
 #music-grid {
     display: grid;
     grid-template-rows: repeat(var(--grid-rows), 1fr);
-    grid-template-columns: minmax(80px, 180px) repeat(calc(var(--grid-cols) - 1), 1fr);
+    grid-template-columns: minmax(100px, 200px) repeat(calc(var(--grid-cols) - 1), 1fr);
     touch-action: none;
     -webkit-user-select: none;
     user-select: none;
@@ -34,7 +34,7 @@
     transition: transform 80ms ease-out, filter 80ms ease-out;
     cursor: pointer;
     margin: 4px;
-    font-size: 2rem;
+    font-size: var(--fs-grid-note);
     color: black;
 }
 .note-cell.pressed {
@@ -71,19 +71,19 @@
     display: grid;
     place-items: center;
     line-height: 1;
-    font-size: 14px;
+    font-size: var(--fs-ui-xs);
     font-weight: 600;
     padding-top: 2px;
     box-sizing: border-box;
 }
 .chord-label {
     position: relative;
-    font-size: 1.6rem;
+    font-size: var(--fs-grid-label);
 }
 .keyboard-hint {
     position: absolute;
     bottom: 16px;
-    font-size: 1.2rem;
+    font-size: var(--fs-ui-sm);
     font-style: italic;
     color: #777;
 }
@@ -91,16 +91,14 @@
 /* ScaleLabelCell */
 .scale-label-cell {
     flex-direction: column;
-    font-size: 1.6rem;
+    font-size: var(--fs-grid-label);
+    text-align: center;
 }
 
 /* ScaleDegreeLabelCell */
 .scale-degree-label-cell {
     position: relative;
-    font-size: 1.6rem;
-    /* display: flex;
-    justify-content: center;
-    align-items: center; */
+    font-size: var(--fs-grid-note);
 }
 .scale-degree-label-cell .degree-number {
     position: relative;
@@ -119,4 +117,18 @@
 }
 .mixolydian-row {
     padding-top: 28px;
+}
+
+@media (max-width: 1279px) and (hover: none) {
+    .keyboard-hint { display: none; }
+}
+@media (max-width: 1023px) {
+    #music-grid {
+        grid-template-columns: minmax(88px, 100px) repeat(calc(var(--grid-cols) - 1), 1fr);
+    }
+    .chord-label,
+    .scale-label-cell {
+        font-size: var(--fs-grid-label-sm);
+    }
+    .note-cell { margin: 3px; }
 }

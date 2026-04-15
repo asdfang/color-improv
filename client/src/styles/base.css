@@ -41,6 +41,15 @@
     --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.5);
     --focus-ring: 0 0 0 2px rgba(111, 214, 118, 0.28);
 
+    --fs-ui-xs: clamp(0.8rem, 0.75rem + 0.15vw, 0.95rem);
+    --fs-ui-sm: clamp(1rem, 0.94rem + 0.2vw, 1.15rem);
+    --fs-ui-md: clamp(1.1rem, 1rem + 0.35vw, 1.35rem);
+    --fs-ui-lg: clamp(1.35rem, 1.2rem + 0.5vw, 1.8rem);
+    --fs-ui-xl: clamp(1.6rem, 1.35rem + 0.7vw, 2.2rem);
+    --fs-grid-label: clamp(1.8rem, 1.5rem + 0.9vw, 2.2rem);
+    --fs-grid-label-sm: clamp(1.25rem, 1.1rem + 0.5vw, 1.55rem);
+    --fs-grid-note: clamp(2.1rem, 1.7rem + 1.15vw, 3rem);
+
     --grid-rows: 6;
     --grid-cols: 9;
 }
@@ -60,7 +69,6 @@ body {
 
 #app {
     width: 100vw;
-    min-width: 880px;
     height: 100vh;
     display: grid;
     grid-template-rows: auto 1fr;
@@ -75,7 +83,7 @@ body {
     justify-content: center;
     gap: 1rem;
     align-items: center;
-    font-size: 1.5rem;
+    font-size: var(--fs-ui-lg);
     text-align: center;
     padding: 1rem;
 }

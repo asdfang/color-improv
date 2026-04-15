@@ -111,7 +111,6 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
                 closeOnBackdrop={false} // Prevent accidentally closing
                 footer={footer}
             >
-                <p>Great performance! You can download your recording (and MIDI log) below.</p>
                 <div className="recording-sections">
                     <div className="recording-section">
                         <h3>Audio</h3>
@@ -127,6 +126,7 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
                         </div>
                     </div>
                 </div>
+                <p>Great performance! You can download your audio and MIDI log below.</p>
             </Dialog>
             <ConfirmCloseDialog
                 isOpen={isConfirmDialogOpen}
