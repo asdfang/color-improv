@@ -20,8 +20,7 @@ export function NoteCell({ color, keyCode, midiNumber, noteName, isActive, handl
                 e.currentTarget.releasePointerCapture(e.pointerId);
                 handlePointerDown(e.pointerId, keyCode, midiNumber);
             }}
-            onPointerEnter={(e) => handlePointerEnter(e.pointerId, keyCode, midiNumber)
-            }
+            onPointerEnter={(e) => handlePointerEnter(e.pointerId, keyCode, midiNumber)}
             onPointerLeave={(e) => handlePointerLeave(e.pointerId, keyCode, midiNumber)}
             onPointerUp={(e) => {
                 e.stopPropagation();

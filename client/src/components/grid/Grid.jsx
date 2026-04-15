@@ -1,113 +1,32 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useStudio } from '/src/contexts/StudioContext';
 import { usePreferences } from '/src/contexts/PreferencesContext';
 import { usePlayback } from '/src/contexts/PlaybackContext';
 import { useActiveNotes } from '/src/hooks/useActiveNotes';
+import { usePointerPlay } from '/src/hooks/usePointerPlay';
 import { NoteCell } from './NoteCell';
 import { ScaleDegreeLabelCell } from './ScaleDegreeLabelCell';
 import { ScaleLabelCell } from './ScaleLabelCell';
 import { ChordLabelCell } from './ChordLabelCell';
 import { CELL_TYPE, buildGridData } from '/src/visual/grid-data.js';
-import { dispatchNoteEvent } from '/src/utils.js';
 
 /** @typedef {import('/src/visual/grid-data.js').CellData} CellData */
 /** @typedef {import('/src/visual/grid-data.js').KeyCode} KeyCode */
 /** @typedef {import('/src/contexts/PlaybackContext.jsx').PlaybackState} PlaybackState */
-/** @typedef {{ keyCode: KeyCode, midiNumber: number }} PointerData */
 
 export function Grid() {
-    const { audioEngine, timingEngine } = useStudio();
+    const { timingEngine } = useStudio();
     const { preferences } = usePreferences();
     const { playbackState } = usePlayback();
     const activeNotes = useActiveNotes();
+    const { handlePointerDown, handlePointerEnter, handlePointerLeave, handlePointerUpOrCancel } = usePointerPlay();
     const [gridData] = useState(() => buildGridData());
     const [currentChord, setCurrentChord] = useState(/** @type {string | null} */ (null));
     const [nextChord, setNextChord] = useState(/** @type {string | null} */ (null));
     const [beatsUntilNextChord, setBeatsUntilNextChord] = useState(/** @type {number | null} */ (null));
     const isStopped = playbackState === 'stopped';
-    
-    const activePointers = useRef(/** @type {Map<number, PointerData>} */ (new Map()));
 
-    /**
-     * Triggers note when pointer enters a cell if pointer slides from another.
-     * Note: its first touch must have been a NoteCell.
-     * Note: for convenience, pointer events still use keyCode as the unqiueID.
-     * @param {number} pointerId 
-     * @param {KeyCode} keyCode 
-     * @param {number} midiNumber 
-     */
-    const handlePointerEnter = (pointerId, keyCode, midiNumber) => {
-        const isActive = activePointers.current.get(pointerId)?.keyCode === keyCode;
-        if (activePointers.current.has(pointerId) && !isActive) {
-            audioEngine.playNote(keyCode, midiNumber);
-            activePointers.current.set(pointerId, { keyCode, midiNumber });
-            dispatchNoteEvent('notestart', keyCode, midiNumber);
-        }
-    };
-
-    /**
-     * Triggers note if the cell was not already playing a note.
-     * Note: for convenience, pointer events still use keyCode as the unqiueID.
-     * @param {number} pointerId 
-     * @param {KeyCode} keyCode 
-     * @param {number} midiNumber 
-     */
-    const handlePointerDown = (pointerId, keyCode, midiNumber) => {
-        const isActive = activePointers.current.get(pointerId)?.keyCode === keyCode;
-        activePointers.current.set(pointerId, { keyCode, midiNumber });
-        if (!isActive) {
-            audioEngine.playNote(keyCode, midiNumber);
-            dispatchNoteEvent('notestart', keyCode, midiNumber);
-        }
-    };
-
-    /**
-     * Stops note if cell is active when pointer released or cancelled.
-     * @param {number} pointerId 
-     * @param {KeyCode} keyCode 
-     * @param {number} midiNumber 
-     */
-    const handlePointerUpOrCancel = (pointerId, keyCode, midiNumber) => {
-        const isActive = activePointers.current.get(pointerId)?.keyCode === keyCode;
-        activePointers.current.delete(pointerId);
-        if (isActive) {
-            audioEngine.stopNote(keyCode, midiNumber);
-            dispatchNoteEvent('noteend', keyCode, midiNumber);
-        }
-    }
-
-    /**
-     * Stops note if cell is active when pointer leaves the cell.
-     * @param {number} pointerId 
-     * @param {KeyCode} keyCode 
-     * @param {number} midiNumber 
-     */
-    const handlePointerLeave = (pointerId, keyCode, midiNumber) => {
-        const wasActive = activePointers.current.get(pointerId)?.keyCode === keyCode;
-        if (activePointers.current.has(pointerId) && wasActive) {
-            audioEngine.stopNote(keyCode, midiNumber);
-            dispatchNoteEvent('noteend', keyCode, midiNumber);
-        }
-    };
-
-    useEffect(() => {
-        /**
-         * Cleans up active pointer data if released off the grid.
-         * Note: does not need to stop a note - would have been stopped on pointerleave.
-         * @param {PointerEvent} e
-         */
-        const handleDocumentPointerUpOrCancel = (e) => {
-            activePointers.current.delete(e.pointerId);
-        }
-        document.addEventListener('pointerup', handleDocumentPointerUpOrCancel);
-        document.addEventListener('pointercancel', handleDocumentPointerUpOrCancel);
-
-        return () => {
-            document.removeEventListener('pointerup', handleDocumentPointerUpOrCancel);
-            document.removeEventListener('pointercancel', handleDocumentPointerUpOrCancel);
-        };
-    }, [audioEngine]);
-
+    // Set up beat change listener in TimingEngine to update current/next chord and countdown based on difficulty level
     useEffect(() => {
         /**
          * @param {{ currentChord: string | null, nextChord: string, beatsUntilNextChord: number | null }} data
@@ -124,15 +43,12 @@ export function Grid() {
                     : null
             );
         };
-
         timingEngine.setOnBeatChange(handleBeatChange);
-
-        return () => {
-            timingEngine.setOnBeatChange(null);
-        };
+        return () => timingEngine.setOnBeatChange(null);
     }, [timingEngine, preferences.difficulty]);
 
     /**
+     * Renders a cell based on its type (note, scale label, chord label, scale degree label, empty).
      * @param {CellData} cell 
      * @param {number} rowIdx 
      * @param {number} colIdx 
