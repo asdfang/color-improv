@@ -88,7 +88,13 @@ body {
     text-align: center;
     padding: 1rem;
 }
+
+/* Prompt user to rotate device on narrow screens in portrait mode */
 @media (orientation: portrait) and (max-width: 768px) {
     #rotate-prompt { display: flex; }
     #app { display: none; }
+}
+
+@media(max-height: 600px) {
+    #app { min-height: auto; }
 }

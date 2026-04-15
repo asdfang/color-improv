@@ -8,8 +8,13 @@ export function ScaleDegreeLabelCell({ scaleDegree, scaleName }) {
     const degree = accidental ? scaleDegree.slice(1) : scaleDegree;
     return (
         <div className={`scale-label-row ${scaleName}-row scale-degree-label-cell `}>
-            {accidental && <span className="accidental">{accidental}</span>}
-            <span className="degree-number">{degree}</span>
+            <div className="scale-degree-label">
+                {accidental && <span className="accidental">{accidental}</span>}
+                <span className="degree-with-caret">
+                    <span className="degree-caret" aria-hidden="true">^</span>
+                    <span className="degree-number">{degree}</span>
+                </span>
+            </div>
         </div>
     );
 };

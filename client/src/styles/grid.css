@@ -3,6 +3,7 @@
     display: grid;
     grid-template-rows: repeat(var(--grid-rows), 1fr);
     grid-template-columns: minmax(100px, 200px) repeat(calc(var(--grid-cols) - 1), 1fr);
+    padding: clamp(0.35rem, 0.8vw, 0.8rem);
     /* Overridden by child styles: */
     -webkit-user-select: none;
     user-select: none;
@@ -81,13 +82,24 @@
     position: relative;
     font-size: var(--fs-grid-label);
 }
-.keyboard-hint {
+.chord-label::after {
+    content: attr(data-keyboard-hint);
     position: absolute;
-    bottom: 16px;
+    left: 50%;
+    top: 120%;
+    transform: translate(-50%);
     font-size: var(--fs-ui-sm);
     font-style: italic;
     color: #777;
+    white-space: nowrap;
 }
+/* .keyboard-hint {
+    position: absolute;
+    bottom: 0px;
+    font-size: var(--fs-ui-sm);
+    font-style: italic;
+    color: #777;
+} */
 
 /* ScaleLabelCell */
 .scale-label-cell {
@@ -104,32 +116,55 @@
 .scale-degree-label-cell .degree-number {
     position: relative;
 }
-.scale-degree-label-cell .degree-number::before {
-    content: '^';
-    position: absolute;
-    top: -0.6em;
-    left: 50%;
-    transform: translateX(-50%);
+
+.scale-degree-label {
+    display: inline-flex;
+    align-items: flex-end;
+}
+.degree-with-caret {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+}
+.degree-caret {
     font-size: 0.8em;
+    transform: scaleY(0.6);
+    margin-bottom: -0.5em;
 }
 
-.blues-row {
-    padding-bottom: 28px;
+/* Override #music-grid > div */
+.blues-row { padding-top: 0.8rem; }
+.mixolydian-row { padding-bottom: 0.8rem;}
+#music-grid > .blues-row.scale-label-cell {
+    justify-content: flex-start;
 }
-.mixolydian-row {
-    padding-top: 28px;
+#music-grid > .mixolydian-row.scale-label-cell {
+    justify-content: flex-end;
+}
+#music-grid > .blues-row.scale-degree-label-cell {
+    align-items: flex-start;
+}
+#music-grid > .mixolydian-row.scale-degree-label-cell {
+    align-items: flex-end;
 }
 
+/* Hide keyboard hints on phones/tablets that are touch-only (likely no keyboard) */
 @media (max-width: 1279px) and (hover: none) {
-    .keyboard-hint { display: none; }
+    .chord-label::after { display: none; }
 }
+/* Adjust label column width for smaller screens, ensuring remaining NoteCells are easily pressed */
 @media (max-width: 1023px) {
     #music-grid {
         grid-template-columns: minmax(88px, 100px) repeat(calc(var(--grid-cols) - 1), 1fr);
+        padding: 0;
     }
     .chord-label,
-    .scale-label-cell {
-        font-size: var(--fs-grid-label-sm);
-    }
+    .scale-label-cell { font-size: var(--fs-grid-label-sm); }
     .note-cell { margin: 3px; }
+}
+
+@media (max-height: 920px) {
+    #music-grid { padding: 0; }
+    .chord-label,
+    .scale-label-cell { font-size: var(--fs-grid-label-sm); }
 }
