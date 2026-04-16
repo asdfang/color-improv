@@ -11,7 +11,7 @@ export function InstructionsDialog({ isOpen, onClose }) {
     const id = 'instructions-dialog';
     const musicIcon = <FontAwesomeIcon icon={faMusic} aria-hidden="true" />;
     const footer = (
-        <button className="btn-text" onClick={onClose}>
+        <button className="btn-text" onClick={onClose} aria-label="Close instructions">
             Let&apos;s Jam! {musicIcon}
         </button>
     );
