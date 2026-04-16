@@ -1,3 +1,5 @@
+// TODO: investigate rAF stalling.
+
 import {
     getBeatDuration, getBeatNumberInMeasure, getMeasureNumberInProgression, getChordInfo, getLoopsCompleted
 } from '/src/timing/progression-data.js';
