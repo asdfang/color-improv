@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
  * @param {{ isOpen: boolean, onClose: () => void }} props
  */
 export function InstructionsDialog({ isOpen, onClose }) {
-    const musicIcon = <FontAwesomeIcon icon={faMusic} />;
+    const musicIcon = <FontAwesomeIcon icon={faMusic} aria-hidden="true" />;
     const footer = (
         <button className="btn-text" onClick={onClose}>
             Let&apos;s Jam! {musicIcon}

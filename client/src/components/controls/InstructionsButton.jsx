@@ -5,6 +5,7 @@ import { InstructionsDialog } from '../dialogs/InstructionsDialog';
 
 export function InstructionsButton() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const infoIcon = <FontAwesomeIcon icon={faCircleInfo} aria-hidden="true" />;
 
     const handleClick = () => {
         setIsDialogOpen(true);
@@ -13,7 +14,7 @@ export function InstructionsButton() {
     return (
         <div id="instructions-wrapper">
             <button id="instructions-button" onClick={handleClick}>
-                <FontAwesomeIcon icon={faCircleInfo} />
+                {infoIcon}
                 <span>Instructions!</span>
             </button>
             <InstructionsDialog

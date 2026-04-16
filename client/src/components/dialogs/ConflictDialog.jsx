@@ -5,8 +5,8 @@ import PropTypes from 'prop-types';
 
 /** @param {{isOpen: boolean, onClose: () => void, onChooseLocal: () => void, onChooseServer: () => void}} props */
 export function ConflictDialog({ isOpen, onClose, onChooseLocal, onChooseServer }) {
-    const localIcon = <FontAwesomeIcon icon={faHardDrive} />;
-    const serverIcon = <FontAwesomeIcon icon={faCloudArrowDown} />;
+    const localIcon = <FontAwesomeIcon icon={faHardDrive} aria-hidden="true" />;
+    const serverIcon = <FontAwesomeIcon icon={faCloudArrowDown} aria-hidden="true" />;
 
     const footer = (
         <>

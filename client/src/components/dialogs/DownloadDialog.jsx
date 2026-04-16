@@ -31,9 +31,9 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
     const audioRef = useRef(/** @type {HTMLAudioElement | null} */(null));
     const preRef = useRef(/** @type {HTMLPreElement | null} */(null));
 
-    const downloadIcon = <FontAwesomeIcon icon={faDownload} />;
-    const checkIcon = <FontAwesomeIcon icon={faCheck} />;
-    const closeIcon = <FontAwesomeIcon icon={faTimes} />;
+    const downloadIcon = <FontAwesomeIcon icon={faDownload} aria-hidden="true" />;
+    const checkIcon = <FontAwesomeIcon icon={faCheck} aria-hidden="true" />;
+    const closeIcon = <FontAwesomeIcon icon={faTimes} aria-hidden="true" />;
 
     const handleDownload = async () => {
         if (!recordingBlob || !logObject) return;

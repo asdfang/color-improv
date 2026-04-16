@@ -38,6 +38,10 @@ export function VolumeControl({ source }) {
     const isMuted = preferences[SOURCE_CONFIG[source].mutePreferenceKey];
     const config = SOURCE_CONFIG[source];
 
+    const mutedIcon = <FontAwesomeIcon icon={faVolumeMute} aria-hidden="true" />;
+    const unmutedIcon = <FontAwesomeIcon icon={faVolumeUp} aria-hidden="true" />;
+    const undoIcon = <FontAwesomeIcon icon={faUndo} aria-hidden="true" />;
+
     /** @param {import('react').ChangeEvent<HTMLInputElement>} e */
     const handleVolumeChange = (e) => {
         const newVolume = parseFloat(e.target.value);
@@ -80,11 +84,7 @@ export function VolumeControl({ source }) {
                     title="Mute/Unmute"
                     onClick={handleMuteToggle}
                 >
-                    {preferences[config.mutePreferenceKey] ? (
-                        <FontAwesomeIcon icon={faVolumeMute} />
-                    ) : (
-                        <FontAwesomeIcon icon={faVolumeUp} />
-                    )}
+                    {preferences[config.mutePreferenceKey] ? mutedIcon : unmutedIcon}
                 </button>
             </div>
             <div className="reset-button">
@@ -93,7 +93,7 @@ export function VolumeControl({ source }) {
                     title="Reset to Defaults"
                     onClick={handleReset}
                 >
-                    <FontAwesomeIcon icon={faUndo} />
+                    {undoIcon}
                 </button>
             </div>
         </div>

@@ -9,6 +9,9 @@ import { VolumePanel } from './VolumePanel';
 export function HamburgerMenu() {
     const [isOpen, setIsOpen] = useState(false);
 
+    const hamburgerIcon = <FontAwesomeIcon icon={faBars} aria-hidden="true" />;
+    const closeIcon = <FontAwesomeIcon icon={faX} aria-hidden="true" />;
+
     useEffect(() => {
         if (!isOpen) return;
 
@@ -31,9 +34,7 @@ export function HamburgerMenu() {
                     onClick={() => setIsOpen(true)}
                     aria-label="Open menu"
                     aria-controls="hamburger-drawer"
-                >
-                    <FontAwesomeIcon icon={faBars} aria-hidden="true"/>
-                </button>
+                >{hamburgerIcon}</button>
             )}
             {isOpen && <div className="hamburger-backdrop" onClick={() => setIsOpen(false)} aria-hidden="true" />}
 
@@ -45,9 +46,7 @@ export function HamburgerMenu() {
                         onClick={() => setIsOpen(false)}
                         aria-label="Close menu"
                         aria-controls="hamburger-drawer"
-                    >
-                        <FontAwesomeIcon icon={faX} aria-hidden="true" />
-                    </button>
+                    >{closeIcon}</button>
                 </div>
                 <InstructionsButton />
                 <DifficultySelect />

@@ -16,11 +16,10 @@ export function PlaybackControls() {
     const canStop = playbackState === 'playing' || playbackState === 'paused';
     const canRecord = playbackState === 'stopped';
 
-    // FontAwesome Icons
-    const playIcon = <FontAwesomeIcon icon={faPlay} />;
-    const pauseIcon = <FontAwesomeIcon icon={faPause} />;
-    const stopIcon = <FontAwesomeIcon icon={faStop} />;
-    const recordIcon = <FontAwesomeIcon className={`${isRecording ? 'animate-pulse' : ''}`} icon={faCircle} />;
+    const playIcon = <FontAwesomeIcon icon={faPlay} aria-hidden="true" />;
+    const pauseIcon = <FontAwesomeIcon icon={faPause} aria-hidden="true" />;
+    const stopIcon = <FontAwesomeIcon icon={faStop} aria-hidden="true" />;
+    const recordIcon = <FontAwesomeIcon className={`${isRecording ? 'animate-pulse' : ''}`} icon={faCircle} aria-hidden="true" />;
     
     const handlePlayOrResume = useCallback(() => {
         if (playbackState === 'stopped') play();
