@@ -19,25 +19,7 @@ export function Dialog({id='', isOpen, onClose, title, closeOnBackdrop = false, 
     useEffect(() => {
         const dialog = dialogRef.current;
         if (!dialog) return;
-
-        // When opening, make sure to reset scroll and focus without scroll jump.
-        if (isOpen) {
-            dialog.showModal();
-            const content = dialog.querySelector('.dialog-content');
-            const resetScroll = () => {
-                dialog.scrollTop = 0;
-                if (content instanceof HTMLElement) {
-                    content.scrollTop = 0;
-                }
-            };
-            try {
-                dialog.focus({ preventScroll: true });
-            } catch {
-                dialog.focus();
-            }
-            resetScroll();
-            // requestAnimationFrame(resetScroll);
-        }
+        if (isOpen) dialog.showModal();
         else if (dialog.open) dialog.close();
     }, [isOpen]);
 
@@ -68,10 +50,15 @@ export function Dialog({id='', isOpen, onClose, title, closeOnBackdrop = false, 
             ref={dialogRef}
             id={id || undefined}
             className="dialog"
-            tabIndex={-1}
             onClick={handleClick}
+            tabIndex={-1}
+            aria-modal="true"
+            aria-labelledby={title ? `${id}-title` : undefined}
         >
-            {title && (<header className="dialog-header"><h2>{title}</h2></header>)}
+            {title && (
+                <header className="dialog-header">
+                    <h2 id={id ? `${id}-title` : undefined}>{title}</h2>
+                </header>)}
             <div className="dialog-content">{children}</div>
             {footer && (<footer className="dialog-footer">{footer}</footer>)}
         </dialog>
