@@ -16,7 +16,7 @@ export function VolumePanel() {
     }, [audioEngine, preferences.backingTrackVolume, preferences.samplesVolume, preferences.backingTrackMuted, preferences.samplesMuted]);
 
     return (
-        <div id="volume-panel">
+        <div className="volume-panel">
             <VolumeControl source="backingTrack" />
             <VolumeControl source="samples" />
         </div>
