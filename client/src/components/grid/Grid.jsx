@@ -26,27 +26,29 @@ export function Grid() {
     const [beatsUntilNextChord, setBeatsUntilNextChord] = useState(/** @type {number | null} */ (null));
     const isStopped = playbackState === 'stopped';
     const isPlaying = playbackState === 'playing';
+    const currentChordHelperEnabled = preferences.difficulty !== 'hard';
+    const countdownHelperEnabled = preferences.difficulty === 'easy';
 
-    // Set up beat change listener in TimingEngine to update current/next chord and countdown based on difficulty level
+    /**
+     * Set up beat change listener in TimingEngine to update current/next chord and countdown.
+     * Note: we filter updates to React state based on difficulty, so using state already reflects whether to show helpers.
+     */
     useEffect(() => {
         /**
          * @param {{ currentChord: string | null, nextChord: string, beatsUntilNextChord: number | null }} data
          */
         const handleBeatChange = ({ currentChord, nextChord, beatsUntilNextChord }) => {
-            const showCurrentChord = preferences.difficulty !== 'hard';
-            const showCountdown = preferences.difficulty === 'easy';
-            
-            setCurrentChord(showCurrentChord ? currentChord : null);
-            setNextChord(showCountdown ? nextChord : null);
+            setCurrentChord(currentChordHelperEnabled ? currentChord : null);
+            setNextChord(currentChordHelperEnabled ? nextChord : null);
             setBeatsUntilNextChord(
-                showCountdown && (beatsUntilNextChord !== null && beatsUntilNextChord <= 4)
+                countdownHelperEnabled && (beatsUntilNextChord !== null && beatsUntilNextChord <= 4)
                     ? beatsUntilNextChord
                     : null
             );
         };
         timingEngine.setOnBeatChange(handleBeatChange);
         return () => timingEngine.setOnBeatChange(null);
-    }, [timingEngine, preferences.difficulty]);
+    }, [currentChordHelperEnabled, countdownHelperEnabled, timingEngine]);
 
     /**
      * Renders a cell based on its type (note, scale label, chord label, scale degree label, empty).
@@ -129,7 +131,13 @@ export function Grid() {
             {gridData.map((row, rowIdx) => 
                 row.map((cell, colIdx) => 
                     renderCell(cell, rowIdx, colIdx))
-        )}
+            )}
+            <span className="sr-only" role="status">
+                { currentChord ? `Current chord: ${currentChord}.` : ''}
+            </span>
+            <span className="sr-only" role="status">
+                { beatsUntilNextChord !== null ? `Next chord: ${nextChord}.` : ''}
+            </span>
         </div>
     );
 }
