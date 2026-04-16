@@ -115,7 +115,7 @@ export function Grid() {
                 );
             }
             case CELL_TYPE.EMPTY: {
-                return <div key={key} />;
+                return <div key={key} className={rowIdx === 0 ? '' : 'scale-label-row'} />; //ugly fix
             }
             default: {
                 const _exhaustiveCheck = /** @type {never} */ (cell);

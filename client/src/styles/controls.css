@@ -301,3 +301,10 @@ button:disabled { cursor: not-allowed; }
     background: #2f2f2f;
     color: #f3f3f3;
 }
+
+@media (max-width: 1023px) {
+    .playback-btn { 
+        width: 60px;
+        height: 60px;
+    }
+}
