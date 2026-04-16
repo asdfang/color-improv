@@ -10,10 +10,6 @@ dialog {
     color: inherit;
     /* Padding handled by each dialog - separators need full width */
 }
-dialog:focus,
-dialog:focus-visible {
-    outline: none;
-}
 dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
 dialog p {
     margin-bottom: 0.75rem;
