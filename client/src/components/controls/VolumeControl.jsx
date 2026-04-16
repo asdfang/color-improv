@@ -81,7 +81,7 @@ export function VolumeControl({ source }) {
             <div className="mute-toggle">
                 <button
                     className={`btn-circle volume-btn mute-btn ${isMuted ? 'muted' : ''}`}
-                    title="Mute/Unmute"
+                    aria-label={isMuted ? 'Click to unmute' : 'Click to mute'}
                     onClick={handleMuteToggle}
                 >
                     {preferences[config.mutePreferenceKey] ? mutedIcon : unmutedIcon}
@@ -90,7 +90,7 @@ export function VolumeControl({ source }) {
             <div className="reset-button">
                 <button
                     className="btn-circle volume-btn"
-                    title="Reset to Defaults"
+                    aria-label="Reset to Defaults"
                     onClick={handleReset}
                 >
                     {undoIcon}

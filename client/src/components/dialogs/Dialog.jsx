@@ -19,7 +19,16 @@ export function Dialog({id='', isOpen, onClose, title, closeOnBackdrop = false, 
     useEffect(() => {
         const dialog = dialogRef.current;
         if (!dialog) return;
-        if (isOpen) dialog.showModal();
+        if (isOpen) {
+            const trigger = /** @type {HTMLElement | null} */ (document.activeElement);
+            dialog.showModal();
+            try {
+                dialog.focus({ preventScroll: true });
+            } catch {
+                dialog.focus();
+            }
+            return () => { trigger?.focus(); };
+        }
         else if (dialog.open) dialog.close();
     }, [isOpen]);
 
@@ -56,9 +65,9 @@ export function Dialog({id='', isOpen, onClose, title, closeOnBackdrop = false, 
             aria-labelledby={title ? `${id}-title` : undefined}
         >
             {title && (
-                <header className="dialog-header">
+                <div className="dialog-header">
                     <h2 id={id ? `${id}-title` : undefined}>{title}</h2>
-                </header>)}
+                </div>)}
             <div className="dialog-content">{children}</div>
             {footer && (<footer className="dialog-footer">{footer}</footer>)}
         </dialog>

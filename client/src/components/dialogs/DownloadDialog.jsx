@@ -115,13 +115,13 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
                     <div className="recording-section">
                         <h3>Audio</h3>
                         <div className="audio-preview">
-                            <audio ref={audioRef} controls controlsList="nodownload noplaybackrate" />
+                            <audio ref={audioRef} controls controlsList="nodownload noplaybackrate" aria-label="Audio preview"/>
                         </div>
                     </div>
                     <div className="recording-section">
                         <h3>MIDI Log</h3>
                         <div className="log-preview">
-                            <pre ref={preRef} id="log-pre"/>
+                            <pre ref={preRef} id="log-pre" aria-label="MIDI log preview"/>
                             <div className="log-preview-fade" />
                         </div>
                     </div>

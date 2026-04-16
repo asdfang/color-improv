@@ -1,6 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMusic } from '@fortawesome/free-solid-svg-icons';
-import { useEffect } from 'react';
 import { Dialog } from './Dialog';
 import PropTypes from 'prop-types';
 
@@ -15,17 +14,6 @@ export function InstructionsDialog({ isOpen, onClose }) {
             Let&apos;s Jam! {musicIcon}
         </button>
     );
-
-    useEffect(() => {
-        if (!isOpen) return;
-        const dialog = document.getElementById(id);
-        if (!(dialog instanceof HTMLDialogElement)) return;
-        dialog.scrollTop = 0;
-        // Reset scroll
-        const content = dialog.querySelector('.dialog-content');
-        if (content instanceof HTMLElement) content.scrollTop = 0;
-        dialog.focus();
-    }, [isOpen]);
 
     return (
         <Dialog

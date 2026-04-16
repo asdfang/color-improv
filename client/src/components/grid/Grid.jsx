@@ -133,10 +133,10 @@ export function Grid() {
                     renderCell(cell, rowIdx, colIdx))
             )}
             <span className="sr-only" role="status">
-                { currentChord ? `Current chord: ${currentChord}.` : ''}
+                { currentChord ? `${currentChord}.` : ''}
             </span>
             <span className="sr-only" role="status">
-                { beatsUntilNextChord !== null ? `Next chord: ${nextChord}.` : ''}
+                { beatsUntilNextChord !== null ? `${nextChord} next.` : ''}
             </span>
         </div>
     );
