@@ -20,7 +20,24 @@ export function Dialog({id='', isOpen, onClose, title, closeOnBackdrop = false, 
         const dialog = dialogRef.current;
         if (!dialog) return;
 
-        if (isOpen) dialog.showModal();
+        // When opening, make sure to reset scroll and focus without scroll jump.
+        if (isOpen) {
+            dialog.showModal();
+            const content = dialog.querySelector('.dialog-content');
+            const resetScroll = () => {
+                dialog.scrollTop = 0;
+                if (content instanceof HTMLElement) {
+                    content.scrollTop = 0;
+                }
+            };
+            try {
+                dialog.focus({ preventScroll: true });
+            } catch {
+                dialog.focus();
+            }
+            resetScroll();
+            // requestAnimationFrame(resetScroll);
+        }
         else if (dialog.open) dialog.close();
     }, [isOpen]);
 
@@ -51,6 +68,7 @@ export function Dialog({id='', isOpen, onClose, title, closeOnBackdrop = false, 
             ref={dialogRef}
             id={id || undefined}
             className="dialog"
+            tabIndex={-1}
             onClick={handleClick}
         >
             {title && (<header className="dialog-header"><h2>{title}</h2></header>)}
