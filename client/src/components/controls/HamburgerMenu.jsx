@@ -8,7 +8,6 @@ import { VolumePanel } from './VolumePanel';
 
 export function HamburgerMenu() {
     const [isOpen, setIsOpen] = useState(false);
-    const toggleMenu = () => setIsOpen(prev => !prev);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -26,16 +25,28 @@ export function HamburgerMenu() {
 
     return (
         <div className="hamburger-menu">
-            <button className={`hamburger-btn ${isOpen ? 'open' : ''}`} onClick={toggleMenu} aria-label="Open menu">
-                <FontAwesomeIcon icon={isOpen ? faX : faBars} />
-            </button>
-            {isOpen && <button className="hamburger-backdrop" onClick={() => setIsOpen(false)} aria-label="Close menu backdrop" />}
+            {!isOpen && (
+                <button
+                    className={`hamburger-btn open`}
+                    onClick={() => setIsOpen(true)}
+                    aria-label="Open menu"
+                    aria-controls="hamburger-drawer"
+                >
+                    <FontAwesomeIcon icon={faBars} aria-hidden="true"/>
+                </button>
+            )}
+            {isOpen && <div className="hamburger-backdrop" onClick={() => setIsOpen(false)} aria-hidden="true" />}
 
-            <aside className={`hamburger-drawer ${isOpen ? 'open' : ''}`} aria-hidden={!isOpen}>
+            <aside id="hamburger-drawer" className={`hamburger-drawer ${isOpen ? 'open' : ''}`} aria-hidden={!isOpen}>
                 <div className="hamburger-drawer-header">
                     <AuthControls />
-                    <button className="hamburger-btn" onClick={() => setIsOpen(false)} aria-label="Close menu">
-                        <FontAwesomeIcon icon={faX} />
+                    <button 
+                        className="hamburger-btn"
+                        onClick={() => setIsOpen(false)}
+                        aria-label="Close menu"
+                        aria-controls="hamburger-drawer"
+                    >
+                        <FontAwesomeIcon icon={faX} aria-hidden="true" />
                     </button>
                 </div>
                 <InstructionsButton />
