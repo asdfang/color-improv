@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMusic } from '@fortawesome/free-solid-svg-icons';
+import { useEffect } from 'react';
 import { Dialog } from './Dialog';
 import PropTypes from 'prop-types';
 
@@ -7,15 +8,28 @@ import PropTypes from 'prop-types';
  * @param {{ isOpen: boolean, onClose: () => void }} props
  */
 export function InstructionsDialog({ isOpen, onClose }) {
+    const id = 'instructions-dialog';
     const musicIcon = <FontAwesomeIcon icon={faMusic} aria-hidden="true" />;
     const footer = (
         <button className="btn-text" onClick={onClose}>
             Let&apos;s Jam! {musicIcon}
         </button>
     );
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const dialog = document.getElementById(id);
+        if (!(dialog instanceof HTMLDialogElement)) return;
+        dialog.scrollTop = 0;
+        // Reset scroll
+        const content = dialog.querySelector('.dialog-content');
+        if (content instanceof HTMLElement) content.scrollTop = 0;
+        dialog.focus();
+    }, [isOpen]);
+
     return (
         <Dialog
-            id="instructions-dialog"
+            id={id}
             isOpen={isOpen}
             onClose={onClose}
             title="Instructions"
