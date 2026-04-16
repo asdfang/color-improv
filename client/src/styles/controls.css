@@ -345,7 +345,7 @@ button:disabled { cursor: not-allowed; }
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-md);
     box-sizing: border-box;
-    padding: calc(1.25rem + env(safe-area-inset-top)) calc(1.25rem + env(safe-area-inset-right)) calc(1.25rem + env(safe-area-inset-bottom)) 1.25rem;
+    padding: calc(0.5rem + env(safe-area-inset-top)) calc(1.25rem + env(safe-area-inset-right)) calc(1.25rem + env(safe-area-inset-bottom)) 1.25rem;
     overflow-y: auto;
     gap: 1rem;
     z-index: 80;
@@ -365,6 +365,7 @@ button:disabled { cursor: not-allowed; }
 
 @media (orientation: landscape) and (max-height: 500px) and (hover: none) {
     #top-panel {
+        padding: 0.5rem;
         grid-template-columns: 1fr auto;
         align-items: flex-start;
     }
