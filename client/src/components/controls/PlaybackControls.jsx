@@ -33,6 +33,7 @@ export function PlaybackControls() {
         if (!(target instanceof HTMLElement)) return;
         if (["INPUT", "TEXTAREA"].includes(target.tagName)) return;
         if (e.repeat) return;
+        if (document.querySelector('dialog[open]')) return;
         
         const { code, shiftKey } = e;
         if (code === 'Space' && !shiftKey) {
