@@ -208,6 +208,12 @@ dialog p {
 }
 
 /* Responsive adjustments */
+@media (max-width: 1023px) {
+    dialog {
+        max-height: 90dvh;
+        overflow-y: auto;
+    }
+}
 @media (max-width: 600px) {
     .recording-sections {
         grid-template-columns: 1fr;
