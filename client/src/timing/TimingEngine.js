@@ -1,4 +1,4 @@
-// TODO: investigate rAF stalling.
+// TODO: investigate rAF stalling, esp. on iOS Simulator, ngrok. try-catch in tick()? visibility change handling? heartbeat fallback?
 
 import {
     getBeatDuration, getBeatNumberInMeasure, getMeasureNumberInProgression, getChordInfo, getLoopsCompleted
