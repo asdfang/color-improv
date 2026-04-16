@@ -266,7 +266,7 @@ button:disabled { cursor: not-allowed; }
     gap: 0.25rem;
     padding: 0 0.5rem;
 }
-.settings-panel select {
+.difficulty-select {
     background: linear-gradient(180deg, #3a3a3a, #2f2f2f);
     color: #f3f3f3;
     border: 1px solid #5a5a5a;
@@ -289,17 +289,17 @@ button:disabled { cursor: not-allowed; }
     transition: border-color 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
 }
 
-.settings-panel select:hover {
+.difficulty-select:hover {
     border-color: #78c67c;
 }
 
-.settings-panel select:focus-visible {
+.difficulty-select:focus-visible {
     outline: none;
     border-color: #6fd676;
     box-shadow: var(--focus-ring);
 }
 
-.settings-panel select option {
+.difficulty-select option {
     background: #2f2f2f;
     color: #f3f3f3;
 }
@@ -339,7 +339,7 @@ button:disabled { cursor: not-allowed; }
     top: 0;
     right: 0;
     height: 100dvh;
-    width: min(22rem, 90vw);
+    width: min(30rem, 90vw);
     background: var(--color-surface);
     border-left: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -361,6 +361,8 @@ button:disabled { cursor: not-allowed; }
 .hamburger-drawer-header {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
 }
 
 @media (orientation: landscape) and (max-height: 500px) and (hover: none) {
@@ -379,5 +381,10 @@ button:disabled { cursor: not-allowed; }
     .hamburger-menu {
         display: inline-flex;
         overflow: visible;
+    }
+    .volume-btn {
+        width: 44px;
+        height: 44px;
+        font-size: var(--fs-ui-sm);
     }
 }
