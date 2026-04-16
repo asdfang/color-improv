@@ -88,6 +88,9 @@ export function PlaybackControls() {
             >
                 {recordIcon}   
             </PlaybackButton>
+            <span role="status" className="sr-only">
+                {isRecording ? 'Recording in progress' : ''}
+            </span>
             <DownloadDialog
                 isOpen={recordingResult !== null}
                 onClose={clearRecordingResult}
