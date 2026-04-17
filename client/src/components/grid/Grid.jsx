@@ -92,7 +92,6 @@ export function Grid() {
                 return (
                     <ChordLabelCell
                         key={key}
-                        chordName={chordName}
                         label={label}
                         keyboardHint={keyboardHint}
                         isHighlighted={!isStopped && chordName !== null && chordName === currentChord}
