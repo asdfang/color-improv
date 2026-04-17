@@ -1,5 +1,5 @@
 /* Music Grid */
-#music-grid {
+.music-grid {
     display: grid;
     grid-template-rows: repeat(var(--grid-rows), 1fr);
     grid-template-columns: minmax(100px, 200px) repeat(calc(var(--grid-cols) - 1), 1fr);
@@ -9,11 +9,11 @@
     user-select: none;
 }
 
-#music-grid.playback-playing { opacity: 1;   filter: saturate(1) }
-#music-grid.playback-paused  { opacity: 0.7; filter: saturate(0.7); }
-#music-grid.playback-stopped { opacity: 0.55; }
+.music-grid.playback-playing { opacity: 1;   filter: saturate(1) }
+.music-grid.playback-paused  { opacity: 0.7; filter: saturate(0.7); }
+.music-grid.playback-stopped { opacity: 0.55; }
 
-#music-grid > div {
+.music-grid > div {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -132,19 +132,19 @@
     margin-bottom: -0.5em;
 }
 
-/* Override #music-grid > div */
+/* Override .music-grid > div */
 .blues-row { padding-top: 0.8rem; }
 .mixolydian-row { padding-bottom: 0.8rem;}
-#music-grid > .blues-row.scale-label-cell {
+.music-grid > .blues-row.scale-label-cell {
     justify-content: flex-start;
 }
-#music-grid > .mixolydian-row.scale-label-cell {
+.music-grid > .mixolydian-row.scale-label-cell {
     justify-content: flex-end;
 }
-#music-grid > .blues-row.scale-degree-label-cell {
+.music-grid > .blues-row.scale-degree-label-cell {
     align-items: flex-start;
 }
-#music-grid > .mixolydian-row.scale-degree-label-cell {
+.music-grid > .mixolydian-row.scale-degree-label-cell {
     align-items: flex-end;
 }
 
@@ -154,7 +154,7 @@
 }
 /* Adjust label column width for smaller screens, ensuring remaining NoteCells are easily pressed */
 @media (max-width: 1023px) {
-    #music-grid {
+    .music-grid {
         grid-template-columns: minmax(88px, 100px) repeat(calc(var(--grid-cols) - 1), 1fr);
         padding: 0;
     }
@@ -164,7 +164,7 @@
 }
 
 @media (max-height: 920px) {
-    #music-grid { padding: 0; }
+    .music-grid { padding: 0; }
     .chord-label,
     .scale-label-cell { font-size: var(--fs-grid-label-sm); }
 }
@@ -179,5 +179,5 @@
         padding-right: env(safe-area-inset-right);
         padding-bottom: env(safe-area-inset-bottom);
     }
-    #music-grid > .scale-label-row { display: none; }
+    .music-grid > .scale-label-row { display: none; }
 }

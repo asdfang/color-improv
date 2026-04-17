@@ -21,6 +21,7 @@ export function ConfirmCloseDialog({ isOpen, onGoBack, onConfirmClose }) {
     return (
         <Dialog
             id="confirm-close-dialog"
+            className="confirm-close-dialog"
             isOpen={isOpen}
             onClose={onGoBack}
             title="Unsaved Changes"

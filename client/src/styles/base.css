@@ -77,14 +77,14 @@ body {
     white-space: nowrap;
 }
 
-#app {
+.app {
     width: 100vw;
     min-height: 100vh;
     display: grid;
     grid-template-rows: auto 1fr;
 }
 
-#rotate-prompt {
+.rotate-prompt {
     display: none;
     position: fixed;
     inset: 0;
@@ -100,8 +100,8 @@ body {
 
 /* Prompt user to rotate device on narrow screens in portrait mode */
 @media (orientation: portrait) and (max-width: 768px) {
-    #rotate-prompt { display: flex; }
-    #app { display: none; }
+    .rotate-prompt { display: flex; }
+    .app { display: none; }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
@@ -109,12 +109,12 @@ body {
         overflow: hidden;
     }
 
-    #app {
+    .app {
         height: 100dvh;
         min-height: 100dvh;
     }
 }
 
 @media(max-height: 600px) {
-    #app { min-height: auto; }
+    .app { min-height: auto; }
 }

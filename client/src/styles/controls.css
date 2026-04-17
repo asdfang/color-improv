@@ -1,5 +1,5 @@
 /* Wrappers */
-#top-panel {
+.top-panel {
     background: var(--color-surface);
     padding: 1rem;
     display: grid;
@@ -18,7 +18,7 @@
 }
 .volume-control { display: contents; }
 
-#playback-controls {
+.playback-controls {
     display: flex;
     gap: 1rem;
     justify-content: center;
@@ -34,7 +34,7 @@
     font-size: var(--fs-ui-md);
 }
 
-#auth-controls {
+.auth-controls {
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
@@ -120,30 +120,30 @@ button:disabled { cursor: not-allowed; }
 .playback-btn-label.recording {
     color: var(--color-recording);
 }
-#play-btn {
+.play-btn {
     background: var(--color-primary);
 }
-#play-btn:hover:not(:disabled) {
+.play-btn:hover:not(:disabled) {
     background: var(--color-primary-hover);
 }
-#pause-btn {
+.pause-btn {
     background: var(--color-pause);
 }
-#pause-btn:hover:not(:disabled) {
+.pause-btn:hover:not(:disabled) {
     background: var(--color-pause-hover);
 }
-#stop-btn {
+.stop-btn {
     background: var(--color-stop);
 }
-#stop-btn:hover:not(:disabled) {
+.stop-btn:hover:not(:disabled) {
     background: var(--color-stop-hover);
 }
-#record-btn {
+.record-btn {
     background: var(--color-surface-alt);
     color: var(--color-recording);
     border: 2px solid var(--color-neutral);
 }
-#record-btn:hover:not(:disabled) {
+.record-btn:hover:not(:disabled) {
     background: var(--color-surface-alt-hover);
 }
 .animate-pulse {
@@ -247,7 +247,7 @@ button:disabled { cursor: not-allowed; }
 }
 
 /* Instructions button */
-#instructions-button {
+.instructions-button {
     display: inline-flex;
     gap: 0.5rem;
     background: transparent;
@@ -255,12 +255,12 @@ button:disabled { cursor: not-allowed; }
     border-radius: var(--radius-sm);
     font-size: var(--fs-ui-md);
 }
-#instructions-button:hover {
+.instructions-button:hover {
     background: rgba(255, 255, 255, 0.1);
 }
 
 /* Difficulty select */
-#difficulty-select-wrapper {
+.difficulty-select-wrapper {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -366,18 +366,18 @@ button:disabled { cursor: not-allowed; }
 }
 
 @media (orientation: landscape) and (max-height: 500px) and (hover: none) {
-    #top-panel {
+    .top-panel {
         padding: 0.5rem;
         grid-template-columns: 1fr auto;
         align-items: flex-start;
     }
-    .playback-btn { 
+    .playback-btn {
         width: 60px;
         height: 60px;
     }
     .playback-btn-label { display: none; }
-    #top-panel > .volume-panel,
-    #top-panel > .settings-panel { display: none; }
+    .top-panel > .volume-panel,
+    .top-panel > .settings-panel { display: none; }
     .hamburger-menu {
         display: inline-flex;
         overflow: visible;

@@ -21,6 +21,7 @@ export function ConflictDialog({ isOpen, onClose, onChooseLocal, onChooseServer 
     return (
         <Dialog
             id="conflict-dialog"
+            className="conflict-dialog"
             isOpen={isOpen}
             onClose={onClose}
             title="Conflict Detected"

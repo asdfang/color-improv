@@ -12,8 +12,8 @@ export function InstructionsButton() {
     }
 
     return (
-        <div id="instructions-wrapper">
-            <button id="instructions-button" onClick={handleClick}>
+        <div>
+            <button className="instructions-button" onClick={handleClick}>
                 {infoIcon}
                 <span>Instructions!</span>
             </button>

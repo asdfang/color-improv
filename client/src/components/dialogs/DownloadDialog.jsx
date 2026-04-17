@@ -105,6 +105,7 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
         <>
             <Dialog
                 id="download-dialog"
+                className="download-dialog"
                 isOpen={isOpen}
                 onClose={handleClose}
                 title="Download Recording"
@@ -121,7 +122,7 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
                     <div className="recording-section">
                         <h3>MIDI Log</h3>
                         <div className="log-preview">
-                            <pre ref={preRef} id="log-pre" aria-label="MIDI log preview"/>
+                            <pre ref={preRef} className="log-pre" aria-label="MIDI log preview"/>
                             <div className="log-preview-fade" />
                         </div>
                     </div>

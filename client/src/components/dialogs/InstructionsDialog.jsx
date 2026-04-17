@@ -18,6 +18,7 @@ export function InstructionsDialog({ isOpen, onClose }) {
     return (
         <Dialog
             id={id}
+            className={id}
             isOpen={isOpen}
             onClose={onClose}
             title="Instructions"

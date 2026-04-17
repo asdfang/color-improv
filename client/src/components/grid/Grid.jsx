@@ -126,7 +126,7 @@ export function Grid() {
     }
 
     return (
-        <div id="music-grid" className={`playback-${playbackState}`}>
+        <div className={`music-grid playback-${playbackState}`}>
             {gridData.map((row, rowIdx) => 
                 row.map((cell, colIdx) => 
                     renderCell(cell, rowIdx, colIdx))

@@ -24,7 +24,7 @@ export function AuthControls() {
     }
 
     return (
-        <div id="auth-controls">
+        <div className="auth-controls">
             {isLoggedIn ? (
                 <button className="btn-text" onClick={logout}>Logout</button>
             ) : (

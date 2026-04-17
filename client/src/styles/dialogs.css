@@ -51,31 +51,31 @@ dialog p {
 .back-btn:hover:not(:disabled) { background: var(--color-neutral-hover); }
 .back-btn svg { vertical-align: -0.2em; }
 
-#instructions-dialog { max-width: 480px; width: 90%; }
-#instructions-dialog p {
+.instructions-dialog { max-width: 480px; width: 90%; }
+.instructions-dialog p {
     line-height: 1.2;
     font-size: var(--fs-ui-md);
 }
-#instructions-dialog ul {
+.instructions-dialog ul {
     display: flex;
     flex-direction: column;
     gap: 1rem;
     padding-left: 1.25rem;
     list-style: none;
 }
-#instructions-dialog li {
+.instructions-dialog li {
     position: relative;
     padding-left: 0.5rem;
     font-size: var(--fs-ui-md);
     color: var(--color-text-muted);
 }
-#instructions-dialog li::before {
+.instructions-dialog li::before {
     content: "\2023";
     position: absolute;
     margin-left: -1.25rem;
     color: var(--color-primary);
 }
-#instructions-dialog li h3 {
+.instructions-dialog li h3 {
     display: block;
     font-size: inherit;
     font-weight: 800;
@@ -84,19 +84,19 @@ dialog p {
     margin-bottom: 0.25rem;
 }
 
-#conflict-dialog { max-width: 440px; width: 90%; }
-#conflict-dialog .dialog-footer { justify-content: center; }
+.conflict-dialog { max-width: 440px; width: 90%; }
+.conflict-dialog .dialog-footer { justify-content: center; }
 
-#auth-dialog { max-width: 440px; width: 90%; }
-#auth-dialog .dialog-footer {
+.auth-dialog { max-width: 440px; width: 90%; }
+.auth-dialog .dialog-footer {
     padding: 1rem 0 1.5rem;
     justify-content: center;
 }
 
-#confirm-close-dialog { max-width: 440px; width: 90%; }
+.confirm-close-dialog { max-width: 440px; width: 90%; }
 
-#download-dialog { max-width: 800px; width: 90%; }
-#download-dialog .dialog-content > p {
+.download-dialog { max-width: 800px; width: 90%; }
+.download-dialog .dialog-content > p {
     margin-bottom: 0;
 }
 
@@ -180,7 +180,7 @@ dialog p {
     border-radius: var(--radius-md);
 }
 
-#log-pre {
+.log-pre {
     height: 100%;
     padding: 0.75rem;
     font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;

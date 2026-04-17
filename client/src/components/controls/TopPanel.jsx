@@ -8,7 +8,7 @@ export function TopPanel() {
     const showMenuOnMobile = useMediaQuery('(orientation: landscape) and (max-height: 500px) and (hover: none)');
 
     return (
-        <div id="top-panel">
+        <div className="top-panel">
             {!showMenuOnMobile && <VolumePanel />}
             <PlaybackControls />
             {!showMenuOnMobile && <SettingsPanel />}

@@ -60,7 +60,7 @@ export function PlaybackControls() {
     }, [handleKeyDown]);
 
     return (
-        <div id="playback-controls">
+        <div className="playback-controls">
             <PlaybackButton 
                 id="play-btn"
                 label="Play"

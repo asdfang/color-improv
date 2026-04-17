@@ -2,9 +2,10 @@ import { useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
 /**
- * 
+ *
  * @param {{
  *   id?: string,
+ *   className?: string,
  *   isOpen: boolean,
  *   onClose: () => void,
  *   title?: string,
@@ -13,7 +14,7 @@ import PropTypes from 'prop-types';
  *   footer?: import('react').ReactNode
  * }} props
  */
-export function Dialog({id='', isOpen, onClose, title, closeOnBackdrop = false, children, footer=null}) {
+export function Dialog({id='', className='', isOpen, onClose, title, closeOnBackdrop = false, children, footer=null}) {
     const dialogRef = useRef(/** @type {HTMLDialogElement | null} */ (null));
 
     useEffect(() => {
@@ -58,7 +59,7 @@ export function Dialog({id='', isOpen, onClose, title, closeOnBackdrop = false, 
         <dialog
             ref={dialogRef}
             id={id || undefined}
-            className="dialog"
+            className={`dialog${className ? ` ${className}` : ''}`}
             onClick={handleClick}
             tabIndex={-1}
             aria-modal="true"
@@ -76,6 +77,7 @@ export function Dialog({id='', isOpen, onClose, title, closeOnBackdrop = false, 
 
 Dialog.propTypes = {
     id: PropTypes.string,
+    className: PropTypes.string,
     isOpen: PropTypes.bool.isRequired,
     onClose: PropTypes.func.isRequired,
     title: PropTypes.string,
