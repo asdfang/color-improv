@@ -62,7 +62,7 @@ export function Dialog({id='', isOpen, onClose, title, closeOnBackdrop = false, 
             onClick={handleClick}
             tabIndex={-1}
             aria-modal="true"
-            aria-labelledby={title ? `${id}-title` : undefined}
+            aria-labelledby={title && id ? `${id}-title` : undefined}
         >
             {title && (
                 <div className="dialog-header">

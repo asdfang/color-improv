@@ -38,7 +38,10 @@ export function HamburgerMenu() {
             )}
             {isOpen && <div className="hamburger-backdrop" onClick={() => setIsOpen(false)} aria-hidden="true" />}
 
-            <aside id="hamburger-drawer" className={`hamburger-drawer ${isOpen ? 'open' : ''}`} aria-hidden={!isOpen}>
+            <aside
+                id="hamburger-drawer"
+                className={`hamburger-drawer ${isOpen ? 'open' : ''}`}
+                inert={!isOpen}>
                 <div className="hamburger-drawer-header">
                     <AuthControls />
                     <button 

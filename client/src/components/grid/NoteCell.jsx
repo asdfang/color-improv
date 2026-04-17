@@ -28,6 +28,9 @@ export function NoteCell({ color, keyCode, midiNumber, noteName, isActive, handl
             style={style}
             onPointerDown={(e) => {
                 e.preventDefault();
+                if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+                    e.currentTarget.releasePointerCapture(e.pointerId);
+                }
                 e.currentTarget.releasePointerCapture(e.pointerId);
                 handlePointerDown?.(e.pointerId, keyCode, midiNumber);
             }}
@@ -53,8 +56,8 @@ NoteCell.propTypes = {
     midiNumber: PropTypes.number.isRequired,
     noteName: PropTypes.string.isRequired,
     isActive: PropTypes.bool.isRequired,
-    handlePointerDown: PropTypes.func.isRequired,
-    handlePointerEnter: PropTypes.func.isRequired,
-    handlePointerLeave: PropTypes.func.isRequired,
-    handlePointerUpOrCancel: PropTypes.func.isRequired,
+    handlePointerDown: PropTypes.func,
+    handlePointerEnter: PropTypes.func,
+    handlePointerLeave: PropTypes.func,
+    handlePointerUpOrCancel: PropTypes.func,
 };

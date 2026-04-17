@@ -1,4 +1,4 @@
-/** @import { NoteEventName } from '/src/constants.js' */
+/** @typedef {import('./constants.js').NoteEventName} NoteEventName */
 
 /**
  * Dispatches a note event with the specified parameters.

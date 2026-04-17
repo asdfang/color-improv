@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { useStudio } from '/src/contexts/StudioContext';
 import { dispatchNoteEvent } from '/src/utils.js';
+import { NOTE_EVENTS } from 'src/constants.js';
 
 /** @typedef {import('/src/visual/grid-data.js').KeyCode} KeyCode */
 /** @typedef {{ keyCode: KeyCode, midiNumber: number }} PointerData */
@@ -26,7 +27,7 @@ export function usePointerPlay() {
         if (activePointers.current.has(pointerId) && !isActive) {
             audioEngine.playNote(keyCode, midiNumber);
             activePointers.current.set(pointerId, { keyCode, midiNumber });
-            dispatchNoteEvent('notestart', keyCode, midiNumber);
+            dispatchNoteEvent(NOTE_EVENTS.START, keyCode, midiNumber);
         }
     };
 
@@ -41,7 +42,7 @@ export function usePointerPlay() {
         activePointers.current.set(pointerId, { keyCode, midiNumber });
         if (!isActive) {
             audioEngine.playNote(keyCode, midiNumber);
-            dispatchNoteEvent('notestart', keyCode, midiNumber);
+            dispatchNoteEvent(NOTE_EVENTS.START, keyCode, midiNumber);
         }
     };
 
@@ -56,7 +57,7 @@ export function usePointerPlay() {
         activePointers.current.delete(pointerId);
         if (isActive) {
             audioEngine.stopNote(keyCode, midiNumber);
-            dispatchNoteEvent('noteend', keyCode, midiNumber);
+            dispatchNoteEvent(NOTE_EVENTS.END, keyCode, midiNumber);
         }
     }
 
@@ -70,7 +71,7 @@ export function usePointerPlay() {
         const wasActive = activePointers.current.get(pointerId)?.keyCode === keyCode;
         if (activePointers.current.has(pointerId) && wasActive) {
             audioEngine.stopNote(keyCode, midiNumber);
-            dispatchNoteEvent('noteend', keyCode, midiNumber);
+            dispatchNoteEvent(NOTE_EVENTS.END, keyCode, midiNumber);
         }
     };
 
