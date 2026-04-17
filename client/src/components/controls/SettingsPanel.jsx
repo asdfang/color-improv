@@ -4,7 +4,7 @@ import { DifficultySelect } from './DifficultySelect';
 
 export function SettingsPanel() {
     return (
-        <div id="settings-panel">
+        <div className="settings-panel">
             <AuthControls />
             <InstructionsButton />
             <DifficultySelect />

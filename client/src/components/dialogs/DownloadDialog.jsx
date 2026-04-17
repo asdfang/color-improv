@@ -31,9 +31,9 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
     const audioRef = useRef(/** @type {HTMLAudioElement | null} */(null));
     const preRef = useRef(/** @type {HTMLPreElement | null} */(null));
 
-    const downloadIcon = <FontAwesomeIcon icon={faDownload} />;
-    const checkIcon = <FontAwesomeIcon icon={faCheck} />;
-    const closeIcon = <FontAwesomeIcon icon={faTimes} />;
+    const downloadIcon = <FontAwesomeIcon icon={faDownload} aria-hidden="true" />;
+    const checkIcon = <FontAwesomeIcon icon={faCheck} aria-hidden="true" />;
+    const closeIcon = <FontAwesomeIcon icon={faTimes} aria-hidden="true" />;
 
     const handleDownload = async () => {
         if (!recordingBlob || !logObject) return;
@@ -111,22 +111,22 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
                 closeOnBackdrop={false} // Prevent accidentally closing
                 footer={footer}
             >
-                <p>Great performance! You can download your recording (and MIDI log) below.</p>
                 <div className="recording-sections">
                     <div className="recording-section">
                         <h3>Audio</h3>
                         <div className="audio-preview">
-                            <audio ref={audioRef} controls controlsList="nodownload noplaybackrate" />
+                            <audio ref={audioRef} controls controlsList="nodownload noplaybackrate" aria-label="Audio preview"/>
                         </div>
                     </div>
                     <div className="recording-section">
                         <h3>MIDI Log</h3>
                         <div className="log-preview">
-                            <pre ref={preRef} id="log-pre"/>
+                            <pre ref={preRef} id="log-pre" aria-label="MIDI log preview"/>
                             <div className="log-preview-fade" />
                         </div>
                     </div>
                 </div>
+                <p>Great performance! You can download your audio and MIDI log below.</p>
             </Dialog>
             <ConfirmCloseDialog
                 isOpen={isConfirmDialogOpen}

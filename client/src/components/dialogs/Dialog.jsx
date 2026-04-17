@@ -19,8 +19,16 @@ export function Dialog({id='', isOpen, onClose, title, closeOnBackdrop = false, 
     useEffect(() => {
         const dialog = dialogRef.current;
         if (!dialog) return;
-
-        if (isOpen) dialog.showModal();
+        if (isOpen) {
+            const trigger = /** @type {HTMLElement | null} */ (document.activeElement);
+            dialog.showModal();
+            try {
+                dialog.focus({ preventScroll: true });
+            } catch {
+                dialog.focus();
+            }
+            return () => { trigger?.focus(); };
+        }
         else if (dialog.open) dialog.close();
     }, [isOpen]);
 
@@ -52,8 +60,14 @@ export function Dialog({id='', isOpen, onClose, title, closeOnBackdrop = false, 
             id={id || undefined}
             className="dialog"
             onClick={handleClick}
+            tabIndex={-1}
+            aria-modal="true"
+            aria-labelledby={title && id ? `${id}-title` : undefined}
         >
-            {title && (<header className="dialog-header"><h2>{title}</h2></header>)}
+            {title && (
+                <div className="dialog-header">
+                    <h2 id={id ? `${id}-title` : undefined}>{title}</h2>
+                </div>)}
             <div className="dialog-content">{children}</div>
             {footer && (<footer className="dialog-footer">{footer}</footer>)}
         </dialog>

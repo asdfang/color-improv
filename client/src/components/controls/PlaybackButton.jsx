@@ -9,12 +9,12 @@ export function PlaybackButton({ id, label, labelClassName='', onClick, disabled
                 className="btn-circle playback-btn"
                 onClick={onClick}
                 disabled={disabled}
-            >
-                {children}
-            </button>
-            <span className={`playback-btn-label ${labelClassName}`}>
-                {label}
-            </span>
+                aria-label={label}
+            >{children}</button>
+            <span
+                id={`${id}-label`}
+                className={`playback-btn-label ${labelClassName}`}
+            >{label}</span>
         </div>
     );
 }

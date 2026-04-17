@@ -16,11 +16,10 @@ export function PlaybackControls() {
     const canStop = playbackState === 'playing' || playbackState === 'paused';
     const canRecord = playbackState === 'stopped';
 
-    // FontAwesome Icons
-    const playIcon = <FontAwesomeIcon icon={faPlay} />;
-    const pauseIcon = <FontAwesomeIcon icon={faPause} />;
-    const stopIcon = <FontAwesomeIcon icon={faStop} />;
-    const recordIcon = <FontAwesomeIcon className={`${isRecording ? 'animate-pulse' : ''}`} icon={faCircle} />;
+    const playIcon = <FontAwesomeIcon icon={faPlay} aria-hidden="true" />;
+    const pauseIcon = <FontAwesomeIcon icon={faPause} aria-hidden="true" />;
+    const stopIcon = <FontAwesomeIcon icon={faStop} aria-hidden="true" />;
+    const recordIcon = <FontAwesomeIcon className={`${isRecording ? 'animate-pulse' : ''}`} icon={faCircle} aria-hidden="true" />;
     
     const handlePlayOrResume = useCallback(() => {
         if (playbackState === 'stopped') play();
@@ -33,6 +32,7 @@ export function PlaybackControls() {
         if (!(target instanceof HTMLElement)) return;
         if (["INPUT", "TEXTAREA"].includes(target.tagName)) return;
         if (e.repeat) return;
+        if (document.querySelector('dialog[open]')) return;
         
         const { code, shiftKey } = e;
         if (code === 'Space' && !shiftKey) {
@@ -88,6 +88,9 @@ export function PlaybackControls() {
             >
                 {recordIcon}   
             </PlaybackButton>
+            <span role="status" className="sr-only">
+                {isRecording ? 'Recording in progress' : ''}
+            </span>
             <DownloadDialog
                 isOpen={recordingResult !== null}
                 onClose={clearRecordingResult}

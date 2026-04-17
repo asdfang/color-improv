@@ -5,8 +5,8 @@ import PropTypes from 'prop-types';
 
 /** @param {{isOpen: boolean, onGoBack: () => void, onConfirmClose: () => void}} props */
 export function ConfirmCloseDialog({ isOpen, onGoBack, onConfirmClose }) {
-    const backIcon = <FontAwesomeIcon icon={faArrowLeft} />;
-    const closeIcon = <FontAwesomeIcon icon={faTimes} />;
+    const backIcon = <FontAwesomeIcon icon={faArrowLeft} aria-hidden="true" />;
+    const closeIcon = <FontAwesomeIcon icon={faTimes} aria-hidden="true" />;
 
     const footer = (
         <>
