@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { useStudio } from '/src/contexts/StudioContext';
 import { dispatchNoteEvent } from '/src/utils.js';
-import { NOTE_EVENTS } from 'src/constants.js';
+import { NOTE_EVENTS } from '/src/constants.js';
 
 /** @typedef {import('/src/visual/grid-data.js').KeyCode} KeyCode */
 /** @typedef {{ keyCode: KeyCode, midiNumber: number }} PointerData */
