@@ -1,4 +1,4 @@
-/** @typedef {import('/src/constants.js').UserPreferences} UserPreferences */
+/** @typedef {import('../constants').UserPreferences} UserPreferences */
 
 export class ServerBackend {
     /**

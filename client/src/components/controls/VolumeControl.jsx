@@ -3,10 +3,10 @@ import { faVolumeUp, faVolumeMute, faUndo } from '@fortawesome/free-solid-svg-ic
 import PropTypes from 'prop-types';
 import { useStudio } from '../../contexts/StudioContext';
 import { usePreferences } from '../../contexts/PreferencesContext';
-import { PREFERENCE_DEFAULTS } from '/src/constants.js';
+import { PREFERENCE_DEFAULTS } from '../../constants';
 
-/** @typedef {import('/src/constants.js').AudioSourceKey} AudioSourceKey */
-/** @typedef {import('/src/audio/AudioEngine.js').AudioEngine} AudioEngine */
+/** @typedef {import('../../constants').AudioSourceKey} AudioSourceKey */
+/** @typedef {import('../../audio/AudioEngine').AudioEngine} AudioEngine */
 
 /**
  * @typedef {{

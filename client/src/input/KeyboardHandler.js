@@ -1,7 +1,7 @@
-import { KEY_MAPPINGS, NOTE_EVENTS } from "/src/constants.js";
-import { dispatchNoteEvent } from "/src/utils.js";
+import { KEY_MAPPINGS, NOTE_EVENTS } from "../constants";
+import { dispatchNoteEvent } from "../utils";
 /** @import { AudioEngine } from '../audio/AudioEngine.js' */
-/** @typedef {import('/src/constants.js').NoteEventName} NoteEventName */
+/** @typedef {import('../constants').NoteEventName} NoteEventName */
 
 /**
  * @param {string} code

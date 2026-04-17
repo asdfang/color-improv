@@ -22,7 +22,10 @@ export class SampleLoader {
     async loadSample(url) {
         // Check cache first
         if (this.cache.has(url)) {
-            return /** @type {AudioBuffer} */ this.cache.get(url);
+            const cachedBuffer = this.cache.get(url);
+            if (cachedBuffer !== undefined) {
+                return cachedBuffer;
+            }
         }
         
         try {
@@ -62,9 +65,11 @@ export class SampleLoader {
      * Load all trumpet sound files.
      * @param {number[]} midiNumbers - An array of MIDI numbers to load trumpet samples of.
      * @param {string} basePath - Where the trumpet samples are stored in the project.
-     * @returns {Promise<Map>} - A promise that resolves to a mapping from MIDI number to audio buffer.
+     * @param {string} audioFormat - Audio file extension such as "wav" or "mp3".
+     * @returns {Promise<Map<number, AudioBuffer>>} - A promise that resolves to a mapping from MIDI number to audio buffer.
      */
     async loadTrumpetSamples(midiNumbers, basePath, audioFormat) {
+        /** @type {Map<number, AudioBuffer>} */
         const sampleMap = new Map();
 
         // Convert MIDI numbers to urls

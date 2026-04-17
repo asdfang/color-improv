@@ -1,10 +1,10 @@
-import { NOTE_EVENTS } from '/src/constants.js';
+import { NOTE_EVENTS } from '../constants';
 
-/** @typedef {import('/src/constants.js').NoteEvent} NoteEvent */
-/** @typedef {import('/src/constants.js').NoteEventName} NoteEventName */
-/** @typedef {import('/src/constants.js').BackingTrackKey} BackingTrackKey */
-/** @typedef {import('/src/constants.js').PreferenceDifficulty} PreferenceDifficulty */
-/** @typedef {import('/src/timing/TimingEngine.js').TimingEngine} TimingEngine */
+/** @typedef {import('../constants').NoteEvent} NoteEvent */
+/** @typedef {import('../constants').NoteEventName} NoteEventName */
+/** @typedef {import('../constants').BackingTrackKey} BackingTrackKey */
+/** @typedef {import('../constants').PreferenceDifficulty} PreferenceDifficulty */
+/** @typedef {import('../timing/TimingEngine').TimingEngine} TimingEngine */
 
 /**
  * @typedef {{
@@ -43,7 +43,6 @@ export class NoteLogger {
 
     /**
      * Start logging note events. Listens for 'notestart' and 'noteend' events dispatched by KeyboardHandler.
-     * (TODO: extend to other input types).
       * @param {BackingTrackKey} backingTrack the backing track being used (e.g., 'blues')
       * @param {PreferenceDifficulty} difficulty the difficulty level (hard/medium/easy)
      */
@@ -77,7 +76,6 @@ export class NoteLogger {
     /**
      * Collects note events with elapsed time from beginning of backing track, then logs them.
      * @param {Event} event note event from KeyboardHandler
-     * (TODO: extended to include other inputs)
      */
     handleNoteEvent(event) {
         const e = /** @type {NoteEvent} */ (event);
@@ -97,7 +95,6 @@ export class NoteLogger {
      * @param {number} midiNumber
      * @param {string} inputID key code that played the note
      * @param {*} position additional contextual information from TimingEngine
-     * (TODO: extend to other input types)
      */
     logEvent(timestamp, eventType, midiNumber, inputID, position) {
         this.events.push({

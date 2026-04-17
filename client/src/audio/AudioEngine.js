@@ -1,8 +1,8 @@
 import { SampleLoader } from "./SampleLoader";
-import { AUDIO_CONFIG } from "/src/constants.js";
-import { clampVolume, sliderToGain } from "/src/audio/audio-utils.js";
+import { AUDIO_CONFIG } from "../constants";
+import { clampVolume, sliderToGain } from "./audio-utils";
 
-/** @typedef {import('/src/constants.js').BackingTrackKey} BackingTrackKey */
+/** @typedef {import('../constants').BackingTrackKey} BackingTrackKey */
 
 /**
  * AudioEngine manages audio playback and Web Audio API interactions.

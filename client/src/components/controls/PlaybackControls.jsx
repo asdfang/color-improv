@@ -4,10 +4,11 @@ import { useCallback, useEffect } from 'react';
 import { usePlayback } from '../../contexts/PlaybackContext';
 import { PlaybackButton } from './PlaybackButton';
 import { DownloadDialog } from '../dialogs/DownloadDialog';
+import { ErrorDialog } from '../dialogs/ErrorDialog';
 
 export function PlaybackControls() {
     const {
-        playbackState, isRecording,
+        playbackState, playbackErrorMessage, clearPlaybackErrorMessage,isRecording,
         play, resume, pause, stop, record,
         recordingResult, clearRecordingResult} = usePlayback();
 
@@ -19,7 +20,11 @@ export function PlaybackControls() {
     const playIcon = <FontAwesomeIcon icon={faPlay} aria-hidden="true" />;
     const pauseIcon = <FontAwesomeIcon icon={faPause} aria-hidden="true" />;
     const stopIcon = <FontAwesomeIcon icon={faStop} aria-hidden="true" />;
-    const recordIcon = <FontAwesomeIcon className={`${isRecording ? 'animate-pulse' : ''}`} icon={faCircle} aria-hidden="true" />;
+    const recordIcon = (<FontAwesomeIcon
+        className={`${isRecording ? 'animate-pulse' : ''}`}
+        icon={faCircle}
+        aria-hidden="true"
+    />);
     
     const handlePlayOrResume = useCallback(() => {
         if (playbackState === 'stopped') play();
@@ -95,6 +100,11 @@ export function PlaybackControls() {
                 isOpen={recordingResult !== null}
                 onClose={clearRecordingResult}
                 recordingResult={recordingResult}
+            />
+            <ErrorDialog
+                isOpen={playbackErrorMessage !== null}
+                onClose={clearPlaybackErrorMessage}
+                errorMessage={playbackErrorMessage || ''}
             />
         </div>
     );

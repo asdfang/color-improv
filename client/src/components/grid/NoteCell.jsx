@@ -31,7 +31,6 @@ export function NoteCell({ color, keyCode, midiNumber, noteName, isActive, handl
                 if (e.currentTarget.hasPointerCapture(e.pointerId)) {
                     e.currentTarget.releasePointerCapture(e.pointerId);
                 }
-                e.currentTarget.releasePointerCapture(e.pointerId);
                 handlePointerDown?.(e.pointerId, keyCode, midiNumber);
             }}
             onPointerEnter={(e) => handlePointerEnter?.(e.pointerId, keyCode, midiNumber)}

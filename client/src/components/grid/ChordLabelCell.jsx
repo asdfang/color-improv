@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 
 /**
- * @param {{chordName: string | null, label: string, keyboardHint: string, isHighlighted: boolean, countdown: number | null}} props
+ * @param {{label: string, keyboardHint: string, isHighlighted: boolean, countdown: number | null}} props
  */
 export function ChordLabelCell({ label, keyboardHint, isHighlighted, countdown }) {
     return (

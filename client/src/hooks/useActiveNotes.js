@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { NOTE_EVENTS } from '/src/constants.js';
+import { NOTE_EVENTS } from '../constants';
 
-/** @typedef {import('/src/constants.js').NoteEvent} NoteEvent */
+/** @typedef {import('../constants').NoteEvent} NoteEvent */
 
 export function useActiveNotes() {
     const [activeNotes, setActiveNotes] = useState(new Set());

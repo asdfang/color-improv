@@ -3,8 +3,8 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import { useStudio } from './StudioContext';
 import { usePreferences } from './PreferencesContext';
 import PropTypes from 'prop-types';
-/** @typedef {import('/src/constants.js').BackingTrackKey} BackingTrackKey */
-/** @typedef {import('/src/events/NoteLogger.js').NoteLog} NoteLog */
+/** @typedef {import('../constants').BackingTrackKey} BackingTrackKey */
+/** @typedef {import('../events/NoteLogger').NoteLog} NoteLog */
 
 /**
  * @typedef {'playing' | 'paused' | 'stopped'} PlaybackState
@@ -17,6 +17,8 @@ import PropTypes from 'prop-types';
 /**
  * @typedef {{
  *    playbackState: PlaybackState,
+ *    playbackErrorMessage: string | null,
+ *    clearPlaybackErrorMessage: () => void,
  *    isRecording: boolean,
  *    recordingResult: RecordingResult,
  *    play: () => Promise<void>,
@@ -37,6 +39,7 @@ export function PlaybackProvider({ children }) {
     const [playbackState, setPlaybackState] = useState(/** @type {PlaybackState} */ ('stopped'));
     const [isRecording, setIsRecording] = useState(false);
     const [recordingResult, setRecordingResult] = useState(/** @type {RecordingResult} */ (null));
+    const [playbackErrorMessage, setPlaybackErrorMessage] = useState(/** @type {string | null} */ (null));
 
     const {
         audioEngine,
@@ -111,7 +114,10 @@ export function PlaybackProvider({ children }) {
             setPlaybackState('playing');
         } catch (error) {
             console.error('Failed to play:', error);
-
+            const errorMessage = error instanceof Error
+                ? error.message
+                : 'An unknown error occurred during playback.';
+            setPlaybackErrorMessage(errorMessage);
             await stop();
         }
     };
@@ -124,6 +130,10 @@ export function PlaybackProvider({ children }) {
         await play();
     };
 
+    const clearPlaybackErrorMessage = () => {
+        setPlaybackErrorMessage(null);
+    }
+
     const clearRecordingResult = () => {
         setRecordingResult(null);
     };
@@ -134,7 +144,7 @@ export function PlaybackProvider({ children }) {
     }, [audioEngine, stop]);
     
     return (
-        <PlaybackContext.Provider value={{ playbackState, isRecording, recordingResult, play, pause, resume, stop, record, clearRecordingResult }}>
+        <PlaybackContext.Provider value={{ playbackState, playbackErrorMessage, clearPlaybackErrorMessage, isRecording, recordingResult, play, pause, resume, stop, record, clearRecordingResult }}>
             {children}
         </PlaybackContext.Provider>
     );

@@ -1,6 +1,13 @@
 import PropTypes from "prop-types";
 
-/** @param {{ id: string, label: string, labelClassName?: string, onClick: () => void, disabled: boolean, children: import('react').ReactNode}} props */
+/** @param {{
+ *      id: string,
+ *      label: string,
+ *      labelClassName?: string,
+ *      onClick: () => void,
+ *      disabled: boolean,
+ *      children: import('react').ReactNode
+ * }} props */
 export function PlaybackButton({ id, label, labelClassName='', onClick, disabled, children }) {
     return (
         <div className="playback-btn-wrapper">

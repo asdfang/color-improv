@@ -2,9 +2,9 @@
  * This module defines the data structure for the visual grid used in the application.
  */
 
-import { midiToColor } from "/src/visual/color-data.js";
-import { KEY_MAPPINGS } from "/src/constants.js";
-import { CHORDS } from "/src/constants.js";
+import { midiToColor } from "../visual/color-data";
+import { KEY_MAPPINGS } from "../constants";
+import { CHORDS } from "../constants";
 
 // ============================================================================
 // TYPE DEFINITIONS
