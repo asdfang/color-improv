@@ -203,6 +203,15 @@ dialog p {
     pointer-events: none;
 }
 
+/* Error dialog */
+.error-message {
+    padding: 1rem;
+    background: rgba(198, 40, 40, 0.12);
+    border-radius: var(--radius-sm);
+    color: #ff8a80;
+    font-size: var(--fs-ui-md);
+}
+
 /* Responsive adjustments */
 @media (max-width: 1023px) {
     dialog {
