@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { useStudio } from '/src/contexts/StudioContext';
+import { useStudio } from '../contexts/StudioContext';
 import { dispatchNoteEvent } from '../utils';
 import { NOTE_EVENTS } from '../constants';
 

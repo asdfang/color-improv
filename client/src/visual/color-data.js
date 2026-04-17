@@ -8,7 +8,7 @@ import { midiToPitchClass } from '../audio/audio-utils';
  * Named color constants in HSL format.
  * Note colors use HSL to enable easy manipulation (brightness, desaturation) in rendering.
  */
-export const COLORS = {
+const COLORS = {
     // Chromatic circle colors (used in PITCH_CLASS_TO_COLOR)
     RED: 'hsl(0, 80%, 65%)',           // C
     ORANGE: 'hsl(30, 80%, 65%)',       // D
@@ -27,7 +27,7 @@ export const COLORS = {
  * Creates smooth gradients within scales while keeping each pitch class consistent.
  * @type {Record<number, string>}
  */
-export const PITCH_CLASS_TO_COLOR = {
+const PITCH_CLASS_TO_COLOR = {
     0: COLORS.RED,          // C
     // 1: no note
     2: COLORS.ORANGE,       // D
@@ -40,17 +40,6 @@ export const PITCH_CLASS_TO_COLOR = {
     9: COLORS.BLUE_VIOLET,  // A
     10: COLORS.MAGENTA,     // A#/Bb
     11: COLORS.PINK_RED,    // B
-};
-
-/**
- * Color helpers for common alpha variants.
- * @param {number} alpha - Opacity value between 0 and 1.
- * @returns {string} - The RGBA color string with the specified alpha.
- * @type {{ WHITE: (alpha: number) => string, BLACK: (alpha: number) => string }}
- */
-export const COLOR_ALPHA = {
-    WHITE: (alpha) => `rgba(255, 255, 255, ${alpha})`,
-    BLACK: (alpha) => `rgba(0, 0, 0, ${alpha})`,
 };
 
 /**

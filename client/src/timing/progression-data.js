@@ -6,17 +6,17 @@
  * 12-bar blues progression data - each element is a measure.
  * Assumes harmonic rhythm of one chord per measure.
  */
-export const TWELVE_BAR_BLUES = [
+const TWELVE_BAR_BLUES = [
     'C7', 'C7', 'C7', 'C7', 'F7', 'F7', 'C7', 'C7', 'G7', 'F7', 'C7', 'G7',
 ];
 
-export const TOTAL_MEASURES = TWELVE_BAR_BLUES.length; // 12 measures
+const TOTAL_MEASURES = TWELVE_BAR_BLUES.length; // 12 measures
 
-export const BEATS_PER_MEASURE = 4;
+const BEATS_PER_MEASURE = 4;
 
-export const TOTAL_BEATS = TOTAL_MEASURES * BEATS_PER_MEASURE; // 12 measures * 4 beats each = 48 beats
+const TOTAL_BEATS = TOTAL_MEASURES * BEATS_PER_MEASURE; // 12 measures * 4 beats each = 48 beats
 
-export const DEFAULT_BPM = 120;
+const DEFAULT_BPM = 120;
 
 /**
  * Get beat duration in seconds
@@ -41,7 +41,7 @@ export function getBeatNumberInMeasure(elapsedBeats) {
  * @param {number} elapsedBeats - number of beats elapsed since the start of the progression (0-indexed, integer)
  * @returns {number} 0-47 if TOTAL_BEATS is 48
  */
-export function getMeasureIndex(elapsedBeats) {
+function getMeasureIndex(elapsedBeats) {
     return Math.floor((elapsedBeats / BEATS_PER_MEASURE) % TOTAL_MEASURES); // 0-indexed
 }
 
