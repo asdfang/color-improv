@@ -2,7 +2,7 @@
  * Color constants and utilities for ColorImprov visual rendering.
  */
 
-import { midiToPitchClass } from '/src/audio/audio-utils.js';
+import { midiToPitchClass } from '../audio/audio-utils';
 
 /**
  * Named color constants in HSL format.
@@ -25,7 +25,7 @@ export const COLORS = {
 /**
  * Maps pitch classes to colors using a chromatic circle (color wheel).
  * Creates smooth gradients within scales while keeping each pitch class consistent.
- * Pastel palette for modern, elegant appearance.
+ * @type {Record<number, string>}
  */
 export const PITCH_CLASS_TO_COLOR = {
     0: COLORS.RED,          // C
@@ -46,6 +46,7 @@ export const PITCH_CLASS_TO_COLOR = {
  * Color helpers for common alpha variants.
  * @param {number} alpha - Opacity value between 0 and 1.
  * @returns {string} - The RGBA color string with the specified alpha.
+ * @type {{ WHITE: (alpha: number) => string, BLACK: (alpha: number) => string }}
  */
 export const COLOR_ALPHA = {
     WHITE: (alpha) => `rgba(255, 255, 255, ${alpha})`,

@@ -1,10 +1,10 @@
-import { NOTE_EVENTS } from '/src/constants.js';
+import { NOTE_EVENTS } from '../constants';
 
-/** @typedef {import('/src/constants.js').NoteEvent} NoteEvent */
-/** @typedef {import('/src/constants.js').NoteEventName} NoteEventName */
-/** @typedef {import('/src/constants.js').BackingTrackKey} BackingTrackKey */
-/** @typedef {import('/src/constants.js').PreferenceDifficulty} PreferenceDifficulty */
-/** @typedef {import('/src/timing/TimingEngine.js').TimingEngine} TimingEngine */
+/** @typedef {import('../constants').NoteEvent} NoteEvent */
+/** @typedef {import('../constants').NoteEventName} NoteEventName */
+/** @typedef {import('../constants').BackingTrackKey} BackingTrackKey */
+/** @typedef {import('../constants').PreferenceDifficulty} PreferenceDifficulty */
+/** @typedef {import('../timing/TimingEngine').TimingEngine} TimingEngine */
 
 /**
  * @typedef {{

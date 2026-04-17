@@ -2,8 +2,8 @@
 
 import {
     getBeatDuration, getBeatNumberInMeasure, getMeasureNumberInProgression, getChordInfo, getLoopsCompleted
-} from '/src/timing/progression-data.js';
-import { AUDIO_CONFIG, VISUAL_LEAD_TIME } from '/src/constants.js';
+} from '../timing/progression-data';
+import { AUDIO_CONFIG, VISUAL_LEAD_TIME } from '../constants';
 /** @import { AudioEngine } from '../audio/AudioEngine.js' */
 
 /**

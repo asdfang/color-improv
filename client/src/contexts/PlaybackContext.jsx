@@ -3,8 +3,8 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import { useStudio } from './StudioContext';
 import { usePreferences } from './PreferencesContext';
 import PropTypes from 'prop-types';
-/** @typedef {import('/src/constants.js').BackingTrackKey} BackingTrackKey */
-/** @typedef {import('/src/events/NoteLogger.js').NoteLog} NoteLog */
+/** @typedef {import('../constants').BackingTrackKey} BackingTrackKey */
+/** @typedef {import('../events/NoteLogger').NoteLog} NoteLog */
 
 /**
  * @typedef {'playing' | 'paused' | 'stopped'} PlaybackState

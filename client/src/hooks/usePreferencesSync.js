@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePreferences } from '../contexts/PreferencesContext';
 import { ServerBackend } from '../api/ServerBackend';
-/** @typedef {import('/src/constants.js').UserPreferences} UserPreferences */
+/** @typedef {import('../constants').UserPreferences} UserPreferences */
 
 /** @typedef {(
  *      { kind: 'idle' }

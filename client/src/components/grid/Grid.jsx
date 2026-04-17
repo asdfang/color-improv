@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
-import { useStudio } from '/src/contexts/StudioContext';
-import { usePreferences } from '/src/contexts/PreferencesContext';
-import { usePlayback } from '/src/contexts/PlaybackContext';
-import { useActiveNotes } from '/src/hooks/useActiveNotes';
-import { usePointerPlay } from '/src/hooks/usePointerPlay';
+import { useStudio } from '../../contexts/StudioContext';
+import { usePreferences } from '../../contexts/PreferencesContext';
+import { usePlayback } from '../../contexts/PlaybackContext';
+import { useActiveNotes } from '../../hooks/useActiveNotes';
+import { usePointerPlay } from '../../hooks/usePointerPlay';
 import { NoteCell } from './NoteCell';
 import { ScaleDegreeLabelCell } from './ScaleDegreeLabelCell';
 import { ScaleLabelCell } from './ScaleLabelCell';
 import { ChordLabelCell } from './ChordLabelCell';
-import { CELL_TYPE, buildGridData } from '/src/visual/grid-data.js';
+import { CELL_TYPE, buildGridData } from '../../visual/grid-data';
 
-/** @typedef {import('/src/visual/grid-data.js').CellData} CellData */
-/** @typedef {import('/src/visual/grid-data.js').KeyCode} KeyCode */
-/** @typedef {import('/src/contexts/PlaybackContext.jsx').PlaybackState} PlaybackState */
+/** @typedef {import('../../visual/grid-data').CellData} CellData */
+/** @typedef {import('../../visual/grid-data').KeyCode} KeyCode */
+/** @typedef {import('../../contexts/PlaybackContext').PlaybackState} PlaybackState */
 
 export function Grid() {
     const { timingEngine } = useStudio();
