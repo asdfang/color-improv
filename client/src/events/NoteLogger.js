@@ -43,7 +43,6 @@ export class NoteLogger {
 
     /**
      * Start logging note events. Listens for 'notestart' and 'noteend' events dispatched by KeyboardHandler.
-     * (TODO: extend to other input types).
       * @param {BackingTrackKey} backingTrack the backing track being used (e.g., 'blues')
       * @param {PreferenceDifficulty} difficulty the difficulty level (hard/medium/easy)
      */
@@ -77,7 +76,6 @@ export class NoteLogger {
     /**
      * Collects note events with elapsed time from beginning of backing track, then logs them.
      * @param {Event} event note event from KeyboardHandler
-     * (TODO: extended to include other inputs)
      */
     handleNoteEvent(event) {
         const e = /** @type {NoteEvent} */ (event);
@@ -97,7 +95,6 @@ export class NoteLogger {
      * @param {number} midiNumber
      * @param {string} inputID key code that played the note
      * @param {*} position additional contextual information from TimingEngine
-     * (TODO: extend to other input types)
      */
     logEvent(timestamp, eventType, midiNumber, inputID, position) {
         this.events.push({
