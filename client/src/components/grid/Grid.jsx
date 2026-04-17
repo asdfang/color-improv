@@ -98,7 +98,7 @@ export function Grid() {
                         isHighlighted={!isStopped && chordName !== null && chordName === currentChord}
                         countdown={
                             !isStopped
-                            && chordName != null
+                            && chordName !== null
                             && chordName === nextChord
                             ? beatsUntilNextChord
                             : null

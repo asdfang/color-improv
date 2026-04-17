@@ -91,7 +91,7 @@ export function usePointerPlay() {
             document.removeEventListener('pointerup', handleDocumentPointerUpOrCancel);
             document.removeEventListener('pointercancel', handleDocumentPointerUpOrCancel);
         };
-    }, [audioEngine]);
+    }, []);
 
     return { handlePointerEnter, handlePointerDown, handlePointerLeave, handlePointerUpOrCancel };
 }
