@@ -2,7 +2,7 @@
 .music-grid {
     display: grid;
     grid-template-rows: repeat(var(--grid-rows), 1fr);
-    grid-template-columns: minmax(100px, 200px) repeat(calc(var(--grid-cols) - 1), 1fr);
+    grid-template-columns: minmax(100px, 200px) repeat(var(--grid-note-cols), 1fr);
     padding: clamp(0.35rem, 0.8vw, 0.8rem);
     /* Overridden by child styles: */
     -webkit-user-select: none;
@@ -155,7 +155,7 @@
 /* Adjust label column width for smaller screens, ensuring remaining NoteCells are easily pressed */
 @media (max-width: 1023px) {
     .music-grid {
-        grid-template-columns: minmax(88px, 100px) repeat(calc(var(--grid-cols) - 1), 1fr);
+        grid-template-columns: minmax(88px, 100px) repeat(var(--grid-note-cols), 1fr);
         padding: 0;
     }
     .chord-label,

@@ -83,11 +83,13 @@ export class RecordingEngine {
     stop() {
         const mediaRecorder = this.mediaRecorder;
         if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+            this.mediaRecorder = null;
+            this.isRecording = false;
             console.warn('RecordingEngine: stop() called but MediaRecorder is not active');
             return Promise.resolve(null);
         }
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, reject => {
             mediaRecorder.onstop = () => {
                 // Blob is ready when `stop` event fires
                 const blob = new Blob(this.chunks, { type: mediaRecorder.mimeType });

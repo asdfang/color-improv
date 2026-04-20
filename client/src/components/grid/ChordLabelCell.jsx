@@ -19,5 +19,5 @@ ChordLabelCell.propTypes = {
     label: PropTypes.string.isRequired,
     keyboardHint: PropTypes.string.isRequired,
     isHighlighted: PropTypes.bool.isRequired,
-    countdown: PropTypes.number,
+    countdown: PropTypes.oneOfType([PropTypes.number, PropTypes.oneOf([null])]),
 };

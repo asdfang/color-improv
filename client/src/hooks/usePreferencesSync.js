@@ -40,9 +40,14 @@ export function usePreferencesSync() {
      * @param {string} password 
      */
     const registerWithSync = async (email, name, password) => {
-        await register(email, name, password);
-        await serverBackend.save(preferences).catch(console.warn);
-        setSyncStatus({ kind: 'ready' });
+        try {
+            await register(email, name, password);
+            await serverBackend.save(preferences).catch(console.warn);
+            setSyncStatus({ kind: 'ready' });
+        } catch (error) {
+            setSyncStatus({ kind: 'idle' });
+            throw error;    
+        }
     };
 
     /**
@@ -53,18 +58,22 @@ export function usePreferencesSync() {
      */
     const loginWithSync = async (email, password) => {
         setSyncStatus({ kind: 'checking' });
-        await login(email, password);
-        const serverPreferences = await serverBackend.load().catch(console.warn);
-        if (!serverPreferences) {
-            setSyncStatus({ kind: 'ready' });
-            return;
-        }
-
-        const serverPreferenceKeys = /** @type {Array<keyof UserPreferences>} */ (Object.keys(serverPreferences));
-        if (!serverPreferenceKeys.every(key => serverPreferences[key] === preferences[key])) {
-            setSyncStatus({ kind: 'conflicted', serverPreferences });
-        } else {
-            setSyncStatus({ kind: 'ready' });
+        try {
+            await login(email, password);
+            const serverPreferences = await serverBackend.load().catch(console.warn);
+            if (!serverPreferences) {
+                setSyncStatus({ kind: 'ready' });
+                return;
+            }
+            const serverPreferenceKeys = /** @type {Array<keyof UserPreferences>} */ (Object.keys(serverPreferences));
+            if (!serverPreferenceKeys.every(key => serverPreferences[key] === preferences[key])) {
+                setSyncStatus({ kind: 'conflicted', serverPreferences });
+            } else {
+                setSyncStatus({ kind: 'ready' });
+            }
+        } catch (error) {
+            setSyncStatus({ kind: 'idle' });
+            throw error;
         }
     };
 

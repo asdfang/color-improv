@@ -52,6 +52,7 @@
 
     --grid-rows: 6;
     --grid-cols: 9;
+    --grid-note-cols: 8; /* --grid-cols minus number of label columns (currently 1) */
 }
 
 * {
