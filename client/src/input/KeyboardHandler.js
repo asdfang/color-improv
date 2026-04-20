@@ -1,12 +1,27 @@
-import { KEY_MAPPINGS } from "/src/constants.js";
+import { KEY_MAPPINGS, NOTE_EVENTS } from "../constants";
+import { dispatchNoteEvent } from "../utils";
+/** @import { AudioEngine } from '../audio/AudioEngine.js' */
+/** @typedef {import('../constants').NoteEventName} NoteEventName */
+
+/**
+ * @param {string} code
+ * @returns {(typeof KEY_MAPPINGS)[keyof typeof KEY_MAPPINGS] | null}
+ */
+function getKeyMapping(code) {
+    if (!(code in KEY_MAPPINGS)) return null;
+    return KEY_MAPPINGS[/** @type {keyof typeof KEY_MAPPINGS} */ (code)];
+}
 
 /**
  * Handles keyboard input only for playing notes.
  */
 export class KeyboardHandler {
+    /**
+     * @param {AudioEngine} audioEngine 
+     */
     constructor(audioEngine) {
         this.audioEngine = audioEngine;
-        this.activeKeys = new Set();
+        this.activeKeys = /** @type {Set<string>} */ (new Set());
 
         // Bind event handlers to preserve 'this' context
         this.handleKeyDown = this.handleKeyDown.bind(this);
@@ -32,12 +47,16 @@ export class KeyboardHandler {
         this.releaseAllKeys();
     }
 
+    /**
+     * @param {KeyboardEvent} event 
+     * @returns 
+     */
     handleKeyDown(event) {
         if (event.repeat) return; // Ignore key auto-repeats
         if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return; // Let browser shortcuts through
         if (document.querySelector('dialog[open]')) return; // Don't capture input when a dialog is open  
         
-        const mapping = KEY_MAPPINGS[event.code];
+        const mapping = getKeyMapping(event.code);
         if (!mapping) return; // Not a mapped key
         const { midiNumber } = mapping;
 
@@ -49,11 +68,15 @@ export class KeyboardHandler {
         this.audioEngine.playNote(event.code, midiNumber);
         this.activeKeys.add(event.code);
 
-        this.dispatchNoteEvent('notestart', event.code, midiNumber);
+        dispatchNoteEvent(NOTE_EVENTS.START, event.code, midiNumber);
     }
 
+    /**
+     * @param {KeyboardEvent} event 
+     * @returns 
+     */
     handleKeyUp(event) {
-        const mapping = KEY_MAPPINGS[event.code];
+        const mapping = getKeyMapping(event.code);
         if (!mapping || document.querySelector('dialog[open]')) return; // Not a mapped key or dialog is open
         const { midiNumber } = mapping;
 
@@ -65,7 +88,7 @@ export class KeyboardHandler {
         this.audioEngine.stopNote(event.code, midiNumber);
         this.activeKeys.delete(event.code);
 
-        this.dispatchNoteEvent('noteend', event.code, midiNumber);
+        dispatchNoteEvent(NOTE_EVENTS.END, event.code, midiNumber);
     }
 
     handleVisibilityChange() {
@@ -80,35 +103,17 @@ export class KeyboardHandler {
 
     releaseAllKeys() {
         for (const code of this.activeKeys) {
-            const mapping = KEY_MAPPINGS[code];
+            const mapping = getKeyMapping(code);
             if (mapping) {
                 const { midiNumber } = mapping;
                 this.audioEngine.stopNote(code, midiNumber);
-                this.dispatchNoteEvent('noteend', code, midiNumber);
+                dispatchNoteEvent(NOTE_EVENTS.END, code, midiNumber);
             }
         }
         this.activeKeys.clear();
-    }
-
-    /**
-     * Dispatches a custom note event, mainly for UI updates.
-     * @param {'notestart' | 'noteend'} eventName 
-     * @param {string} keyCode KeyboardEvent.code
-     * @param {number} midiNumber
-     */
-    dispatchNoteEvent(eventName, keyCode, midiNumber) {
-        const event = new CustomEvent(eventName, {
-            detail: {
-                uniqueID: keyCode,
-                midiNumber,
-                timestamp: performance.now(), // UI time
-            }
-        });
-        document.dispatchEvent(event);
     }
 
     getActiveKeys() {
         return Array.from(this.activeKeys);
     }
 }
-

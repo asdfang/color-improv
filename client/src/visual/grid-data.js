@@ -2,8 +2,9 @@
  * This module defines the data structure for the visual grid used in the application.
  */
 
-import { midiToColor } from "/src/visual/color-data.js";
-import { KEY_MAPPINGS } from "/src/constants.js";
+import { midiToColor } from "../visual/color-data";
+import { KEY_MAPPINGS } from "../constants";
+import { CHORDS } from "../constants";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -13,7 +14,7 @@ import { KEY_MAPPINGS } from "/src/constants.js";
  * @typedef {Object} NoteCellData
  * @property {'note'} type
  * @property {string} color - HSL color string
- * @property {string} keyCode - KeyboardEvent.code
+ * @property {KeyCode} keyCode - KeyboardEvent.code
  * @property {number} midiNumber
  * @property {string} noteName
  * @property {string} scaleRoot
@@ -22,14 +23,24 @@ import { KEY_MAPPINGS } from "/src/constants.js";
  */
 
 /**
- * @typedef {Object} ScaleOrChordLabelCellData
- * @property {'scaleOrChordLabel'} type
- * @property {string} labelText - Text to display (may contain newlines)
+ * @typedef {Object} ScaleLabelCellData
+ * @property {'scaleLabel'} type
+ * @property {string} scaleName - The scale this label corresponds to.
+ * @property {string} label - Scale label text to display
+ */
+
+/**
+ * @typedef {Object} ChordLabelCellData
+ * @property {'chordLabel'} type
+ * @property {string|null} chordName - The chord this label corresponds to, or null if it applies to all chords. Used for determining when to highlight the label.
+ * @property {string} label - Chord label text to display
+ * @property {string} keyboardHint - Hint text to display under the chord label for keyboard keys that play this chord
  */
 
 /**
  * @typedef {Object} ScaleDegreeLabelCellData
  * @property {'scaleDegreeLabel'} type
+ * @property {string} scaleName - The scale this label corresponds to
  * @property {string} scaleDegree - Scale degree notation (e.g., '1', '♭3', '♯4')
  */
 
@@ -39,8 +50,10 @@ import { KEY_MAPPINGS } from "/src/constants.js";
  */
 
 /**
- * @typedef {NoteCellData | ScaleOrChordLabelCellData | ScaleDegreeLabelCellData | EmptyCellData} CellData
+ * @typedef {NoteCellData | ScaleLabelCellData | ChordLabelCellData | ScaleDegreeLabelCellData | EmptyCellData} CellData
  */
+
+/** @typedef {import('/src/constants.js').KeyCode} KeyCode */
 
 // ============================================================================
 // CONSTANTS
@@ -87,7 +100,8 @@ export const GRID_LAYOUT = {
  */
 export const CELL_TYPE = /** @type {const} */ ({
     NOTE: 'note',
-    SCALE_OR_CHORD_LABEL: 'scaleOrChordLabel',
+    SCALE_LABEL: 'scaleLabel',
+    CHORD_LABEL: 'chordLabel',
     SCALE_DEGREE_LABEL: 'scaleDegreeLabel',
     EMPTY: 'empty',
 });
@@ -99,7 +113,7 @@ export const CELL_TYPE = /** @type {const} */ ({
 /**
  * Returns the grid coordinates from the KeyboardEvent.code.
  * Top three rows are mixolydian scales, bottom row is blues scale, middle rows are labels.
- * @param {string} key - The keyboard key as named in KEY_MAPPINGS in /src/constants.js
+ * @param {KeyCode} key - The keyboard key as named in KEY_MAPPINGS in /src/constants.js
  * @returns {{row: number, col: number}} - The grid coordinates of the key, with (row: 0, col: 0) as top left.
  */
 export function keyToGridCoordinates(key) {
@@ -149,7 +163,8 @@ export function buildGridData() {
     );
 
     // Build note cells from KEY_MAPPINGS
-    for (const [keyCode, mapping] of Object.entries(KEY_MAPPINGS)) {
+    for (const keyCode of /** @type {KeyCode[]} */ (Object.keys(KEY_MAPPINGS))) {
+        const mapping = KEY_MAPPINGS[keyCode];
         const { row, col } = keyToGridCoordinates(keyCode);
         const { midiNumber, noteName, scaleRoot, scaleMode, scaleDegree } = mapping;
 
@@ -167,33 +182,57 @@ export function buildGridData() {
     }
 
     // Chord labels (column 0). These cells display labelText with keyboard keys
-    grid[3][0] = { type: CELL_TYPE.SCALE_OR_CHORD_LABEL, labelText: 'G⁷\n(qwertyui)' };
-    grid[4][0] = { type: CELL_TYPE.SCALE_OR_CHORD_LABEL, labelText: 'F⁷\n(asdfghjk)' };
-    grid[5][0] = { type: CELL_TYPE.SCALE_OR_CHORD_LABEL, labelText: 'C⁷\n(zxcvbnm,)' };
-    grid[0][0] = { type: CELL_TYPE.SCALE_OR_CHORD_LABEL, labelText: 'Any!\n(1234567)' };
+    grid[3][0] = { 
+        type: CELL_TYPE.CHORD_LABEL,
+        chordName: 'G7',
+        label: CHORDS['G7'].display,
+        keyboardHint: '(qwertyui)',
+    };
+    grid[4][0] = { 
+        type: CELL_TYPE.CHORD_LABEL,
+        chordName: 'F7',
+        label: CHORDS['F7'].display,
+        keyboardHint: '(asdfghjk)'
+    };
+    grid[5][0] = { 
+        type: CELL_TYPE.CHORD_LABEL,
+        chordName: 'C7',
+        label: CHORDS['C7'].display,
+        keyboardHint: '(zxcvbnm,)'
+    };
+    grid[0][0] = { 
+        type: CELL_TYPE.CHORD_LABEL,
+        chordName: null,
+        label: 'Any!',
+        keyboardHint: '(1234567)',
+    };
 
     // Mixolydian scale degree labels (row 2). This cell displays labelText
     grid[2][0] = {
-        type: CELL_TYPE.SCALE_OR_CHORD_LABEL,
-        labelText: 'Mixolydian\nScale Degrees',
+        type: CELL_TYPE.SCALE_LABEL,
+        scaleName: 'mixolydian',
+        label: 'Scale Degrees',
     };
     // These cells display scale degrees
     for (const [scaleDegree, col] of Object.entries(GRID_LAYOUT.mixolydian.columns)) {
         grid[2][col] = {
             type: CELL_TYPE.SCALE_DEGREE_LABEL,
+            scaleName: 'mixolydian',
             scaleDegree,
         };
     }
 
     // Blues scale degree labels (row 1). This cell displays labelText
     grid[1][0] = {
-        type: CELL_TYPE.SCALE_OR_CHORD_LABEL,
-        labelText: 'Blues\nScale Degrees',
+        type: CELL_TYPE.SCALE_LABEL,
+        scaleName: 'blues',
+        label: 'Scale Degrees',
     };
     // These cells display scale degrees
     for (const [scaleDegree, col] of Object.entries(GRID_LAYOUT.blues.columns)) {
         grid[1][col] = {
             type: CELL_TYPE.SCALE_DEGREE_LABEL,
+            scaleName: 'blues',
             scaleDegree,
         };
     }

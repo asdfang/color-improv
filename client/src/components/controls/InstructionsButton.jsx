@@ -1,0 +1,26 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
+import { useState } from 'react';
+import { InstructionsDialog } from '../dialogs/InstructionsDialog';
+
+export function InstructionsButton() {
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const infoIcon = <FontAwesomeIcon icon={faCircleInfo} aria-hidden="true" />;
+
+    const handleClick = () => {
+        setIsDialogOpen(true);
+    }
+
+    return (
+        <div>
+            <button className="instructions-button" onClick={handleClick}>
+                {infoIcon}
+                <span>Instructions!</span>
+            </button>
+            <InstructionsDialog
+                isOpen={isDialogOpen}
+                onClose={() => setIsDialogOpen(false)}
+            />
+        </div>
+    );
+}
