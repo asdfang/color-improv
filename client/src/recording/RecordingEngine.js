@@ -89,7 +89,7 @@ export class RecordingEngine {
             return Promise.resolve(null);
         }
 
-        return new Promise((resolve, reject => {
+        return new Promise((resolve, reject) => {
             mediaRecorder.onstop = () => {
                 // Blob is ready when `stop` event fires
                 const blob = new Blob(this.chunks, { type: mediaRecorder.mimeType });
