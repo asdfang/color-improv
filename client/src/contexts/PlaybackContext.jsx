@@ -52,14 +52,14 @@ export function PlaybackProvider({ children }) {
     
     const { preferences } = usePreferences();
 
-    const pause = () => {
+    const pause = useCallback(() => {
         audioEngine.pauseBackingTrack();
         audioEngine.stopAllSamples();
         timingEngine.pause();
         keyboardHandler.disable();
 
         setPlaybackState('paused');
-    };
+    }, [audioEngine, timingEngine, keyboardHandler]);
 
     const resume = () => {
         audioEngine.playBackingTrack();
@@ -142,6 +142,34 @@ export function PlaybackProvider({ children }) {
         audioEngine.setOnEnded(() => stop());
         return () => { audioEngine.setOnEnded(null); };
     }, [audioEngine, stop]);
+
+    // Debug audioContext statechange
+    useEffect(() => {
+        const handleStateChange = () => {
+            console.log('AudioContext state changed to:', audioEngine.audioContext.state);
+        }
+        audioEngine.audioContext.addEventListener('statechange', handleStateChange);
+        return () => audioEngine.audioContext.removeEventListener('statechange', handleStateChange);
+    }, [audioEngine]);
+
+    // When app backgrounds, pause playing or stop recording.
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            console.log('Document visibility changed:', document.visibilityState);
+            if (document.hidden && playbackState === 'playing') {
+                if (isRecording) {
+                    console.log('STOPPING. (was recording)');
+                    stop();
+                } else {
+                    console.log('PAUSING.');
+                    pause(); 
+                }   
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [playbackState, isRecording, pause, stop]);
     
     return (
         <PlaybackContext.Provider value={{ playbackState, playbackErrorMessage, clearPlaybackErrorMessage, isRecording, recordingResult, play, pause, resume, stop, record, clearRecordingResult }}>
