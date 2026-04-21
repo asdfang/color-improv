@@ -110,7 +110,7 @@ export class TimingEngine {
     resume() {
         const debugAudioEngineTime = this.audioEngine.getCurrentTime();
         console.log(`TimingEngine: resume called at AudioContext time ${debugAudioEngineTime.toFixed(3)}s`);
-        if (!this.startTime) {
+        if (this.startTime === null) {
             throw new Error('TimingEngine has not been started yet. Cannot resume.');
         }
         if (this.pausedAt === null) {
