@@ -16,6 +16,7 @@ export class TimingEngine {
      * @param {'blues'} trackKey 
      */
     constructor(audioEngine, trackKey = 'blues') {
+        console.log('TimingEngine: constructor initializing.');
         this.audioEngine = audioEngine;
 
         this.startTime = null;
@@ -70,6 +71,7 @@ export class TimingEngine {
         }
         if (this.isPlaying) return;
         this.startTime = this.audioEngine.getCurrentTime();
+        console.log(`TimingEngine: start called at AudioContext time ${this.startTime.toFixed(3)}s`);
         this.isPlaying = true;
         this.totalPausedDuration = 0;
         this.tick();
@@ -99,7 +101,6 @@ export class TimingEngine {
             cancelAnimationFrame(this.rafId);
             this.rafId = null;
         }
-        this.setOnBeatChange(null);
         this.lastEmitted = null;
     }
 
@@ -107,6 +108,8 @@ export class TimingEngine {
      * Resume timer only from paused state.
      */
     resume() {
+        const debugAudioEngineTime = this.audioEngine.getCurrentTime();
+        console.log(`TimingEngine: resume called at AudioContext time ${debugAudioEngineTime.toFixed(3)}s`);
         if (!this.startTime) {
             throw new Error('TimingEngine has not been started yet. Cannot resume.');
         }
