@@ -8,7 +8,7 @@ import { AUDIO_CONFIG, VISUAL_LEAD_TIME } from '../constants';
 
 /**
  * Manages timing and synchronization between audio and visual components.
- * Uses AudioEngine's clock as the central time source; does not manage playback.
+ * Uses AudioEngine's backing track time as the central time source; does not manage playback.
  */
 export class TimingEngine {
     /**
@@ -19,10 +19,7 @@ export class TimingEngine {
         console.log('TimingEngine: constructor initializing.');
         this.audioEngine = audioEngine;
 
-        this.startTime = null;
         this.isPlaying = false;
-        this.pausedAt = null;
-        this.totalPausedDuration = 0;
         this.trackKey = trackKey;
 
         this.bpm = AUDIO_CONFIG.backingTracks[this.trackKey].bpm;
@@ -63,26 +60,25 @@ export class TimingEngine {
     }
 
     /**
-     * Start timer.
+     * Start timer (from pause or stop).
      */
-    start() {
-        if (!this.audioEngine.isReady()) {
-            throw new Error('AudioEngine is not ready. Cannot start TimingEngine.');
+    play() {
+        if (this.isPlaying) {
+            console.warn('TimingEngine already playing, cannot start.');
+            return;
         }
-        if (this.isPlaying) return;
-        this.startTime = this.audioEngine.getCurrentTime();
-        console.log(`TimingEngine: start called at AudioContext time ${this.startTime.toFixed(3)}s`);
         this.isPlaying = true;
-        this.totalPausedDuration = 0;
         this.tick();
     }
 
     /**
-     * Pause timer, preserve start time.
+     * Pause timer. Does not clear lastEmitted so paused visuals will remain on screen.
      */
     pause() {
-        if (!this.isPlaying) return;
-        this.pausedAt = this.audioEngine.getCurrentTime();
+        if (!this.isPlaying) {
+            console.warn('TimingEngine not playing, cannot pause.');
+            return;
+        }
         this.isPlaying = false;
         if (this.rafId !== null) {
             cancelAnimationFrame(this.rafId);
@@ -91,12 +87,14 @@ export class TimingEngine {
     }
 
     /**
-     * Stop timer, reset start time.
+     * Stop timer. Clears lastEmitted so visuals reset.
      */
     stop() {
+        if (!this.isPlaying) {
+            console.warn('TimingEngine not playing, cannot stop.');
+            return;
+        }
         this.isPlaying = false;
-        this.startTime = null;
-        this.pausedAt = null;
         if (this.rafId !== null) {
             cancelAnimationFrame(this.rafId);
             this.rafId = null;
@@ -105,38 +103,11 @@ export class TimingEngine {
     }
 
     /**
-     * Resume timer only from paused state.
-     */
-    resume() {
-        const debugAudioEngineTime = this.audioEngine.getCurrentTime();
-        console.log(`TimingEngine: resume called at AudioContext time ${debugAudioEngineTime.toFixed(3)}s`);
-        if (this.startTime === null) {
-            throw new Error('TimingEngine has not been started yet. Cannot resume.');
-        }
-        if (this.pausedAt === null) {
-            throw new Error('TimingEngine is not paused. Cannot resume.');
-        }
-        const pausedDuration = this.audioEngine.getCurrentTime() - this.pausedAt;
-        this.totalPausedDuration += pausedDuration;
-        this.pausedAt = null;
-        this.isPlaying = true;
-        this.tick();
-    }
-
-    /**
-     * Get the AudioContext time when playback started. Useful for debugging and synchronization.
-     * @returns {number|null} The start time in AudioContext time, or null if not started.
-     */
-    getStartTime() {
-        return this.startTime;
-    }
-
-    /**
-     * Get the current AudioContext time.
-     * @returns {number} The current time in AudioContext time.
+     * Get the current backing track time.
+     * @returns {number} The current time in backing track time.
      */
     getCurrentTime() {
-        return this.audioEngine.getCurrentTime();
+        return this.audioEngine.getCurrentBackingTrackTime();
     }
 
     /**
@@ -153,7 +124,7 @@ export class TimingEngine {
      */
     getCurrentPosition(leadTime = 0) {
         // If not playing, return nulls
-        if (!this.isPlaying || this.startTime === null) {
+        if (!this.isPlaying) {
             return {
                 phase: 'waiting',
                 beatNumberInMeasure: null,
@@ -166,7 +137,7 @@ export class TimingEngine {
             }
         }
 
-        const elapsedTotalTime = this.audioEngine.getCurrentTime() - this.startTime - this.totalPausedDuration + leadTime;
+        const elapsedTotalTime = this.audioEngine.getCurrentBackingTrackTime() + leadTime;
         const elapsedTimeSinceSilence = elapsedTotalTime - this.silenceOffset;
         const elapsedTimeFromProgressionStart = elapsedTotalTime - (this.silenceOffset + this.countInBeats * this.beatDuration);
 

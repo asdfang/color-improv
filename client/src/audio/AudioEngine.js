@@ -23,7 +23,6 @@ export class AudioEngine {
         this.audioContext = /** @type {AudioContext} */ (new AudioCtx());
 
         this.backingTrack = backingTrack;
-        // Initialize SampleLoader with the AudioContext
         this.sampleLoader = new SampleLoader(this.audioContext);
 
         // Sample-related elements
@@ -57,6 +56,9 @@ export class AudioEngine {
 
         // Callback when backing track ends
         this.onEnded = null;
+        this.handleBackingTrackEnded = () => {
+            if (this.onEnded) this.onEnded();
+        };
 
         // Loading state
         this.samplesLoaded = false;
@@ -67,9 +69,6 @@ export class AudioEngine {
         // Preloading samples and backing track in parallel
         this.samplesLoadingPromise = this.preloadSamples();
         this.backingTrackCanPlayThroughPromise = this.setUpBackingTrack();
-
-        // Debug/seek offset (for syncing timing when seeking via setDebugTime)
-        this.seekOffset = 0;
     }
 
     /**
@@ -109,9 +108,10 @@ export class AudioEngine {
             this.backingTrackSource.connect(this.backingTrackGain);
 
             // Listen for track end to reset app
-            backingTrackElement.addEventListener('ended', () => {
-                if (this.onEnded) this.onEnded();
-            });
+            if (this.backingTrackElement) {
+                this.backingTrackElement.removeEventListener('ended', this.handleBackingTrackEnded);
+            }
+            backingTrackElement.addEventListener('ended', this.handleBackingTrackEnded);
 
             // Convert event-based API into promise-based
             await new Promise((resolve, reject) => {
@@ -443,12 +443,14 @@ export class AudioEngine {
     }
 
     /**
-     * Get current time of AudioContext, adjusted for any debug seeks.
-     * If doesn't exist, fail fast.
-     * @returns 
+     * Get current time of backing track.
+     * @returns {number} Current time of backing track in seconds, or null if backing track not initialized.
      */
-    getCurrentTime() {
-        return this.audioContext.currentTime + this.seekOffset;
+    getCurrentBackingTrackTime() {
+        if (!this.backingTrackElement) {
+            throw new Error('AudioEngine: Cannot get backing track time - backing track not initialized');
+        }
+        return this.backingTrackElement.currentTime;
     }
 
     /**
@@ -462,19 +464,6 @@ export class AudioEngine {
     }
 
     /**
-     * DEBUG: Set current playback time (for testing/debugging).
-     * Seeks the backing track and adjusts timing to match audio position.
-     * @param {number} seconds - Time in seconds to seek to
-     */
-    setDebugTime(seconds) {
-        if (this.backingTrackElement) {
-            this.backingTrackElement.currentTime = seconds;
-            // Adjust seekOffset so getCurrentTime() returns the desired position
-            this.seekOffset = seconds - this.audioContext.currentTime;
-        }
-    }
-
-    /**
      * Set the callback function to be called when the backing track ends.
      * Set to null for cleanup.
      * @param {function | null} callback 
@@ -485,6 +474,10 @@ export class AudioEngine {
 
     async dispose() {
         this.stopAllSound();
+
+        if (this.backingTrackElement) {
+            this.backingTrackElement.removeEventListener('ended', this.handleBackingTrackEnded);
+        }
         
         if (this.audioContext) {
             await this.audioContext.close();

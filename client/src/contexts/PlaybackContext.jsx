@@ -63,7 +63,7 @@ export function PlaybackProvider({ children }) {
 
     const resume = () => {
         audioEngine.playBackingTrack();
-        timingEngine.resume();
+        timingEngine.play();
         keyboardHandler.enable();
 
         setPlaybackState('playing');
@@ -108,7 +108,7 @@ export function PlaybackProvider({ children }) {
                 await audioEngine.initialize();
             }
             audioEngine.playBackingTrack();
-            timingEngine.start();
+            timingEngine.play();
             keyboardHandler.enable();
 
             setPlaybackState('playing');
