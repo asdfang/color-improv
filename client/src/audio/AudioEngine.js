@@ -33,6 +33,7 @@ export class AudioEngine {
         this.backingTrackElement = null;    // HTMLAudioElement for backing track
         this.backingTrackSource = null;     // Web Audio API MediaElementAudioSourceNode for backing track
         this.backingTrackGain = null;       // GainNode for backing track volume control
+        this.pausedAt = null;              // Time where backing track was paused, for resuming
 
         // Volume state -- takes in constructor parameters
         this.backingTrackDesiredVolume = 0; // Holds slider value
@@ -291,47 +292,55 @@ export class AudioEngine {
      * Play backing track from the beginning, or resume from where it left off if paused.
      * Caller handles play promise for autoplay policy.
      * 
-     * @returns {{startTime: number, playPromise: Promise<void>}|null} {startTime, playPromise} or null if cannot play.
+     * @returns {Promise<void>} Resolves when playback starts successfully, rejects on error or if AudioContext not running.
      */
-    playBackingTrack() {
+    async playBackingTrack() {
         if (this.audioContext.state !== 'running') {
             console.warn('AudioEngine: Cannot play backing track - AudioContext not running');
-            return null;
+            return;
         }
 
         if (!this.backingTrackElement) {
             console.warn('AudioEngine: Backing track not initialized');
-            return null;
+            return;
         }
 
-        console.log('Playback rate before resume:', this.backingTrackElement.playbackRate);
-        console.log('Audio element currentTime: ', this.backingTrackElement.currentTime);
-        console.log('AudioContext currentTime: ', this.audioContext.currentTime);
-        const playPromise = this.backingTrackElement.play();
-        return {
-            startTime: this.audioContext.currentTime,
-            playPromise
-        };
+        try {
+            if (this.pausedAt !== null) {
+                this.backingTrackElement.currentTime = this.pausedAt;
+                this.pausedAt = null;
+            }
+            this.backingTrackElement.playbackRate = 1.0;
+            await this.backingTrackElement.play();
+        } catch (error) {
+            console.error('AudioEngine: Failed to play backing track:', error);
+        }
     }
 
     /**
      * Stop backing track playback and reset to beginning.
      */
     stopBackingTrack() {
-        if (!this.backingTrackElement) return;
+        if (!this.backingTrackElement) {
+            console.warn('AudioEngine: Backing track not initialized');
+            return;
+        }
 
         this.backingTrackElement.pause();
         this.backingTrackElement.currentTime = 0;
     }
 
     /**
-     * Pause backing track playback, and keeps position.
+     * Pause backing track playback, and saves position.
      */
     pauseBackingTrack() {
-        if (!this.backingTrackElement) return;
+        if (!this.backingTrackElement) {
+            console.warn('AudioEngine: Backing track not initialized');
+            return;
+        }
 
-        console.log('Playback rate before pause:', this.backingTrackElement.playbackRate);
         this.backingTrackElement.pause();
+        this.pausedAt = this.backingTrackElement.currentTime;
     }
 
     /**
@@ -340,6 +349,17 @@ export class AudioEngine {
      */
     isBackingTrackMuted() {
         return this.backingTrackMuted;
+    }
+
+    /**
+     * Get current time of backing track.
+     * @returns {number} Current time of backing track in seconds, or null if backing track not initialized.
+     */
+    getCurrentBackingTrackTime() {
+        if (!this.backingTrackElement) {
+            throw new Error('AudioEngine: Cannot get backing track time - backing track not initialized');
+        }
+        return this.backingTrackElement.currentTime;
     }
 
     /**
@@ -452,17 +472,6 @@ export class AudioEngine {
      */
     getUniqueMIDINumbers() {
         return new Set(this.getActiveMIDINumbers());
-    }
-
-    /**
-     * Get current time of backing track.
-     * @returns {number} Current time of backing track in seconds, or null if backing track not initialized.
-     */
-    getCurrentBackingTrackTime() {
-        if (!this.backingTrackElement) {
-            throw new Error('AudioEngine: Cannot get backing track time - backing track not initialized');
-        }
-        return this.backingTrackElement.currentTime;
     }
 
     /**

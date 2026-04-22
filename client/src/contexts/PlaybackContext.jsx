@@ -104,7 +104,7 @@ export function PlaybackProvider({ children }) {
             if (!audioEngine.isReady()) {
                 await audioEngine.initialize();
             }
-            audioEngine.playBackingTrack();
+            await audioEngine.playBackingTrack();
             timingEngine.play();
             keyboardHandler.enable();
 
