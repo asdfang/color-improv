@@ -123,7 +123,7 @@ export const REQUIRED_SAMPLES = [
  */
 const BACKING_TRACKS_DATA = {
     blues: {
-        filename: 'blues.mp3',
+        filename: 'blues.wav',
         bpm: 120,
         silenceOffset: 0.281,   // before first count-in hit
         countInBeats: 4,        // number of count-in beats before blues progression starts
