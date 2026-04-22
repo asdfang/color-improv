@@ -28,8 +28,11 @@ export function StudioProvider({ children }) {
     const [studio] = useState(() => {
         const backingTrack = /** @type {BackingTrackKey} */ ('blues'); // TODO: Extract to config/preference manager
         const audioEngine = new AudioEngine(backingTrack);
+        audioEngine.createContext();
+        audioEngine.setupGainNodes();
         const timingEngine = new TimingEngine(audioEngine, backingTrack);
-        const recordingEngine = new RecordingEngine(audioEngine.audioContext);
+        // Assert audioContext is not null
+        const recordingEngine = new RecordingEngine(/** @type {AudioContext} */ (audioEngine.audioContext));
         audioEngine.connectMainToExternalNode(recordingEngine.getMediaStreamDestinationNode());
         const noteLogger = new NoteLogger(timingEngine);
         const keyboardHandler = new KeyboardHandler(audioEngine);

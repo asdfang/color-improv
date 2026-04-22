@@ -14,6 +14,15 @@ export class SampleLoader {
         this.cache = new Map(); // Holds URL -> buffer, prevents re-downloading samples
     }
 
+    /**
+     * Update AudioContext reference if recovery is needed.
+     * Keeps old samples loaded - these should still be valid.
+     * @param {AudioContext} audioContext
+     */
+    updateAudioContext(audioContext) {
+        this.audioContext = audioContext;
+    }
+
    /**
     * Load, decode, and cache a single audio file.
     * @param {string} url A url to the audio file.
