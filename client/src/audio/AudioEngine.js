@@ -133,6 +133,7 @@ export class AudioEngine {
 
     /**
      * Initialize AudioEngine for playback. Only called after user interaction.
+     * Can be used to resume AudioContext.
      * 
      * @returns {Promise<void>} Resolves when initialization is complete.
      */
@@ -142,6 +143,7 @@ export class AudioEngine {
 
         // Resume AudioContext if suspended (requires user gesture)
         if (this.audioContext.state === 'suspended') {
+            console.log(`AudioEngine: Resuming AudioContext state from ${this.audioContext.state} to running.`);
             await this.audioContext.resume();
         }
 
@@ -149,6 +151,11 @@ export class AudioEngine {
         if (this.audioContext.state !== 'running') {
             throw new Error(`AudioEngine initialization failed, failed to resume AudioContext: ${this.audioContext.state}`);
         }
+    }
+
+    async suspendContext() {
+        console.log(`AudioEngine: Setting AudioContext state from ${this.audioContext.state} to suspended.`);
+        await this.audioContext.suspend();
     }
 
     /**
@@ -281,7 +288,7 @@ export class AudioEngine {
     }
 
     /**
-     * Play backing track from the beginning, or resume if paused.
+     * Play backing track from the beginning, or resume from where it left off if paused.
      * Caller handles play promise for autoplay policy.
      * 
      * @returns {{startTime: number, playPromise: Promise<void>}|null} {startTime, playPromise} or null if cannot play.
@@ -414,6 +421,7 @@ export class AudioEngine {
         for (const [inputID, { midiNumber }] of this.activeSources.entries()) {
             this.stopNote(inputID, midiNumber);
         }
+        // TODO: emit noteend events?
     }
 
     /**

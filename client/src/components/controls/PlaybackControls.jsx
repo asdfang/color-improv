@@ -9,10 +9,10 @@ import { ErrorDialog } from '../dialogs/ErrorDialog';
 export function PlaybackControls() {
     const {
         playbackState, playbackErrorMessage, clearPlaybackErrorMessage,isRecording,
-        play, resume, pause, stop, record,
+        play, pause, stop, record,
         recordingResult, clearRecordingResult} = usePlayback();
 
-    const canPlayOrResume = playbackState === 'stopped' || playbackState === 'paused';
+    const canPlay = playbackState === 'stopped' || playbackState === 'paused';
     const canPause = playbackState === 'playing' && !isRecording;
     const canStop = playbackState === 'playing' || playbackState === 'paused';
     const canRecord = playbackState === 'stopped';
@@ -26,10 +26,9 @@ export function PlaybackControls() {
         aria-hidden="true"
     />);
     
-    const handlePlayOrResume = useCallback(() => {
-        if (playbackState === 'stopped') play();
-        else if (playbackState === 'paused') resume();
-    }, [playbackState, play, resume]);
+    const handlePlay = useCallback(() => {
+        if (playbackState === 'paused' || playbackState === 'stopped') play();
+    }, [playbackState, play]);
 
     /** @type {(e: KeyboardEvent) => void} */
     const handleKeyDown = useCallback((e) => {
@@ -44,7 +43,7 @@ export function PlaybackControls() {
             e.preventDefault();
             if (isRecording) return;
             if (playbackState === 'playing') pause();
-            else handlePlayOrResume();
+            else handlePlay();
         } else if (code === 'Space' && shiftKey) {
             e.preventDefault();
             if (playbackState !== 'stopped') stop();
@@ -52,7 +51,7 @@ export function PlaybackControls() {
             e.preventDefault();
             if (playbackState === 'stopped' && !isRecording) record();
         }
-    }, [playbackState, isRecording, pause, stop, record, handlePlayOrResume]);
+    }, [playbackState, isRecording, pause, stop, record, handlePlay]);
 
     useEffect(() => {
         document.addEventListener('keydown', handleKeyDown);
@@ -64,8 +63,8 @@ export function PlaybackControls() {
             <PlaybackButton 
                 id="play-btn"
                 label="Play"
-                onClick={handlePlayOrResume}
-                disabled={!canPlayOrResume}
+                onClick={handlePlay}
+                disabled={!canPlay}
             >{playIcon}
             </PlaybackButton>
             <PlaybackButton

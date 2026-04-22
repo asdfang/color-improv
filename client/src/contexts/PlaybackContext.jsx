@@ -22,8 +22,7 @@ import PropTypes from 'prop-types';
  *    isRecording: boolean,
  *    recordingResult: RecordingResult,
  *    play: () => Promise<void>,
- *    pause: () => void,
- *    resume: () => void,
+ *    pause: () => Promise<void>,
  *    stop: () => Promise<void>,
  *    record: () => Promise<void>,
  *    clearRecordingResult: () => void,
@@ -52,22 +51,16 @@ export function PlaybackProvider({ children }) {
     
     const { preferences } = usePreferences();
 
-    const pause = useCallback(() => {
+    const pause = useCallback(async () => {
         audioEngine.pauseBackingTrack();
         audioEngine.stopAllSamples();
+        await audioEngine.suspendContext();
         timingEngine.pause();
         keyboardHandler.disable();
 
         setPlaybackState('paused');
     }, [audioEngine, timingEngine, keyboardHandler]);
 
-    const resume = () => {
-        audioEngine.playBackingTrack();
-        timingEngine.play();
-        keyboardHandler.enable();
-
-        setPlaybackState('playing');
-    };
 
     const stop = useCallback(async () => {
         const wasRecording = recordingEngine.isRecordingActive();
@@ -78,6 +71,7 @@ export function PlaybackProvider({ children }) {
             }
             : null;
         audioEngine.stopAllSound();
+        await audioEngine.suspendContext();
         timingEngine.stop();
         keyboardHandler.disable();
 
@@ -123,11 +117,11 @@ export function PlaybackProvider({ children }) {
     };
 
     const record = async () => {
+        await play();
         recordingEngine.start();
         noteLogger.start(backingTrack, preferences.difficulty);
 
         setIsRecording(true);
-        await play();
     };
 
     const clearPlaybackErrorMessage = () => {
@@ -143,27 +137,13 @@ export function PlaybackProvider({ children }) {
         return () => { audioEngine.setOnEnded(null); };
     }, [audioEngine, stop]);
 
-    // Debug audioContext statechange
-    useEffect(() => {
-        const handleStateChange = () => {
-            console.log('AudioContext state changed to:', audioEngine.audioContext.state);
-        }
-        audioEngine.audioContext.addEventListener('statechange', handleStateChange);
-        return () => audioEngine.audioContext.removeEventListener('statechange', handleStateChange);
-    }, [audioEngine]);
-
     // When app backgrounds, pause playing or stop recording.
     useEffect(() => {
-        const handleVisibilityChange = () => {
+        const handleVisibilityChange = async () => {
             console.log('Document visibility changed:', document.visibilityState);
             if (document.hidden && playbackState === 'playing') {
-                if (isRecording) {
-                    console.log('STOPPING. (was recording)');
-                    stop();
-                } else {
-                    console.log('PAUSING.');
-                    pause(); 
-                }   
+                if (isRecording) await stop();
+                else await pause();
             }
         };
 
@@ -172,7 +152,7 @@ export function PlaybackProvider({ children }) {
     }, [playbackState, isRecording, pause, stop]);
     
     return (
-        <PlaybackContext.Provider value={{ playbackState, playbackErrorMessage, clearPlaybackErrorMessage, isRecording, recordingResult, play, pause, resume, stop, record, clearRecordingResult }}>
+        <PlaybackContext.Provider value={{ playbackState, playbackErrorMessage, clearPlaybackErrorMessage, isRecording, recordingResult, play, pause, stop, record, clearRecordingResult }}>
             {children}
         </PlaybackContext.Provider>
     );
