@@ -48,6 +48,7 @@ export class TimingEngine {
      * Uses requestAnimationFrame to check for beat changes and call the callback with information on beat changes.
      */
     tick() {
+        console.log('sample rate: ', this.audioEngine.audioContext.sampleRate);
         const { currentChord, nextChord, beatsUntilNextChord } = this.getCurrentPosition(VISUAL_LEAD_TIME);
         if (this.lastEmitted === null ||
             currentChord !== this.lastEmitted.currentChord ||

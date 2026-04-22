@@ -307,11 +307,15 @@ export class AudioEngine {
 
         try {
             if (this.pausedAt !== null) {
+                console.log('AudioEngine: Resuming backing track from paused position:', this.pausedAt);
                 this.backingTrackElement.currentTime = this.pausedAt;
                 this.pausedAt = null;
             }
             this.backingTrackElement.playbackRate = 1.0;
             await this.backingTrackElement.play();
+            console.log('AudioEngine: Backing track playback started');
+            console.log('AudioEngine: Current backing track time:', this.backingTrackElement.currentTime);
+            console.log('AudioEngine: AudioContext current time:', this.audioContext.currentTime);
         } catch (error) {
             console.error('AudioEngine: Failed to play backing track:', error);
         }
@@ -341,6 +345,10 @@ export class AudioEngine {
 
         this.backingTrackElement.pause();
         this.pausedAt = this.backingTrackElement.currentTime;
+        console.log('AudioEngine: Backing track playback paused:', this.backingTrackElement.paused);
+        console.log('AudioEngine: Paused backing track time saved at:', this.pausedAt);
+        console.log('AudioEngine: Current backing track time:', this.backingTrackElement.currentTime);
+        console.log('AudioEngine: AudioContext current time:', this.audioContext.currentTime);
     }
 
     /**
