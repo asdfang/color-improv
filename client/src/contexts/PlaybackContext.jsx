@@ -2,6 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { useStudio } from './StudioContext';
 import { usePreferences } from './PreferencesContext';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import PropTypes from 'prop-types';
 /** @typedef {import('../constants').BackingTrackKey} BackingTrackKey */
 /** @typedef {import('../events/NoteLogger').NoteLog} NoteLog */
@@ -48,6 +49,8 @@ export function PlaybackProvider({ children }) {
         keyboardHandler,
         backingTrack,
     } = useStudio();
+
+    const shouldAutoPauseWhenHidden = useMediaQuery('(hover: none) and (pointer: coarse)');
     
     const { preferences } = usePreferences();
 
@@ -139,6 +142,8 @@ export function PlaybackProvider({ children }) {
 
     // When app backgrounds, pause playing or stop recording.
     useEffect(() => {
+        if (!shouldAutoPauseWhenHidden) return;
+
         const handleVisibilityChange = async () => {
             console.log('Document visibility changed:', document.visibilityState);
             if (document.hidden && playbackState === 'playing') {
@@ -149,7 +154,7 @@ export function PlaybackProvider({ children }) {
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, [playbackState, isRecording, pause, stop]);
+    }, [shouldAutoPauseWhenHidden, playbackState, isRecording, pause, stop]);
     
     return (
         <PlaybackContext.Provider value={{ playbackState, playbackErrorMessage, clearPlaybackErrorMessage, isRecording, recordingResult, play, pause, stop, record, clearRecordingResult }}>
