@@ -140,6 +140,15 @@ export function PlaybackProvider({ children }) {
         return () => { audioEngine.setOnEnded(null); };
     }, [audioEngine, stop]);
 
+    // Debug audioContext statechange
+    useEffect(() => {
+        const handleStateChange = () => {
+            console.log('AudioContext state changed to:', audioEngine.audioContext.state);
+        }
+        audioEngine.audioContext.addEventListener('statechange', handleStateChange);
+        return () => audioEngine.audioContext.removeEventListener('statechange', handleStateChange);
+    }, [audioEngine]);
+
     // When app backgrounds, pause playing or stop recording.
     useEffect(() => {
         if (!shouldAutoPauseWhenHidden) return;

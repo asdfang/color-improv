@@ -304,6 +304,9 @@ export class AudioEngine {
             return null;
         }
 
+        console.log('Playback rate before resume:', this.backingTrackElement.playbackRate);
+        console.log('Audio element currentTime: ', this.backingTrackElement.currentTime);
+        console.log('AudioContext currentTime: ', this.audioContext.currentTime);
         const playPromise = this.backingTrackElement.play();
         return {
             startTime: this.audioContext.currentTime,
@@ -327,6 +330,7 @@ export class AudioEngine {
     pauseBackingTrack() {
         if (!this.backingTrackElement) return;
 
+        console.log('Playback rate before pause:', this.backingTrackElement.playbackRate);
         this.backingTrackElement.pause();
     }
 
