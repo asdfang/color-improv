@@ -17,6 +17,18 @@ export class RecordingEngine {
         this.isRecording = false;
     }
 
+    /**
+     * 
+     * @param {AudioContext} audioContext 
+     */
+    updateAudioContext(audioContext) {
+        if (!audioContext) {
+            throw new Error('RecordingEngine: updateAudioContext called with null/undefined audioContext');
+        }
+        this.audioContext = audioContext;
+        this.mediaStreamDestination = this.audioContext.createMediaStreamDestination();
+    }
+
     isRecordingActive() {
         return this.isRecording;
     }

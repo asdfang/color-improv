@@ -8,7 +8,7 @@ import PropTypes from 'prop-types';
 /** @typedef {import('../events/NoteLogger').NoteLog} NoteLog */
 
 /**
- * @typedef {'playing' | 'paused' | 'stopped' | 'interrupted'} PlaybackState
+ * @typedef {'playing' | 'paused' | 'stopped'} PlaybackState
  */
 
 /**
@@ -22,7 +22,7 @@ import PropTypes from 'prop-types';
  *    clearPlaybackErrorMessage: () => void,
  *    isRecording: boolean,
  *    recordingResult: RecordingResult,
- *    play: () => Promise<void>,
+ *    play: () => Promise<boolean>,
  *    pause: () => Promise<void>,
  *    stop: () => Promise<void>,
  *    record: () => Promise<void>,
@@ -41,8 +41,13 @@ export function PlaybackProvider({ children }) {
     const [recordingResult, setRecordingResult] = useState(/** @type {RecordingResult} */ (null));
     const [playbackErrorMessage, setPlaybackErrorMessage] = useState(/** @type {string | null} */ (null));
     const [audioContextRevision, setAudioContextRevision] = useState(0);
+    const { preferences } = usePreferences();
     const attachedAudioCtxRef = useRef(/** @type {AudioContext | null} */ (null));
     const interruptionInFlightRef = useRef(false);
+    const interruptionNeedsResolutionRef = useRef(false);
+    const isResolvingRef = useRef(false);
+    const preInterruptionWasRecordingRef = useRef(false);
+    const shouldAutoPauseWhenHidden = useMediaQuery('(hover: none) and (pointer: coarse)');
 
     const {
         audioEngine,
@@ -53,10 +58,6 @@ export function PlaybackProvider({ children }) {
         backingTrack,
     } = useStudio();
 
-    const shouldAutoPauseWhenHidden = useMediaQuery('(hover: none) and (pointer: coarse)');
-    
-    const { preferences } = usePreferences();
-
     const suspendIfRunning = useCallback(async () => {
         const audioCtx = audioEngine.audioContext;
         if (!audioCtx) return;
@@ -66,7 +67,7 @@ export function PlaybackProvider({ children }) {
     }, [audioEngine]);
 
     const pause = useCallback(async () => {
-        if (interruptionInFlightRef.current) {
+        if (interruptionInFlightRef.current || isResolvingRef.current) {
             console.warn('Pause action ignored due to ongoing interruption recovery.');
             return;
         }
@@ -80,9 +81,9 @@ export function PlaybackProvider({ children }) {
         setPlaybackState('paused');
     }, [audioEngine, timingEngine, keyboardHandler, suspendIfRunning]);
 
-    const stopAndPrepareRecording = useCallback(async () => {
+    const finalizeRecording = useCallback(async () => {
         if (!recordingEngine.isRecordingActive()) {
-            console.warn('stopAndPrepareRecording called but recording is not active.');
+            console.warn('finalizeRecording called but recording is not active.');
             setIsRecording(false);
             return;
         }
@@ -109,13 +110,13 @@ export function PlaybackProvider({ children }) {
     }, [recordingEngine, noteLogger]);
 
     const stop = useCallback(async () => {
-        if (interruptionInFlightRef.current) {
+        if (interruptionInFlightRef.current || isResolvingRef.current) {
             console.warn('Stop ignored due to ongoing interruption recovery.');
             return;
         }
 
         if (recordingEngine.isRecordingActive()) {
-            await stopAndPrepareRecording();
+            await finalizeRecording();
         }
         audioEngine.stopAllSound();
         await suspendIfRunning();
@@ -124,12 +125,19 @@ export function PlaybackProvider({ children }) {
 
         setIsRecording(false);
         setPlaybackState('stopped');
-    }, [recordingEngine, audioEngine, timingEngine, keyboardHandler, stopAndPrepareRecording, suspendIfRunning]);
+    }, [recordingEngine, audioEngine, timingEngine, keyboardHandler, finalizeRecording, suspendIfRunning]);
 
     const play = async () => {
-        if (interruptionInFlightRef.current) {
+        if (interruptionInFlightRef.current || isResolvingRef.current) {
             console.warn('Play action ignored due to ongoing interruption recovery.');
-            return;
+            return false;
+        }
+        if (interruptionNeedsResolutionRef.current) {
+            await recoverAfterTeardown();
+        }
+        if (interruptionNeedsResolutionRef.current) {
+            setPlaybackErrorMessage('Cannot play due to unresolved audio interruption. Please try again or refresh.');
+            return false;
         }
 
         try {
@@ -141,8 +149,8 @@ export function PlaybackProvider({ children }) {
             timingEngine.play();
             keyboardHandler.enable();
 
-            setPlaybackErrorMessage(null);
             setPlaybackState('playing');
+            return true;
         } catch (error) {
             console.error('Failed to play:', error);
             const errorMessage = error instanceof Error
@@ -155,13 +163,14 @@ export function PlaybackProvider({ children }) {
     };
 
     const record = async () => {
-        if (interruptionInFlightRef.current) {
+        if (interruptionInFlightRef.current || isResolvingRef.current) {
             console.warn('Record action ignored due to ongoing interruption recovery.');
             return;
         }
 
         try {
-            await play();
+            const didStartPlayback = await play();
+            if (!didStartPlayback) return;
             recordingEngine.start();
             noteLogger.start(backingTrack, preferences.difficulty);
 
@@ -173,41 +182,76 @@ export function PlaybackProvider({ children }) {
 
     const clearPlaybackErrorMessage = () => {
         setPlaybackErrorMessage(null);
-    }
+    };
 
     const clearRecordingResult = () => {
         setRecordingResult(null);
     };
 
+    // Setup stop visuals when backing track ends
     useEffect(() => {
         audioEngine.setOnEnded(() => stop());
         return () => { audioEngine.setOnEnded(null); };
     }, [audioEngine, stop]);
 
-    // Debug audioContext statechange
+    const recoverAfterTeardown = useCallback(async () => {
+        if (!interruptionNeedsResolutionRef.current || isResolvingRef.current) return;
+        try {
+            isResolvingRef.current = true;
+            if (audioEngine.audioContext) {
+                throw new Error('AudioContext should have torn down, but still exists.');
+            }
+
+            // Re-initialize AudioEngine, AudioContext in suspended state
+            audioEngine.createContext();
+            if (!audioEngine.audioContext) {
+                throw new Error('Failed to create AudioContext during interruption recovery.');
+            }
+            recordingEngine.updateAudioContext(audioEngine.audioContext);
+            audioEngine.setupGainNodes();
+            await audioEngine.setupBackingTrack();
+            if (preInterruptionWasRecordingRef.current) audioEngine.clearPausedAt();
+            audioEngine.connectMainToExternalNode(recordingEngine.getMediaStreamDestinationNode());
+
+            setAudioContextRevision(value => value + 1);
+            interruptionNeedsResolutionRef.current = false;
+            preInterruptionWasRecordingRef.current = false;
+        } catch (error) {
+            console.error('Failed to resolve post-interruption state:', error);
+        } finally {
+            isResolvingRef.current = false;
+        }
+    }, [audioEngine, recordingEngine]);
+
+    /**
+     * Detects interruptions, updates UI -> teardown AudioContext -> (needs recovery)
+     */
     useEffect(() => {
         const audioCtx = audioEngine.audioContext;
         if (!audioCtx) {
             attachedAudioCtxRef.current = null;
             return;
         }
-        if (attachedAudioCtxRef.current === audioCtx) {
-            return;
-        }
+        if (attachedAudioCtxRef.current === audioCtx) return;
 
         const handleInterruption = async () => {
-            if (interruptionInFlightRef.current) return;
-            interruptionInFlightRef.current = true;
-
-            setPlaybackState('interrupted');
-            keyboardHandler.disable();
-            timingEngine.pause();
-
             try {
+                if (interruptionInFlightRef.current) return;
+                interruptionInFlightRef.current = true;
+                preInterruptionWasRecordingRef.current = isRecording;
+
+                // Update UI immediately
+                if (isRecording || playbackState === 'stopped') setPlaybackState('stopped');
+                else setPlaybackState('paused');
+                keyboardHandler.disable();
+                timingEngine.pause();
+
                 if (recordingEngine.isRecordingActive()) {
-                    await stopAndPrepareRecording();
+                    await finalizeRecording();
                 }
+
                 await audioEngine.teardownForRecovery();
+                interruptionNeedsResolutionRef.current = true;
                 setAudioContextRevision(value => value + 1);
             } catch (error) {
                 console.error('Failed during interruption recovery:', error);
@@ -218,7 +262,7 @@ export function PlaybackProvider({ children }) {
 
         const handleStateChange = () => {
             if (audioCtx.state === 'interrupted') {
-                console.warn('AudioContext was interrupted. Attempting to recover...');
+                console.warn('AudioContext was interrupted.');
                 void handleInterruption();
             }
         };
@@ -231,27 +275,30 @@ export function PlaybackProvider({ children }) {
                 attachedAudioCtxRef.current = null;
             }
         };
-    }, [audioContextRevision, audioEngine, timingEngine, keyboardHandler, recordingEngine, stopAndPrepareRecording]);
+    }, [isRecording, playbackState, audioContextRevision, audioEngine, timingEngine, keyboardHandler, recordingEngine, finalizeRecording]);
 
     // When app backgrounds, pause playing or stop recording.
     useEffect(() => {
-        if (!shouldAutoPauseWhenHidden) return;
-
         const handleVisibilityChange = async () => {
             console.log('Document visibility changed:', document.visibilityState);
-            if (interruptionInFlightRef.current || playbackState === 'interrupted') {
-                console.warn('Visibility change ignored due to ongoing interruption recovery.');
-                return;
-            }
-            if (document.hidden && playbackState === 'playing') {
-                if (isRecording) await stop();
+            if (document.visibilityState === 'hidden') {
+                if (interruptionInFlightRef.current || interruptionNeedsResolutionRef.current) {
+                    console.warn('Visibility change ignored due to ongoing interruption.');
+                    return;
+                }
+                if (!shouldAutoPauseWhenHidden) return;
+                if (playbackState !== 'playing') return;
+                if (isRecording ) await stop();
                 else await pause();
+            } else if (document.visibilityState === 'visible' && interruptionNeedsResolutionRef.current) {
+                console.log('Attempting to recover from interruption on return to app.');
+                await recoverAfterTeardown();
             }
         };
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, [shouldAutoPauseWhenHidden, playbackState, isRecording, pause, stop]);
+    }, [isRecording, playbackState, pause, stop, recoverAfterTeardown, shouldAutoPauseWhenHidden]);
     
     return (
         <PlaybackContext.Provider value={{ playbackState, playbackErrorMessage, clearPlaybackErrorMessage, isRecording, recordingResult, play, pause, stop, record, clearRecordingResult }}>

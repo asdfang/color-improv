@@ -62,6 +62,7 @@ export class AudioEngine {
         if (!this.audioContext) throw new Error('AudioEngine failed to create AudioContext');
         if (!this.mainGain || !this.samplesGain || !this.backingTrackGain) this.setupGainNodes();
         if (!this.backingTrackElement || !this.backingTrackSource) {
+            console.log('resuming at: ', this.pausedAt);
             this.backingTrackCanPlayThroughPromise = this.setupBackingTrack(this.pausedAt ?? 0);
         }
         if (!this.sampleLoader) this.sampleLoader = new SampleLoader(this.audioContext);
@@ -84,15 +85,16 @@ export class AudioEngine {
     }
 
     async teardownForRecovery() {
-        this.stopAllSound();
-        this.teardownBackingTrack(); // Saves position for recovery
+        this.stopAllSamples();
+        const pausedAt = this.teardownBackingTrack(); // Saves position for recovery
         this.clearGainNodes();
         await this.teardownContext();
-        this.samples.clear();
         this.activeSources.clear();
         // Keep samples! samplesLoaded can stay true.
         this.backingTrackCanPlayThrough = false;
         this.backingTrackCanPlayThroughPromise = null;
+
+        return pausedAt;
     }
 
     createContext() {
@@ -135,6 +137,10 @@ export class AudioEngine {
         this.mainGain = null;
         this.samplesGain = null;
         this.backingTrackGain = null;
+    }
+
+    clearPausedAt() {
+        this.pausedAt = null;
     }
 
     /**
@@ -205,6 +211,7 @@ export class AudioEngine {
         this.backingTrackElement = null;
         this.backingTrackSource = null;
 
+        console.log('Backing track torn down, paused at:', this.pausedAt);
         return this.pausedAt;
     }
 
@@ -399,7 +406,7 @@ export class AudioEngine {
 
         try {
             if (this.pausedAt !== null) {
-                console.log('AudioEngine: Resuming backing track from paused position:', this.pausedAt);
+                console.log('AudioEngine: Resuming backing track from position:', this.pausedAt);
                 this.backingTrackElement.currentTime = this.pausedAt;
                 this.pausedAt = null;
             }
