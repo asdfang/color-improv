@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Dialog } from './Dialog';
 import PropTypes from 'prop-types';
 
@@ -17,6 +17,7 @@ export function AuthDialog({ isOpen, onClose, openToRegister, setOpenToRegister,
     const [name, setName] = useState('');
     const [password, setPassword] = useState('');
     const [feedback, setFeedback] = useState('');
+    const dialogRef = useRef(/** @type { { shake: () => void } | null } */ (null));
 
     /** @param {import('react').FormEvent<HTMLFormElement>} e */
     const handleSubmit = async (e) => {
@@ -43,6 +44,7 @@ export function AuthDialog({ isOpen, onClose, openToRegister, setOpenToRegister,
             } else {
                 setFeedback(message);
             }
+            dialogRef.current?.shake();
         }
     }
 
@@ -66,6 +68,7 @@ export function AuthDialog({ isOpen, onClose, openToRegister, setOpenToRegister,
 
     return (
         <Dialog
+            ref={dialogRef}
             id="auth-dialog"
             className="auth-dialog"
             isOpen={isOpen}

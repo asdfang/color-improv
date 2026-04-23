@@ -1,9 +1,10 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useImperativeHandle } from 'react';
 import PropTypes from 'prop-types';
 
 /**
  *
  * @param {{
+ *   ref?: import('react').Ref<{ shake: () => void }>,
  *   id?: string,
  *   className?: string,
  *   isOpen: boolean,
@@ -14,8 +15,19 @@ import PropTypes from 'prop-types';
  *   footer?: import('react').ReactNode
  * }} props
  */
-export function Dialog({id='', className='', isOpen, onClose, title, closeOnBackdrop = false, children, footer=null}) {
+export function Dialog({ref, id='', className='', isOpen, onClose, title, closeOnBackdrop = false, children, footer=null}) {
     const dialogRef = useRef(/** @type {HTMLDialogElement | null} */ (null));
+
+    const shake = () => {
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+        dialog.classList.add('dialog-shake');
+        dialog.addEventListener('animationend', () => {
+            dialog.classList.remove('dialog-shake');
+        }, { once: true });
+    };
+
+    useImperativeHandle(ref, () => ({ shake }));
 
     useEffect(() => {
         const dialog = dialogRef.current;
@@ -55,7 +67,9 @@ export function Dialog({id='', className='', isOpen, onClose, title, closeOnBack
 
     /** @param {import('react').MouseEvent<HTMLDialogElement>} e */
     const handleClick = (e) => {
-        if (closeOnBackdrop && e.target === dialogRef.current) onClose();
+        if (e.target !== dialogRef.current) return;
+        if (closeOnBackdrop) onClose();
+        else shake();
     }
 
     return (
@@ -79,6 +93,7 @@ export function Dialog({id='', className='', isOpen, onClose, title, closeOnBack
 }
 
 Dialog.propTypes = {
+    ref: PropTypes.oneOfType([PropTypes.func, PropTypes.shape({ current: PropTypes.object })]),
     id: PropTypes.string,
     className: PropTypes.string,
     isOpen: PropTypes.bool.isRequired,
