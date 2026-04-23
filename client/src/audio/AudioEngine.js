@@ -1,6 +1,8 @@
 import { SampleLoader } from "./SampleLoader";
-import { AUDIO_CONFIG } from "/src/constants.js";
-import { clampVolume, sliderToGain } from "/src/audio/audio-utils.js";
+import { AUDIO_CONFIG } from "../constants";
+import { clampVolume, sliderToGain } from "./audio-utils";
+
+/** @typedef {import('../constants').BackingTrackKey} BackingTrackKey */
 
 /**
  * AudioEngine manages audio playback and Web Audio API interactions.
@@ -8,19 +10,13 @@ import { clampVolume, sliderToGain } from "/src/audio/audio-utils.js";
  */
 export class AudioEngine {
     /**
-     * Initializes the AudioEngine, creating AudioContext and SampleLoader.
-     * Call initialize() after user interaction to prepare for playback.
+     * @param {BackingTrackKey} backingTrack - key for backing track to load from AUDIO_CONFIG (to be extracted to configpreference manager)
      */
-    constructor() {
-        // Initialize AudioContext immediately to decode samples - state is 'suspended' until user interaction
-        const AudioCtx = window.AudioContext || /** @type {Window & { webkitAudioContext?: typeof AudioContext }} */ (window).webkitAudioContext;
-        if (!AudioCtx) {
-            throw new Error('Web Audio API is not supported in this browser.');
-        }
-        this.audioContext = new AudioCtx();
+    constructor(backingTrack) {
+        this.audioContext = null;
 
-        // Initialize SampleLoader with the AudioContext
-        this.sampleLoader = new SampleLoader(this.audioContext);
+        this.backingTrack = backingTrack;   // TODO: make user configurable
+        this.sampleLoader = null;
 
         // Sample-related elements
         this.samples = new Map();           // Stores decoded AudioBuffers: MIDI Number -> decoded AudioBuffer
@@ -29,124 +25,54 @@ export class AudioEngine {
         // Backing track elements
         this.backingTrackElement = null;    // HTMLAudioElement for backing track
         this.backingTrackSource = null;     // Web Audio API MediaElementAudioSourceNode for backing track
-        this.backingTrackGain = null;       // GainNode for backing track volume control
+        this.pausedAt = null;               // Time where backing track was paused, for resuming
 
-        // Volume state -- takes in constructor parameters
+        // Volume state - from UI sliders, saved when muted
         this.backingTrackDesiredVolume = 0; // Holds slider value
         this.backingTrackMuted = false;
-        this.samplesDesiredVolume = 0; // Holds slider value
+        this.samplesDesiredVolume = 0;      // Holds slider value
         this.samplesMuted = false;
 
-        // Connect gain nodes to destination immediately (connect source nodes to gain nodes later)
-        // Main gain for future overall control/rerouting.
-        this.mainGain = this.audioContext.createGain();
-        this.mainGain.gain.value = AUDIO_CONFIG.volumes.MAIN_GAIN_DEFAULT;
-        this.mainGain.connect(this.audioContext.destination);
-
-        this.samplesGain = this.audioContext.createGain();
-        this.samplesGain.gain.value = sliderToGain(this.samplesDesiredVolume);
-        this.samplesGain.connect(this.mainGain);
-
-        this.backingTrackGain = this.audioContext.createGain();
-        this.backingTrackGain.gain.value = sliderToGain(this.backingTrackDesiredVolume);
-        this.backingTrackGain.connect(this.mainGain);
+        // Gain nodes
+        this.mainGain = null;
+        this.samplesGain = null;
+        this.backingTrackGain = null;
 
         // Callback when backing track ends
         this.onEnded = null;
+        this.handleBackingTrackEnded = () => {
+            if (this.onEnded) this.onEnded();
+        };
 
         // Loading state
         this.samplesLoaded = false;
         this.samplesLoadingPromise = null;
-        this.samplesLoadingError = null;
         this.backingTrackCanPlayThrough = false;
         this.backingTrackCanPlayThroughPromise = null;
-        this.backingTrackCanPlayThroughError = null;
-
-        // Preloading samples and backing track in parallel
-        this.samplesLoadingPromise = this.preloadSamples();
-        this.backingTrackCanPlayThroughPromise = this.setUpBackingTrack();
-
-        // Debug/seek offset (for syncing timing when seeking via setDebugTime)
-        this.seekOffset = 0;
-    }
-
-    /**
-     * Preload all audio prior to user interaction, when AudioContext is in 'suspended' state.
-     * Saves errors for initialize() to handle.
-     * 
-     * @returns {Promise<void>} Resolves when all samples are loaded.
-     */
-    async preloadSamples() {
-        try {
-            this.samples = await this.sampleLoader.loadTrumpetSamples(
-                AUDIO_CONFIG.samples, AUDIO_CONFIG.paths.SAMPLES_BASE, AUDIO_CONFIG.format
-            );
-
-            this.samplesLoaded = true;
-        } catch (error) {
-            console.error('Error preloading samples in AudioEngine:', error);
-            this.samplesLoadingError = error; // Store error for handling in initialize()
-        }
-    }
-
-    /**
-     * Set up backing track using MediaElementAudioSourceNode
-     * to use HTML5 Audio element with Web Audio API's timing.
-     * Saves errors for initialize() to handle.
-     * 
-     * @returns {Promise<void>} Resolves when backing track is ready to play through.
-     */
-    async setUpBackingTrack() {
-        try {
-            // Create HTML5 Audio element to hold backing track
-            this.backingTrackElement = new Audio(AUDIO_CONFIG.getBackingTrackPath('blues')); // TODO: avoid hardcoding
-            this.backingTrackElement.loop = false;
-
-            // Create and connect Web Audio API nodes: source ->  gain (already connected to destination)
-            this.backingTrackSource = this.audioContext.createMediaElementSource(this.backingTrackElement);
-            this.backingTrackSource.connect(this.backingTrackGain);
-
-            // Listen for track end to reset app
-            this.backingTrackElement.addEventListener('ended', () => {
-                if (this.onEnded) this.onEnded();
-            });
-
-            // Convert event-based API into promise-based
-            await new Promise((resolve, reject) => {
-                // Wait for canplaythrough event to ensure track is fully buffered
-                this.backingTrackElement.addEventListener('canplaythrough', () => {
-                    this.backingTrackCanPlayThrough = true;
-                    resolve();
-                }, { once: true });
-                this.backingTrackElement.addEventListener('error', reject, { once: true });
-
-                this.backingTrackElement.load();
-            });
-        } catch (error) {
-            console.error('AudioEngine: Error setting up backing track:', error);
-            this.backingTrackCanPlayThroughError = error; // Store error for handling in initialize()
-        }
     }
 
     /**
      * Initialize AudioEngine for playback. Only called after user interaction.
+     * Can be used to resume AudioContext.
      * 
      * @returns {Promise<void>} Resolves when initialization is complete.
      */
     async initialize() {
+        if (!this.audioContext) this.createContext();
+        if (!this.audioContext) throw new Error('AudioEngine failed to create AudioContext');
+        if (!this.mainGain || !this.samplesGain || !this.backingTrackGain) this.setupGainNodes();
+        if (!this.backingTrackElement || !this.backingTrackSource) {
+            this.backingTrackCanPlayThroughPromise = this.setupBackingTrack(this.pausedAt ?? 0);
+        }
+        if (!this.sampleLoader) this.sampleLoader = new SampleLoader(this.audioContext);
+        else this.sampleLoader.updateAudioContext(this.audioContext);
+        if (!this.samplesLoaded) this.samplesLoadingPromise = this.loadSamples();
+
         await this.samplesLoadingPromise; // Wait for samples to finish loading
         await this.backingTrackCanPlayThroughPromise; // Wait for backing track to be ready
 
-        if (!this.samplesLoaded) {
-            throw new Error(`AudioEngine initialization failed, samples failed to load: ${this.samplesLoadingError.message}`);
-        }
-
-        if (!this.backingTrackCanPlayThrough) {
-            throw new Error(`AudioEngine initialization failed, backing track failed to load: ${this.backingTrackCanPlayThroughError.message}`);
-        }
-
         // Resume AudioContext if suspended (requires user gesture)
-        if (this.audioContext.state === 'suspended') {
+        if (this.audioContext.state === 'suspended' || this.audioContext.state === 'interrupted') {
             await this.audioContext.resume();
         }
 
@@ -156,14 +82,178 @@ export class AudioEngine {
         }
     }
 
+    async teardownForRecovery() {
+        this.stopAllSamples();
+        const pausedAt = this.teardownBackingTrack(); // Saves position for recovery
+        this.clearGainNodes();
+        await this.teardownContext();
+        this.activeSources.clear();
+        // Keep samples! samplesLoaded can stay true.
+        this.backingTrackCanPlayThrough = false;
+        this.backingTrackCanPlayThroughPromise = null;
+
+        return pausedAt;
+    }
+
+    createContext() {
+        const AudioCtx = window.AudioContext || /** @type {Window & { webkitAudioContext?: typeof AudioContext }} */ (window).webkitAudioContext;
+        if (!AudioCtx) {
+            throw new Error('Web Audio API is not supported in this browser.');
+        }
+        this.audioContext = /** @type {AudioContext} */ (new AudioCtx());
+        if (!this.audioContext) {
+            throw new Error('Failed to create AudioContext.');
+        }
+    }
+
+    async teardownContext() {
+        if (this.audioContext) {
+            await this.audioContext.close();
+            this.audioContext = null;
+        }
+    }
+
+    setupGainNodes() {
+        if (!this.audioContext) {
+            throw new Error('AudioContext needs to be initialized before setting up gain nodes. Call createContext() first.');
+        }
+
+        this.mainGain = this.audioContext.createGain();
+        this.mainGain.gain.value = AUDIO_CONFIG.volumes.MAIN_GAIN_DEFAULT;
+        this.mainGain.connect(this.audioContext.destination);
+
+        this.samplesGain = this.audioContext.createGain();
+        this.samplesGain.gain.value = sliderToGain(this.samplesDesiredVolume);
+        this.samplesGain.connect(this.mainGain);
+        
+        this.backingTrackGain = this.audioContext.createGain();
+        this.backingTrackGain.gain.value = sliderToGain(this.backingTrackDesiredVolume);
+        this.backingTrackGain.connect(this.mainGain);
+    }
+
+    clearGainNodes() {
+        this.mainGain = null;
+        this.samplesGain = null;
+        this.backingTrackGain = null;
+    }
+
+    clearPausedAt() {
+        this.pausedAt = null;
+    }
+
+    /**
+     * Set up backing track using MediaElementAudioSourceNode to use HTML5 Audio element with Web Audio API's timing.
+     * 
+     * @param {number} startPosition - Optional start position in seconds for backing track (default 0).
+     * @returns {Promise<void>} Resolves when backing track is ready to play through.
+     */
+    async setupBackingTrack(startPosition = 0) {
+        if (!this.audioContext) {
+            throw new Error('AudioContext needs to be initialized before setting up backing track. Call createContext() first.');
+        }
+        if (!this.backingTrackGain) {
+            throw new Error('Gain nodes need to be initialized before setting up backing track. Call setupGainNodes() after createContext() first.');
+        }
+
+        try {
+            // Create HTML5 Audio element to hold backing track at specified start position
+            this.backingTrackElement = new Audio(AUDIO_CONFIG.getBackingTrackPath(this.backingTrack));
+            this.backingTrackElement.loop = false;
+            const backingTrackElement = this.backingTrackElement; // For event listener closure
+
+            // Create and connect Web Audio API nodes: source ->  gain (already connected to destination)
+            this.backingTrackSource = this.audioContext.createMediaElementSource(this.backingTrackElement);
+            this.backingTrackSource.connect(this.backingTrackGain);
+
+            // Listen for track end to reset app
+            this.backingTrackElement.addEventListener('ended', this.handleBackingTrackEnded);
+
+            // Convert event-based API into promise-based
+            await new Promise((resolve, reject) => {
+                const onCanPlayThrough = () => {
+                    this.backingTrackCanPlayThrough = true;
+                    backingTrackElement.currentTime = startPosition;
+                    cleanup();
+                    resolve(undefined);
+                }
+
+                const onError = () => {
+                    cleanup();
+                    reject(new Error('Failed to load backing track'));
+                }
+
+                const cleanup = () => {
+                    backingTrackElement.removeEventListener('canplaythrough', onCanPlayThrough);
+                    backingTrackElement.removeEventListener('error', onError);
+                }
+
+                backingTrackElement.addEventListener('canplaythrough', onCanPlayThrough, { once: true });
+                backingTrackElement.addEventListener('error', onError, { once: true });
+                backingTrackElement.load();
+            });
+        } catch (error) {
+            console.error('AudioEngine: Error setting up backing track:', error);
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`AudioEngine failed to set up backing track: ${message}`);
+        }
+    }
+
+    /**
+     * Tears down backing track, saves current position for later recovery.
+     * @return {number|null} current position of backing track in seconds, or null if backing track not initialized
+     */
+    teardownBackingTrack() {
+        this.backingTrackElement?.pause();
+        this.pausedAt = this.backingTrackElement?.currentTime ?? null;
+        this.backingTrackElement?.removeEventListener('ended', this.handleBackingTrackEnded);
+        this.backingTrackElement = null;
+        this.backingTrackSource = null;
+
+        return this.pausedAt;
+    }
+
+    /**
+     * Load all samples.
+     * 
+     * @returns {Promise<void>} Resolves when all samples are loaded.
+     */
+    async loadSamples() {
+        try {
+            if (!this.sampleLoader) {
+                if (!this.audioContext) {
+                    throw new Error('AudioContext not initialized before creating SampleLoader');
+                }
+                this.sampleLoader = new SampleLoader(this.audioContext);
+            }
+            this.samples = await this.sampleLoader.loadTrumpetSamples(
+                AUDIO_CONFIG.samples, AUDIO_CONFIG.paths.SAMPLES_BASE, AUDIO_CONFIG.format
+            );
+
+            this.samplesLoaded = true;
+        } catch (error) {
+            console.error('Error loading samples in AudioEngine:', error);
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`AudioEngine failed to load samples: ${message}`);
+        }
+    }
+
+    async suspendContext() {
+        if (!this.audioContext) {
+            throw new Error('AudioContext not initialized, cannot suspend context');
+        }
+        await this.audioContext.suspend();
+    }
+
     /**
      * Connect main gain node to external node (e.g. for recording, visualization, etc.)
      * @param {AudioNode} externalNode 
      */
     connectMainToExternalNode(externalNode) {
+        if (!this.mainGain) {
+            throw new Error('Main gain node not initialized. Call setupGainNodes() after createContext() first.');
+        }
         if (!externalNode || !(externalNode instanceof AudioNode)) {
-            console.warn('AudioEngine: Invalid external node provided for connection. Must be instance of AudioNode.');
-            return;
+            throw new Error('AudioEngine: Invalid external node provided for connection. Must be instance of AudioNode.');
         }
         this.mainGain.connect(externalNode);
     }
@@ -173,14 +263,22 @@ export class AudioEngine {
      * @param {AudioNode} externalNode 
      */
     disconnectMainFromExternalNode(externalNode) {
+        if (!this.mainGain) {
+            throw new Error('Main gain node not initialized. Call setupGainNodes() after createContext() first.');
+        }
         if (!externalNode || !(externalNode instanceof AudioNode)) {
-            console.warn('AudioEngine: Invalid external node provided for disconnection. Must be instance of AudioNode.');
-            return;
+            throw new Error('AudioEngine: Invalid external node provided for disconnection. Must be instance of AudioNode.');
         }
         try {
             this.mainGain.disconnect(externalNode);
         } catch (error) {
-            if (error.name === 'InvalidAccessError') {
+            const isInvalidAccessError =
+                typeof error === 'object' &&
+                error !== null &&
+                'name' in error &&
+                error.name === 'InvalidAccessError';
+
+            if (isInvalidAccessError) {
                 console.warn('AudioEngine: Attempted to disconnect main gain from an external node that was not connected. Ignoring.');
             } else {
                 throw error;
@@ -200,15 +298,16 @@ export class AudioEngine {
      * @returns {{midiNumber: number, sourceNode: AudioBufferSourceNode, gainNode: GainNode}|null} {source} or null if sample not found
      */
     playNote(inputID, midiNumber) {
+        if (!this.audioContext || !this.samplesGain || !this.backingTrackGain) {
+            throw new Error('AudioEngine: cannot play notes. Call createContext() and setupGainNodes() first.');
+        }
         if (this.audioContext.state !== 'running') {
-            console.warn('AudioEngine: Cannot play - AudioContext not running');
-            return null;
+            throw new Error('AudioEngine: cannot play notes. AudioContext not running');
         }
 
         const buffer = this.samples.get(midiNumber);
         if (!buffer) {
-            console.warn(`AudioEngine: No sample found for MIDI number ${midiNumber}`);
-            return null;
+            throw new Error(`AudioEngine: No sample found for MIDI number ${midiNumber}`);
         }
 
         // Handle rapid re-triggering (fade out takes time)
@@ -257,11 +356,13 @@ export class AudioEngine {
     stopNote(inputID, midiNumber) {
         const active = this.activeSources.get(inputID);
 
+        if (!this.audioContext) {
+            throw new Error('AudioEngine: no AudioContext');
+        }
         if (!active) {
             console.warn(`AudioEngine: No active note found for inputID ${inputID} to stop`);
             return;
         }
-
         if (active.midiNumber !== midiNumber) {
             console.warn(`AudioEngine: Active note MIDI ${active.midiNumber} does not match requested stop MIDI ${midiNumber} for inputID ${inputID}`);
             // Still proceed to stop note with inputID
@@ -280,46 +381,51 @@ export class AudioEngine {
     }
 
     /**
-     * Play backing track from the beginning, or resume if paused.
+     * Play backing track from the beginning, or resume from where it left off if paused.
      * Caller handles play promise for autoplay policy.
      * 
-     * @returns {{startTime: number, playPromise: Promise<void>}|null} {startTime, playPromise} or null if cannot play.
+     * @returns {Promise<void>} Resolves when playback starts successfully, rejects on error or if AudioContext not running.
      */
-    playBackingTrack() {
+    async playBackingTrack() {
+        if (!this.audioContext || !this.backingTrackElement) {
+            throw new Error('AudioEngine: cannot play backing track. Call createContext() and setupBackingTrack() first.');
+        }
         if (this.audioContext.state !== 'running') {
-            console.warn('AudioEngine: Cannot play backing track - AudioContext not running');
-            return null;
+            throw new Error('AudioEngine: cannot play backing track - AudioContext not running.');
         }
 
-        if (!this.backingTrackElement) {
-            console.warn('AudioEngine: Backing track not initialized');
-            return null;
+        if (this.pausedAt !== null) {
+            this.backingTrackElement.currentTime = this.pausedAt;
+            this.pausedAt = null;
         }
-
-        const playPromise = this.backingTrackElement.play();
-        return {
-            startTime: this.audioContext.currentTime,
-            playPromise
-        };
+        this.backingTrackElement.playbackRate = 1.0;
+        await this.backingTrackElement.play();
     }
 
     /**
      * Stop backing track playback and reset to beginning.
      */
     stopBackingTrack() {
-        if (!this.backingTrackElement) return;
+        if (!this.backingTrackElement) {
+            console.warn('AudioEngine: cannot stop - backing track not initialized. Call setupBackingTrack() first.');
+            return;
+        }
 
         this.backingTrackElement.pause();
         this.backingTrackElement.currentTime = 0;
     }
 
     /**
-     * Pause backing track playback, and keeps position.
+     * Pause backing track playback, and saves position.
      */
     pauseBackingTrack() {
-        if (!this.backingTrackElement) return;
+        if (!this.backingTrackElement) {
+            console.warn('AudioEngine: cannot pause - backing track not initialized. Call setupBackingTrack() first.');
+            return;
+        }
 
         this.backingTrackElement.pause();
+        this.pausedAt = this.backingTrackElement.currentTime;
     }
 
     /**
@@ -328,6 +434,17 @@ export class AudioEngine {
      */
     isBackingTrackMuted() {
         return this.backingTrackMuted;
+    }
+
+    /**
+     * Get current time of backing track.
+     * @returns {number} Current time of backing track in seconds, or null if backing track not initialized.
+     */
+    getCurrentBackingTrackTime() {
+        if (!this.backingTrackElement) {
+            throw new Error('AudioEngine: Cannot get backing track time - backing track not initialized');
+        }
+        return this.backingTrackElement.currentTime;
     }
 
     /**
@@ -342,7 +459,7 @@ export class AudioEngine {
      * Set backing track volume, clamped to valid range [0.0, 1.0].
      * Saves volume if muted; immediately applies if not muted.
      * @param {number} volume 
-     * @returns {number} current backing track gain value (0.0 if muted)
+      * @returns {number|undefined} current backing track gain value (0.0 if muted), or undefined if gain node unavailable
      */
     setBackingTrackVolume(volume) {
         if (!this.backingTrackGain) return;
@@ -359,7 +476,7 @@ export class AudioEngine {
      * Set all samples volume, clamped to valid range [0.0, 1.0].
      * Saves volume if muted; immediately applies if not muted.
      * @param {number} volume 
-     * @returns {number} current samples gain value (0.0 if muted)
+     * @returns {number|undefined} current samples gain value (0.0 if muted), or undefined if gain node unavailable
      */
     setSamplesVolume(volume) {
         if (!this.samplesGain) return;
@@ -413,6 +530,7 @@ export class AudioEngine {
         for (const [inputID, { midiNumber }] of this.activeSources.entries()) {
             this.stopNote(inputID, midiNumber);
         }
+        // TODO: emit noteend events?
     }
 
     /**
@@ -442,43 +560,29 @@ export class AudioEngine {
     }
 
     /**
-     * Get current time of AudioContext, adjusted for any debug seeks.
-     * If doesn't exist, fail fast.
-     * @returns 
-     */
-    getCurrentTime() {
-        return this.audioContext.currentTime + this.seekOffset;
-    }
-
-    /**
      * 
      * @returns {boolean} - whether or not AudioContext is ready for playback
      */
     isReady() {
         return this.samplesLoaded &&
                this.backingTrackCanPlayThrough &&
+               this.audioContext !== null &&
                this.audioContext.state === 'running';
     }
 
     /**
-     * DEBUG: Set current playback time (for testing/debugging).
-     * Seeks the backing track and adjusts timing to match audio position.
-     * @param {number} seconds - Time in seconds to seek to
+     * Set the callback function to be called when the backing track ends.
+     * Set to null for cleanup.
+     * @param {function | null} callback 
      */
-    setDebugTime(seconds) {
-        if (this.backingTrackElement) {
-            this.backingTrackElement.currentTime = seconds;
-            // Adjust seekOffset so getCurrentTime() returns the desired position
-            this.seekOffset = seconds - this.audioContext.currentTime;
-        }
+    setOnEnded(callback) {
+        this.onEnded = callback;
     }
 
     async dispose() {
-        this.stopAllSound();
-        
-        if (this.audioContext) {
-            await this.audioContext.close();
-            this.audioContext = null;
-        }
+        await this.teardownForRecovery();
+        this.pausedAt = null;
+        this.sampleLoader = null;
+        this.samplesLoaded = false;
     }
 }

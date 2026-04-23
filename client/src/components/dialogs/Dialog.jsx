@@ -1,0 +1,105 @@
+import { useRef, useEffect, useImperativeHandle } from 'react';
+import PropTypes from 'prop-types';
+
+/**
+ *
+ * @param {{
+ *   ref?: import('react').Ref<{ shake: () => void }>,
+ *   id?: string,
+ *   className?: string,
+ *   isOpen: boolean,
+ *   onClose: () => void,
+ *   title?: string,
+ *   closeOnBackdrop?: boolean,
+ *   children: import('react').ReactNode,
+ *   footer?: import('react').ReactNode
+ * }} props
+ */
+export function Dialog({ref, id='', className='', isOpen, onClose, title, closeOnBackdrop = false, children, footer=null}) {
+    const dialogRef = useRef(/** @type {HTMLDialogElement | null} */ (null));
+
+    const shake = () => {
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+        dialog.classList.add('dialog-shake');
+        dialog.addEventListener('animationend', () => {
+            dialog.classList.remove('dialog-shake');
+        }, { once: true });
+    };
+
+    useImperativeHandle(ref, () => ({ shake }));
+
+    useEffect(() => {
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+        if (isOpen) {
+            const trigger = /** @type {HTMLElement | null} */ (document.activeElement);
+            dialog.showModal();
+            try {
+                dialog.focus({ preventScroll: true });
+            } catch {
+                dialog.focus();
+            }
+            dialog.scrollTop = 0;
+            const content = dialog.querySelector('.dialog-content');
+            if (content instanceof HTMLElement) content.scrollTop = 0;
+            return () => { trigger?.focus(); };
+        }
+        else if (dialog.open) dialog.close();
+    }, [isOpen]);
+
+    useEffect(() => {
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+        /** @param {KeyboardEvent} e */
+        const handleEscape = (e) => {
+            if (e.key !== 'Escape') return;
+            e.preventDefault();
+            e.stopPropagation();
+            onClose();
+        };
+
+        dialog.addEventListener('keydown', handleEscape);
+        return () => {
+            dialog.removeEventListener('keydown', handleEscape);
+        };
+    }, [onClose]);
+
+    /** @param {import('react').MouseEvent<HTMLDialogElement>} e */
+    const handleClick = (e) => {
+        if (e.target !== dialogRef.current) return;
+        if (closeOnBackdrop) onClose();
+        else shake();
+    }
+
+    return (
+        <dialog
+            ref={dialogRef}
+            id={id || undefined}
+            className={`dialog${className ? ` ${className}` : ''}`}
+            onClick={handleClick}
+            tabIndex={-1}
+            aria-modal="true"
+            aria-labelledby={title && id ? `${id}-title` : undefined}
+        >
+            {title && (
+                <div className="dialog-header">
+                    <h2 id={id ? `${id}-title` : undefined}>{title}</h2>
+                </div>)}
+            <div className="dialog-content">{children}</div>
+            {footer && (<footer className="dialog-footer">{footer}</footer>)}
+        </dialog>
+    );
+}
+
+Dialog.propTypes = {
+    ref: PropTypes.oneOfType([PropTypes.func, PropTypes.shape({ current: PropTypes.object })]),
+    id: PropTypes.string,
+    className: PropTypes.string,
+    isOpen: PropTypes.bool.isRequired,
+    onClose: PropTypes.func.isRequired,
+    title: PropTypes.string,
+    closeOnBackdrop: PropTypes.bool,
+    children: PropTypes.node,
+    footer: PropTypes.node,
+};

@@ -7,6 +7,64 @@
  */
 
 // ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+/** @typedef {keyof typeof BACKING_TRACKS_DATA} BackingTrackKey */
+
+/**
+ * @typedef {{
+ *   paths: {
+ *     SAMPLES_BASE: string,
+ *     BACKING_TRACKS_BASE: string,
+ *   },
+ *   samples: number[],
+ *   format: string,
+ *   volumes: {
+ *     MAIN_GAIN_DEFAULT: number,
+ *     SAMPLES_GAIN_DEFAULT: number,
+ *     BACKING_TRACK_GAIN_DEFAULT: number,
+ *     NOTE_FADE_TIME_DEFAULT: number,
+ *   },
+ *   backingTracks: typeof BACKING_TRACKS_DATA,
+ *   getSamplePath: (midiNumber: number) => string,
+ *   getBackingTrackPath: (trackType: BackingTrackKey) => string,
+ * }} AudioConfig
+ */
+
+/** @typedef {keyof typeof KEY_MAPPINGS} KeyCode */
+
+/** @typedef {typeof NOTE_EVENTS[keyof typeof NOTE_EVENTS]} NoteEventName */
+
+/**
+ * @typedef {{
+ *   uniqueID: string,
+ *   midiNumber: number,
+ *   timestamp: number,
+ * }} NoteEventDetail
+ */
+
+/** @typedef {CustomEvent<NoteEventDetail> & {type: NoteEventName}} NoteEvent */
+
+/** @typedef {'easy' | 'medium' | 'hard'} PreferenceDifficulty */
+
+/** @typedef {'backingTrack' | 'samples'} AudioSourceKey */
+
+/**
+ * @typedef {'C7' | 'F7' | 'G7'} ChordName
+ */
+
+/**
+ * @typedef {{
+ *   difficulty: PreferenceDifficulty,
+ *   backingTrackVolume: number,
+ *   samplesVolume: number,
+ *   backingTrackMuted: boolean,
+ *   samplesMuted: boolean,
+ * }} UserPreferences
+ */
+
+// ============================================================================
 // VISUAL CONSTANTS
 // ============================================================================
 
@@ -16,6 +74,36 @@
  * creating a visual "lead" effect for smoother animations.
  */
 export const VISUAL_LEAD_TIME = 0.1; // seconds (100 ms)
+
+/**
+ * Centralized note event names emitted by input handlers and consumed by UI/logging.
+ */
+export const NOTE_EVENTS = /** @type {const} */ ({
+    START: 'notestart',
+    END: 'noteend',
+});
+
+/**
+ * Centralized chord definitions for the 12-bar blues progression.
+ * Maps internal chord names to their display representations.
+ */
+export const CHORDS = /** @type {const} */ ({
+    C7: {
+        name: 'C7',
+        display: 'C⁷',
+        root: 'C',
+    },
+    F7: {
+        name: 'F7',
+        display: 'F⁷',
+        root: 'F',
+    },
+    G7: {
+        name: 'G7',
+        display: 'G⁷',
+        root: 'G',
+    },
+});
 
 // ============================================================================
 // AUDIO CONSTANTS
@@ -30,9 +118,24 @@ export const REQUIRED_SAMPLES = [
 ];
 
 /**
+ * Backing track metadata.
+ * Add new entries here to automatically expand BackingTrackKey type.
+ */
+const BACKING_TRACKS_DATA = {
+    blues: {
+        filename: 'blues.wav',
+        bpm: 120,
+        silenceOffset: 0.281,   // before first count-in hit
+        countInBeats: 4,        // number of count-in beats before blues progression starts
+        maxLoops: 11,           // number of loops (for active chord highlighting)
+    },
+};
+
+/**
  * Audio path constants and helper functions.
  * TODO: support multiple instruments, backing tracks, formats with fallback, etc?
  * TODO: user may upload their own samples?
+ * @type {AudioConfig}
  */
 export const AUDIO_CONFIG = {
     paths: {
@@ -49,20 +152,14 @@ export const AUDIO_CONFIG = {
         NOTE_FADE_TIME_DEFAULT: 0.35, // seconds
     },
 
-    backingTracks: {
-        blues: {
-            filename: 'blues.mp3',
-            bpm: 120,
-            silenceOffset: 0.281,   // before first count-in hit
-            countInBeats: 4,        // number of count-in beats before blues progression starts
-            maxLoops: 11,           // number of loops (for active chord highlighting)
-        },
-    },
+    backingTracks: BACKING_TRACKS_DATA,
 
+    /** @param {number} midiNumber */
     getSamplePath(midiNumber) {
         return `${this.paths.SAMPLES_BASE}${midiNumber}.${this.format}`;
     },
 
+    /** @param {BackingTrackKey} trackType */
     getBackingTrackPath(trackType) {
         return `${this.paths.BACKING_TRACKS_BASE}${this.backingTracks[trackType].filename}`;
     },
@@ -72,7 +169,7 @@ export const AUDIO_CONFIG = {
  * Musical data linked with a keyboard key, using KeyboardEvent.code as the key.
  * Note that scale degrees reach 8 (as opposed to 1) for convenience.
  */
-export const KEY_MAPPINGS = {
+export const KEY_MAPPINGS = /** @type {const} */ ({
     // G Mixolydian scale - top row (qwertyui)
     'KeyQ': { midiNumber: 67, noteName: 'G', scaleRoot: 'G', scaleMode: 'Mixolydian', scaleDegree: '1' },
     'KeyW': { midiNumber: 69, noteName: 'A', scaleRoot: 'G', scaleMode: 'Mixolydian', scaleDegree: '2' },
@@ -111,17 +208,32 @@ export const KEY_MAPPINGS = {
     'Digit5': { midiNumber: 67, noteName: 'G', scaleRoot: 'C', scaleMode: 'Blues', scaleDegree: '5' },
     'Digit6': { midiNumber: 70, noteName: 'B♭', scaleRoot: 'C', scaleMode: 'Blues', scaleDegree: '♭7' },
     'Digit7': { midiNumber: 72, noteName: 'C', scaleRoot: 'C', scaleMode: 'Blues', scaleDegree: '8' },
-};
+});
 
 /**
  * NOTE: These defaults should match PREFERENCE_DEFAULTS in server/src/constants.js.
  * Default user preferences in a flat object for simplicity.
  * Used if no preferences are saved in localStorage or account.
  */
+
+/** @type {UserPreferences} */
 export const PREFERENCE_DEFAULTS = {
     difficulty: 'easy', // | 'medium' | 'hard'
     backingTrackVolume: AUDIO_CONFIG.volumes.BACKING_TRACK_GAIN_DEFAULT,
     samplesVolume: AUDIO_CONFIG.volumes.SAMPLES_GAIN_DEFAULT,
     backingTrackMuted: false,
     samplesMuted: false,
+}
+
+export const SCHEMA = {
+    /** @param {unknown} d */
+    difficulty: (d) => typeof d === 'string' && ['easy', 'medium', 'hard'].includes(d) ? d : undefined,
+    /** @param {unknown} vol */
+    backingTrackVolume: (vol) => typeof vol === 'number' && vol >= 0 && vol <= 1 ? vol : undefined,
+    /** @param {unknown} vol */
+    samplesVolume: (vol) => typeof vol === 'number' && vol >= 0 && vol <= 1 ? vol : undefined,
+    /** @param {unknown} bool */
+    backingTrackMuted: (bool) => typeof bool === 'boolean' ? bool : undefined,
+    /** @param {unknown} bool */
+    samplesMuted: (bool) => typeof bool === 'boolean' ? bool : undefined,
 }

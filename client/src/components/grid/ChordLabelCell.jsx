@@ -1,0 +1,23 @@
+import PropTypes from "prop-types";
+
+/**
+ * @param {{label: string, keyboardHint: string, isHighlighted: boolean, countdown: number | null}} props
+ */
+export function ChordLabelCell({ label, keyboardHint, isHighlighted, countdown }) {
+    return (
+        <div className={`chord-label-cell ${isHighlighted ? 'highlighted' : ''}`}>
+            <p
+                className="chord-label"
+                data-keyboard-hint={keyboardHint}
+                >{label}</p>
+            {countdown !== null && <span className="countdown">{countdown}</span>}
+        </div>
+    );
+}
+
+ChordLabelCell.propTypes = {
+    label: PropTypes.string.isRequired,
+    keyboardHint: PropTypes.string.isRequired,
+    isHighlighted: PropTypes.bool.isRequired,
+    countdown: PropTypes.oneOfType([PropTypes.number, PropTypes.oneOf([null])]),
+};

@@ -3,13 +3,34 @@
  * Note: to imitate a live improvisation, there is no ability to pause/resume while recording.
  */
 export class RecordingEngine {
+    /**
+     * @param {AudioContext} audioContext 
+     */
     constructor(audioContext) {
         this.audioContext = audioContext;
         this.mediaStreamDestination = this.audioContext.createMediaStreamDestination();
 
         // MediaRecorder created fresh on each start()
-        this.mediaRecorder = null;
-        this.chunks = [];
+        this.mediaRecorder = /** @type {MediaRecorder | null} */ (null);
+        this.chunks = /** @type {Blob[]} */ ([]);
+
+        this.isRecording = false;
+    }
+
+    /**
+     * 
+     * @param {AudioContext} audioContext 
+     */
+    updateAudioContext(audioContext) {
+        if (!audioContext) {
+            throw new Error('RecordingEngine: updateAudioContext called with null/undefined audioContext');
+        }
+        this.audioContext = audioContext;
+        this.mediaStreamDestination = this.audioContext.createMediaStreamDestination();
+    }
+
+    isRecordingActive() {
+        return this.isRecording;
     }
 
     /**
@@ -51,16 +72,17 @@ export class RecordingEngine {
         
         const mimeType = this._selectMimeType();
         const options = mimeType ? { mimeType } : {};
-
+        
         this.mediaRecorder = new MediaRecorder(this.mediaStreamDestination.stream, options);
-
+        
         this.mediaRecorder.ondataavailable = (e) => {
             if (e.data.size > 0) {
                 this.chunks.push(e.data);
             }
         };
-
+        
         this.mediaRecorder.start();
+        this.isRecording = true;
     }
 
     /**
@@ -71,24 +93,28 @@ export class RecordingEngine {
       * Note: The Blob is created from the collected chunks when the MediaRecorder's `stop` event fires.
      */
     stop() {
-        if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
+        const mediaRecorder = this.mediaRecorder;
+        if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+            this.mediaRecorder = null;
+            this.isRecording = false;
             console.warn('RecordingEngine: stop() called but MediaRecorder is not active');
             return Promise.resolve(null);
         }
 
         return new Promise((resolve, reject) => {
-            this.mediaRecorder.onstop = () => {
+            mediaRecorder.onstop = () => {
                 // Blob is ready when `stop` event fires
-                const blob = new Blob(this.chunks, { type: this.mediaRecorder.mimeType });
+                const blob = new Blob(this.chunks, { type: mediaRecorder.mimeType });
                 this.mediaRecorder = null;
+                this.isRecording = false;
                 resolve(blob);
             };
 
-            this.mediaRecorder.onerror = (e) => {
+            mediaRecorder.onerror = (e) => {
                 reject(e.error);
             };
 
-            this.mediaRecorder.stop();
+            mediaRecorder.stop();
         });
     }
 }

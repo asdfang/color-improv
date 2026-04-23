@@ -1,0 +1,183 @@
+/* Music Grid */
+.music-grid {
+    display: grid;
+    grid-template-rows: repeat(var(--grid-rows), 1fr);
+    grid-template-columns: minmax(100px, 200px) repeat(var(--grid-note-cols), 1fr);
+    padding: clamp(0.35rem, 0.8vw, 0.8rem);
+    /* Overridden by child styles: */
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.music-grid.playback-playing { opacity: 1;   filter: saturate(1) }
+.music-grid.playback-paused  { opacity: 0.7; filter: saturate(0.7); }
+.music-grid.playback-stopped { opacity: 0.55; }
+
+.music-grid > div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Allow text selection on label cells for copying chord/scale names, but not on note cells/gaps */
+.chord-label-cell, .scale-label-cell, .scale-degree-label-cell {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+/* NoteCell */
+.note-cell {
+    background: var(--cell-color);
+    border-radius: 8px;
+    transition: transform 80ms ease-out, filter 80ms ease-out;
+    cursor: pointer;
+    margin: 4px;
+    font-size: var(--fs-grid-note);
+    color: black;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+.note-cell.pressed {
+    transform: scale(0.98);
+    filter: brightness(0.8);
+}
+.note-name {
+    pointer-events: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* ChordLabelCell */
+.chord-label-cell {
+    position: relative;
+    flex-direction: column;
+    border: 4px solid transparent;
+}
+.chord-label-cell.highlighted {
+    border: 4px solid rgba(255, 255, 255, 1);
+    background-color: rgba(255, 255, 255, 0.2);
+}
+.countdown {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.9);
+    border: 2.2px solid rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 1);
+    display: grid;
+    place-items: center;
+    line-height: 1;
+    font-size: var(--fs-ui-xs);
+    font-weight: 600;
+    padding-top: 2px;
+    box-sizing: border-box;
+}
+.chord-label {
+    position: relative;
+    font-size: var(--fs-grid-label);
+}
+.chord-label::after {
+    content: attr(data-keyboard-hint);
+    position: absolute;
+    left: 50%;
+    top: 120%;
+    transform: translate(-50%);
+    font-size: var(--fs-ui-sm);
+    font-style: italic;
+    color: #777;
+    white-space: nowrap;
+}
+/* .keyboard-hint {
+    position: absolute;
+    bottom: 0px;
+    font-size: var(--fs-ui-sm);
+    font-style: italic;
+    color: #777;
+} */
+
+/* ScaleLabelCell */
+.scale-label-cell {
+    flex-direction: column;
+    font-size: var(--fs-grid-label);
+    text-align: center;
+}
+
+/* ScaleDegreeLabelCell */
+.scale-degree-label-cell {
+    position: relative;
+    font-size: var(--fs-grid-note);
+}
+.scale-degree-label-cell .degree-number {
+    position: relative;
+}
+
+.scale-degree-label {
+    display: inline-flex;
+    align-items: flex-end;
+}
+.degree-with-caret {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+}
+.degree-caret {
+    font-size: 0.8em;
+    transform: scaleY(0.6);
+    margin-bottom: -0.5em;
+}
+
+/* Override .music-grid > div */
+.blues-row { padding-top: 0.8rem; }
+.mixolydian-row { padding-bottom: 0.8rem;}
+.music-grid > .blues-row.scale-label-cell {
+    justify-content: flex-start;
+}
+.music-grid > .mixolydian-row.scale-label-cell {
+    justify-content: flex-end;
+}
+.music-grid > .blues-row.scale-degree-label-cell {
+    align-items: flex-start;
+}
+.music-grid > .mixolydian-row.scale-degree-label-cell {
+    align-items: flex-end;
+}
+
+/* Hide keyboard hints on phones/tablets that are touch-only (likely no keyboard) */
+@media (max-width: 1279px) and (hover: none) {
+    .chord-label::after { display: none; }
+}
+/* Adjust label column width for smaller screens, ensuring remaining NoteCells are easily pressed */
+@media (max-width: 1023px) {
+    .music-grid {
+        grid-template-columns: minmax(88px, 100px) repeat(var(--grid-note-cols), 1fr);
+        padding: 0;
+    }
+    .chord-label,
+    .scale-label-cell { font-size: var(--fs-grid-label-sm); }
+    .note-cell { margin: 3px; }
+}
+
+@media (max-height: 920px) {
+    .music-grid { padding: 0; }
+    .chord-label,
+    .scale-label-cell { font-size: var(--fs-grid-label-sm); }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+    :root {
+        --grid-rows: 4;
+    }
+    #app { min-height: 100dvh; }
+    #app {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    .music-grid > .scale-label-row { display: none; }
+}

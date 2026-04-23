@@ -1,20 +1,24 @@
+// TODO: investigate rAF stalling, esp. on iOS Simulator, ngrok. try-catch in tick()? visibility change handling? heartbeat fallback?
+
 import {
     getBeatDuration, getBeatNumberInMeasure, getMeasureNumberInProgression, getChordInfo, getLoopsCompleted
-} from '/src/timing/progression-data.js';
-import { AUDIO_CONFIG } from '/src/constants.js';
+} from '../timing/progression-data';
+import { AUDIO_CONFIG, VISUAL_LEAD_TIME } from '../constants';
+/** @import { AudioEngine } from '../audio/AudioEngine.js' */
 
 /**
  * Manages timing and synchronization between audio and visual components.
- * Uses AudioEngine's clock as the central time source; does not manage playback.
+ * Uses AudioEngine's backing track time as the central time source; does not manage playback.
  */
 export class TimingEngine {
+    /**
+     * @param {AudioEngine} audioEngine 
+     * @param {'blues'} trackKey 
+     */
     constructor(audioEngine, trackKey = 'blues') {
         this.audioEngine = audioEngine;
 
-        this.startTime = null;
         this.isPlaying = false;
-        this.pausedAt = null;
-        this.totalPausedDuration = 0;
         this.trackKey = trackKey;
 
         this.bpm = AUDIO_CONFIG.backingTracks[this.trackKey].bpm;
@@ -22,68 +26,83 @@ export class TimingEngine {
         this.silenceOffset = AUDIO_CONFIG.backingTracks[this.trackKey].silenceOffset;
         this.countInBeats = AUDIO_CONFIG.backingTracks[this.trackKey].countInBeats;
         this.maxLoops = AUDIO_CONFIG.backingTracks[this.trackKey].maxLoops; // for active chord highlighting
+
+        // Internal state
+        /** @type {{currentChord: string|null, nextChord: string|null, beatsUntilNextChord: number|null} | null} */
+        this.lastEmitted = null;
+        this.onBeatChange = null;
+        this.rafId = null;
     }
 
     /**
-     * Start timer.
+     * Sets the callback function to be called when a beat change occurs.
+     * Set to null for cleanup.
+     * @param {function | null} callback 
      */
-    start() {
-        if (!this.audioEngine.isReady()) {
-            throw new Error('AudioEngine is not ready. Cannot start TimingEngine.');
-        }
-        this.startTime = this.audioEngine.getCurrentTime();
-        this.isPlaying = true;
-        this.totalPausedDuration = 0;
+    setOnBeatChange(callback) {
+        this.onBeatChange = callback;
     }
 
     /**
-     * Pause timer, preserve start time.
+     * Uses requestAnimationFrame to check for beat changes and call the callback with information on beat changes.
+     */
+    tick() {
+        const { currentChord, nextChord, beatsUntilNextChord } = this.getCurrentPosition(VISUAL_LEAD_TIME);
+        if (this.lastEmitted === null ||
+            currentChord !== this.lastEmitted.currentChord ||
+            nextChord !== this.lastEmitted.nextChord ||
+            beatsUntilNextChord !== this.lastEmitted.beatsUntilNextChord) {
+            this.onBeatChange?.({ currentChord, nextChord, beatsUntilNextChord });
+        }
+        this.lastEmitted = { currentChord, nextChord, beatsUntilNextChord };
+        this.rafId = requestAnimationFrame(() => this.tick());
+    }
+
+    /**
+     * Start timer (from pause or stop).
+     */
+    play() {
+        if (this.isPlaying) {
+            console.warn('TimingEngine already playing, cannot start.');
+            return;
+        }
+        this.isPlaying = true;
+        this.tick();
+    }
+
+    /**
+     * Pause timer. Does not clear lastEmitted so paused visuals will remain on screen.
      */
     pause() {
-        if (!this.isPlaying) return;
-        this.pausedAt = this.audioEngine.getCurrentTime();
+        if (!this.isPlaying) {
+            console.warn('TimingEngine not playing, cannot pause.');
+            return;
+        }
         this.isPlaying = false;
+        if (this.rafId !== null) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
+        }
     }
 
     /**
-     * Stop timer, reset start time.
+     * Stop timer. Clears lastEmitted so visuals reset.
      */
     stop() {
         this.isPlaying = false;
-        this.startTime = null;
-        this.pausedAt = null;
-    }
-
-    /**
-     * Resume timer only from paused state.
-     */
-    resume() {
-        if (!this.startTime) {
-            throw new Error('TimingEngine has not been started yet. Cannot resume.');
+        if (this.rafId !== null) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
         }
-        if (this.pausedAt === null) {
-            throw new Error('TimingEngine is not paused. Cannot resume.');
-        }
-        const pausedDuration = this.audioEngine.getCurrentTime() - this.pausedAt;
-        this.totalPausedDuration += pausedDuration;
-        this.pausedAt = null;
-        this.isPlaying = true;
+        this.lastEmitted = null;
     }
 
     /**
-     * Get the AudioContext time when playback started. Useful for debugging and synchronization.
-     * @returns {number|null} The start time in AudioContext time, or null if not started.
-     */
-    getStartTime() {
-        return this.startTime;
-    }
-
-    /**
-     * Get the current AudioContext time.
-     * @returns {number} The current time in AudioContext time.
+     * Get the current backing track time.
+     * @returns {number} The current time in backing track time.
      */
     getCurrentTime() {
-        return this.audioEngine.getCurrentTime();
+        return this.audioEngine.getCurrentBackingTrackTime();
     }
 
     /**
@@ -100,7 +119,7 @@ export class TimingEngine {
      */
     getCurrentPosition(leadTime = 0) {
         // If not playing, return nulls
-        if (!this.isPlaying || this.startTime === null) {
+        if (!this.isPlaying) {
             return {
                 phase: 'waiting',
                 beatNumberInMeasure: null,
@@ -113,7 +132,7 @@ export class TimingEngine {
             }
         }
 
-        const elapsedTotalTime = this.audioEngine.getCurrentTime() - this.startTime - this.totalPausedDuration + leadTime;
+        const elapsedTotalTime = this.audioEngine.getCurrentBackingTrackTime() + leadTime;
         const elapsedTimeSinceSilence = elapsedTotalTime - this.silenceOffset;
         const elapsedTimeFromProgressionStart = elapsedTotalTime - (this.silenceOffset + this.countInBeats * this.beatDuration);
 
