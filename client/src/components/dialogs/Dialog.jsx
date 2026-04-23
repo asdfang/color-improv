@@ -28,6 +28,9 @@ export function Dialog({id='', className='', isOpen, onClose, title, closeOnBack
             } catch {
                 dialog.focus();
             }
+            dialog.scrollTop = 0;
+            const content = dialog.querySelector('.dialog-content');
+            if (content instanceof HTMLElement) content.scrollTop = 0;
             return () => { trigger?.focus(); };
         }
         else if (dialog.open) dialog.close();
