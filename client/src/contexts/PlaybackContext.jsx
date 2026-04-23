@@ -72,13 +72,21 @@ export function PlaybackProvider({ children }) {
             return;
         }
 
-        audioEngine.pauseBackingTrack();
-        audioEngine.stopAllSamples();
-        await suspendIfRunning();
-        timingEngine.pause();
-        keyboardHandler.disable();
+        try {
+            audioEngine.pauseBackingTrack();
+            audioEngine.stopAllSamples();
+            await suspendIfRunning();
+            timingEngine.pause();
+            keyboardHandler.disable();
 
-        setPlaybackState('paused');
+            setPlaybackState('paused');
+        } catch (error) {
+            console.error('Failed to pause:', error);
+            const errorMessage = error instanceof Error
+                ? error.message
+                : 'An unknown error occurred while pausing.';
+            setPlaybackErrorMessage(errorMessage);
+        }
     }, [audioEngine, timingEngine, keyboardHandler, suspendIfRunning]);
 
     const finalizeRecording = useCallback(async () => {
@@ -115,16 +123,24 @@ export function PlaybackProvider({ children }) {
             return;
         }
 
-        if (recordingEngine.isRecordingActive()) {
-            await finalizeRecording();
-        }
-        audioEngine.stopAllSound();
-        await suspendIfRunning();
-        timingEngine.stop();
-        keyboardHandler.disable();
+        try {
+            if (recordingEngine.isRecordingActive()) {
+                await finalizeRecording();
+            }
+            audioEngine.stopAllSound();
+            await suspendIfRunning();
+            timingEngine.stop();
+            keyboardHandler.disable();
 
-        setIsRecording(false);
-        setPlaybackState('stopped');
+            setIsRecording(false);
+            setPlaybackState('stopped');
+        } catch (error) {
+            console.error('Failed to stop:', error);
+            const errorMessage = error instanceof Error
+                ? error.message
+                : 'An unknown error occurred while stopping.';
+            setPlaybackErrorMessage(errorMessage);
+        }
     }, [recordingEngine, audioEngine, timingEngine, keyboardHandler, finalizeRecording, suspendIfRunning]);
 
     const play = async () => {

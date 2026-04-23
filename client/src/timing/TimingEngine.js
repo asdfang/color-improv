@@ -89,10 +89,6 @@ export class TimingEngine {
      * Stop timer. Clears lastEmitted so visuals reset.
      */
     stop() {
-        if (!this.isPlaying) {
-            console.warn('TimingEngine not playing, cannot stop.');
-            return;
-        }
         this.isPlaying = false;
         if (this.rafId !== null) {
             cancelAnimationFrame(this.rafId);

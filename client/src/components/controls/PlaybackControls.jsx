@@ -25,10 +25,6 @@ export function PlaybackControls() {
         icon={faCircle}
         aria-hidden="true"
     />);
-    
-    const handlePlay = useCallback(() => {
-        if (playbackState === 'paused' || playbackState === 'stopped') play();
-    }, [playbackState, play]);
 
     /** @type {(e: KeyboardEvent) => void} */
     const handleKeyDown = useCallback((e) => {
@@ -42,16 +38,16 @@ export function PlaybackControls() {
         if (code === 'Space' && !shiftKey) {
             e.preventDefault();
             if (isRecording) return;
-            if (playbackState === 'playing') pause();
-            else handlePlay();
+            if (playbackState === 'playing') void pause();
+            else void play();
         } else if (code === 'Space' && shiftKey) {
             e.preventDefault();
-            if (playbackState !== 'stopped') stop();
+            if (playbackState !== 'stopped') void stop();
         } else if (code === 'KeyR' && shiftKey) {
             e.preventDefault();
-            if (playbackState === 'stopped' && !isRecording) record();
+            if (playbackState === 'stopped' && !isRecording) void record();
         }
-    }, [playbackState, isRecording, pause, stop, record, handlePlay]);
+    }, [playbackState, isRecording, pause, stop, record, play]);
 
     useEffect(() => {
         document.addEventListener('keydown', handleKeyDown);
@@ -63,7 +59,7 @@ export function PlaybackControls() {
             <PlaybackButton 
                 id="play-btn"
                 label="Play"
-                onClick={handlePlay}
+                onClick={play}
                 disabled={!canPlay}
             >{playIcon}
             </PlaybackButton>

@@ -25,6 +25,10 @@ export function AuthDialog({ isOpen, onClose, openToRegister, setOpenToRegister,
         try {
             if (openToRegister) await onRegister(email, name, password);
             else await onLogin(email, password);
+            setEmail('');
+            setName('');
+            setPassword('');
+            setFeedback('');
             onClose();
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Authentication failed';
@@ -43,6 +47,7 @@ export function AuthDialog({ isOpen, onClose, openToRegister, setOpenToRegister,
     }
 
     const handleClose = () => {
+        setPassword('');
         setFeedback('');
         onClose();
     }
@@ -76,6 +81,7 @@ export function AuthDialog({ isOpen, onClose, openToRegister, setOpenToRegister,
                         id="email"
                         type="email"
                         value={email}
+                        autoComplete="email"
                         onChange={(e) => setEmail(e.target.value)}
                         required
                     />
@@ -87,6 +93,7 @@ export function AuthDialog({ isOpen, onClose, openToRegister, setOpenToRegister,
                             id="name"
                             type="text"
                             value={name}
+                            autoComplete="name"
                             onChange={(e) => setName(e.target.value)}
                             required
                         />
@@ -98,6 +105,7 @@ export function AuthDialog({ isOpen, onClose, openToRegister, setOpenToRegister,
                         id="password"
                         type="password"
                         value={password}
+                        autoComplete={openToRegister ? 'new-password' : 'current-password'}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />

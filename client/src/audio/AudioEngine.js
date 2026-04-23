@@ -62,7 +62,6 @@ export class AudioEngine {
         if (!this.audioContext) throw new Error('AudioEngine failed to create AudioContext');
         if (!this.mainGain || !this.samplesGain || !this.backingTrackGain) this.setupGainNodes();
         if (!this.backingTrackElement || !this.backingTrackSource) {
-            console.log('resuming at: ', this.pausedAt);
             this.backingTrackCanPlayThroughPromise = this.setupBackingTrack(this.pausedAt ?? 0);
         }
         if (!this.sampleLoader) this.sampleLoader = new SampleLoader(this.audioContext);
@@ -74,7 +73,6 @@ export class AudioEngine {
 
         // Resume AudioContext if suspended (requires user gesture)
         if (this.audioContext.state === 'suspended' || this.audioContext.state === 'interrupted') {
-            console.log(`AudioEngine: Resuming AudioContext state from ${this.audioContext.state} to running.`);
             await this.audioContext.resume();
         }
 
@@ -211,7 +209,6 @@ export class AudioEngine {
         this.backingTrackElement = null;
         this.backingTrackSource = null;
 
-        console.log('Backing track torn down, paused at:', this.pausedAt);
         return this.pausedAt;
     }
 
@@ -244,7 +241,6 @@ export class AudioEngine {
         if (!this.audioContext) {
             throw new Error('AudioContext not initialized, cannot suspend context');
         }
-        console.log(`AudioEngine: Setting AudioContext state from ${this.audioContext.state} to suspended.`);
         await this.audioContext.suspend();
     }
 
@@ -257,8 +253,7 @@ export class AudioEngine {
             throw new Error('Main gain node not initialized. Call setupGainNodes() after createContext() first.');
         }
         if (!externalNode || !(externalNode instanceof AudioNode)) {
-            console.warn('AudioEngine: Invalid external node provided for connection. Must be instance of AudioNode.');
-            return;
+            throw new Error('AudioEngine: Invalid external node provided for connection. Must be instance of AudioNode.');
         }
         this.mainGain.connect(externalNode);
     }
@@ -272,8 +267,7 @@ export class AudioEngine {
             throw new Error('Main gain node not initialized. Call setupGainNodes() after createContext() first.');
         }
         if (!externalNode || !(externalNode instanceof AudioNode)) {
-            console.warn('AudioEngine: Invalid external node provided for disconnection. Must be instance of AudioNode.');
-            return;
+            throw new Error('AudioEngine: Invalid external node provided for disconnection. Must be instance of AudioNode.');
         }
         try {
             this.mainGain.disconnect(externalNode);
@@ -308,14 +302,12 @@ export class AudioEngine {
             throw new Error('AudioEngine: cannot play notes. Call createContext() and setupGainNodes() first.');
         }
         if (this.audioContext.state !== 'running') {
-            console.warn('AudioEngine: cannot play notes. AudioContext not running');
-            return null;
+            throw new Error('AudioEngine: cannot play notes. AudioContext not running');
         }
 
         const buffer = this.samples.get(midiNumber);
         if (!buffer) {
-            console.warn(`AudioEngine: No sample found for MIDI number ${midiNumber}`);
-            return null;
+            throw new Error(`AudioEngine: No sample found for MIDI number ${midiNumber}`);
         }
 
         // Handle rapid re-triggering (fade out takes time)
@@ -365,8 +357,7 @@ export class AudioEngine {
         const active = this.activeSources.get(inputID);
 
         if (!this.audioContext) {
-            console.warn('AudioEngine: no AudioContext');
-            return;
+            throw new Error('AudioEngine: no AudioContext');
         }
         if (!active) {
             console.warn(`AudioEngine: No active note found for inputID ${inputID} to stop`);
@@ -400,21 +391,15 @@ export class AudioEngine {
             throw new Error('AudioEngine: cannot play backing track. Call createContext() and setupBackingTrack() first.');
         }
         if (this.audioContext.state !== 'running') {
-            console.warn('AudioEngine: cannot play backing track - AudioContext not running.');
-            return;
+            throw new Error('AudioEngine: cannot play backing track - AudioContext not running.');
         }
 
-        try {
-            if (this.pausedAt !== null) {
-                console.log('AudioEngine: Resuming backing track from position:', this.pausedAt);
-                this.backingTrackElement.currentTime = this.pausedAt;
-                this.pausedAt = null;
-            }
-            this.backingTrackElement.playbackRate = 1.0;
-            await this.backingTrackElement.play();
-        } catch (error) {
-            console.error('AudioEngine: Failed to play backing track:', error);
+        if (this.pausedAt !== null) {
+            this.backingTrackElement.currentTime = this.pausedAt;
+            this.pausedAt = null;
         }
+        this.backingTrackElement.playbackRate = 1.0;
+        await this.backingTrackElement.play();
     }
 
     /**
