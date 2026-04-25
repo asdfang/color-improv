@@ -49,5 +49,6 @@ model Recording {
   durationSeconds   Float
   fileSizeBytes     Int
   audioMimeType     String    // For audio file extension; event log is always application/json
+  notes             String?   // Optional user notes about the recording
   createdAt         DateTime  @default(now())
 }
