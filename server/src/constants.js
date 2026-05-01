@@ -5,3 +5,7 @@ export const PREFERENCE_DEFAULTS = {
     backingTrackMuted: false,
     samplesMuted: false,
 };
+
+export const MAX_RECORDINGS_PER_USER = 10;
+
+export const MAX_MB_PER_FILE = 15;
