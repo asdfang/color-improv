@@ -1,3 +1,9 @@
+// Multer middleware for recording uploads.
+// Parses multipart/form-data requests with 'audio' and 'log' fields,
+// writes to disk in user-specific folders with shared base filename.
+// Enforces file type and size limits.
+// Requires auth middleware to set req.userId first.
+
 import multer from 'multer';
 import path from 'path';
 import { mkdirSync } from 'fs';
@@ -43,16 +49,21 @@ const storage = multer.diskStorage({
     },
 });
 
+/**
+ * Multer middleware to handle recording uploads.
+ * On success, populates req.files.audio[0] and req.files.log[0] with multer file objects already written to disk.
+ * req.body will hold text fields (title, notes, durationSeconds).
+ */
 export const recordingUpload = multer({
     storage,
     limits: { fileSize: MAX_MB_PER_FILE * 1024 * 1024 }, // 15MB limit for each file
     fileFilter: (req, file, cb) => {
         if (file.fieldname === 'audio'
             && (file.mimetype === 'audio/webm' || file.mimetype === 'audio/mp4')) {
-            cb(null, true);
+            return cb(null, true);
         }
         if (file.fieldname === 'log' && file.mimetype === 'application/json') {
-            cb(null, true)
+            return cb(null, true)
         }
         cb(new Error('Invalid file type'), false);
     },
