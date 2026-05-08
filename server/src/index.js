@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import preferencesRoutes from './routes/preferences.js';
+import recordingsRoutes from './routes/recordings.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -23,6 +24,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/preferences', preferencesRoutes);
+app.use('/api/recordings', recordingsRoutes);
 
 // SPA catch-all route
 const __filename = fileURLToPath(import.meta.url);

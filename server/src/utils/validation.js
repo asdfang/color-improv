@@ -7,14 +7,37 @@ function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
 }
 
-export function validateRequiredString(input, fieldName, minLength = 1) {
+export function validateRequiredString(input, fieldName, minLength = 1, maxLength = 100) {
     if (typeof input !== 'string') {
         return { valid: false, error: `${fieldName} is required` };
     }
     if (input.trim().length < minLength) {
         return { valid: false, error: `${fieldName} must be at least ${minLength} characters` };
     }
+    if (input.trim().length > maxLength) {
+        return { valid: false, error: `${fieldName} must be at most ${maxLength} characters` };
+    }
     return { valid: true, data: input.trim() };
+}
+
+export function validateOptionalString(input, fieldName, minLength = 0, maxLength = 100) {
+    if (input === undefined || input === '') {
+        return { valid: true, data: null }; // Optional field intentionally missing
+    }
+    if (typeof input !== 'string') {
+        return { valid: false, error: `${fieldName} must be a string` };
+    }
+    const trimmed = input.trim();
+    if (trimmed === '') {
+        return { valid: true, data: null };
+    }
+    if (trimmed.length < minLength) {
+        return { valid: false, error: `${fieldName} must be at least ${minLength} characters` };
+    }
+    if (trimmed.length > maxLength) {
+        return { valid: false, error: `${fieldName} must be at most ${maxLength} characters` };
+    }
+    return { valid: true, data: trimmed };
 }
 
 export function validateEmail(input) {
@@ -117,6 +140,31 @@ export function validatePreferencesBody({ difficulty, backingTrackVolume, sample
             samplesVolume: samplesVolumeResult.data,
             backingTrackMuted: backingTrackMutedResult.data,
             samplesMuted: samplesMutedResult.data,
+        }
+    };
+}
+
+export function validateRecordingMetadata({ title, notes, durationSeconds } = {}) {
+    const titleResult = validateRequiredString(title, 'Title', 1, 100);
+    if (!titleResult.valid) return titleResult;
+
+    const notesResult = validateOptionalString(notes, 'Notes', 0, 500);
+    if (!notesResult.valid) return notesResult;
+
+    if (durationSeconds === undefined || durationSeconds === '') {
+        return { valid: false, error: 'Duration is required' };
+    }
+    const duration = Number(durationSeconds); // Convert multer string to number
+    if (!Number.isFinite(duration) || duration < 0) {
+        return { valid: false, error: 'Duration must be a non-negative number' };
+    }
+
+    return {
+        valid: true,
+        data: {
+            title: titleResult.data,
+            notes: notesResult.data,
+            durationSeconds: duration, // Keep as number
         }
     };
 }
