@@ -8,23 +8,11 @@ import { requireAuth } from '../middleware/auth.js';
 import { recordingUpload } from '../middleware/upload.js';
 import { validateRecordingMetadata } from '../utils/validation.js';
 import { MAX_RECORDINGS_PER_USER } from '../constants.js';
+import { cleanupRecordingFiles } from '../storage/localDisk.js';
 
 // Mounted at /api/recordings, all routes here require auth
 const router = express.Router();
 router.use(requireAuth);
-
-// Extract to another file?
-/**
- * Unlinks audio and log files to clean up already-written files in case of validation failure or library full error.
- * @param {string} audioPath 
- * @param {string} logPath 
- */
-async function cleanupSavedFiles(audioPath, logPath) {
-    await Promise.allSettled([
-        fs.unlink(audioPath),
-        fs.unlink(logPath),
-    ]);
-}
 
 /**
  * Handles recording uploads with recordingUpload multer middleware.
@@ -40,13 +28,13 @@ router.post('/', recordingUpload, async (req, res) => {
 
     const recordingMetadataResult = validateRecordingMetadata(req.body);
     if (!recordingMetadataResult.valid) {
-        await cleanupSavedFiles(audioFile.path, logFile.path);
+        await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
         return res.status(400).json({ error: recordingMetadataResult.error });
     }
 
     const count = await prisma.recording.count({ where: { userId: req.userId }});
     if (count >= MAX_RECORDINGS_PER_USER) {
-        await cleanupSavedFiles(audioFile.path, logFile.path);
+        await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
 
         return res.status(409).json({
             error: {
@@ -71,7 +59,7 @@ router.post('/', recordingUpload, async (req, res) => {
         });
         res.status(201).json({ recording });
     } catch (error) {
-        await cleanupSavedFiles(audioFile.path, logFile.path);
+        await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
         throw error;
     }
 });

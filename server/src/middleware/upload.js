@@ -8,6 +8,7 @@ import multer from 'multer';
 import path from 'path';
 import { mkdirSync } from 'fs';
 import fs from 'fs/promises';
+import { audioExtFor } from '../storage/localDisk.js'; // TODO: change for cloud storage
 import { MAX_MB_PER_FILE } from '../constants.js';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
@@ -17,9 +18,7 @@ mkdirSync(UPLOAD_DIR, { recursive: true });
 
 function getFileExtension(file) {
     if (file.fieldname === 'log') return 'json';
-    if (file.mimetype === 'audio/webm') return 'webm';
-    if (file.mimetype === 'audio/mp4') return 'mp4';
-    throw new Error(`Unsupported file type: ${file.mimetype}`);
+    return audioExtFor(file.mimetype);
 }
 
 function generateBaseFilename(userId) {
