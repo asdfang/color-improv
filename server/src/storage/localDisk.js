@@ -12,7 +12,7 @@ export function audioExtFor(audioMimeType) {
     return ext;
 }
 
-function pathFor(userId, baseFilename, extension) {
+export function pathFor(userId, baseFilename, extension) {
     return path.resolve('uploads', userId, `${baseFilename}.${extension}`);
 }
 
