@@ -8,6 +8,14 @@ function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
 }
 
+export function validateAllowedFields(body, allowedFields) {
+    const unknown = Object.keys(body).filter(k => !allowedFields.includes(k));
+    if (unknown.length > 0) {
+        return { valid: false, error: `Unknown fields: ${unknown.join(', ')}. Allowed fields: ${allowedFields.join(', ')}.` };
+    }
+    return { valid: true, data: body };
+}
+
 export function validateRequiredString(input, fieldName, minLength = 1, maxLength = 100) {
     if (minLength < 1) {
         throw new Error('minLength must be at least 1 for required strings');
