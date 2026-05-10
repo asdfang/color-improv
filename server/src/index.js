@@ -11,7 +11,7 @@ import recordingsRoutes from './routes/recordings.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(express.json());
+app.use(express.json()); // req.body available for JSON payloads
 app.use(cookieParser());
 app.use(cors({
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
