@@ -18,12 +18,19 @@ export function pathFor(userId, baseFilename, extension) {
 
 /**
  * Unlinks audio and log files to clean up already-written files in case of validation failure or library full error.
+ * Failure to unlink is logged but does not throw.
  * @param {string} audioPath 
  * @param {string} logPath 
  */
 export async function cleanupRecordingFiles(userId, baseFilename, audioMimeType) {
-    await Promise.allSettled([
-        fs.unlink(pathFor(userId, baseFilename, audioExtFor(audioMimeType))),
-        fs.unlink(pathFor(userId, baseFilename, 'json')),
-    ]);
+    const audioPath = pathFor(userId, baseFilename, audioExtFor(audioMimeType));
+    const logPath = pathFor(userId, baseFilename, 'json');
+    const paths = [audioPath, logPath];
+    const results = await Promise.allSettled(paths.map(p => fs.unlink(p)));
+
+    results.forEach((result, i) => {
+        if (result.status === 'rejected') {
+            console.error(`cleanupRecordingFiles: failed to unlink ${paths[i]}:`, result.reason);
+        }
+    });
 }
