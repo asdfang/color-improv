@@ -28,15 +28,12 @@ router.post('/register', async (req, res) => {
 
     const user = await prisma.user.create({
         data: { email, name, passwordHash },
+        select: { id: true, email: true, name: true }, // Omit passwordHash
     });
 
     sendAuthCookie(res, user.id);
 
-    res.status(201).json({
-        user: {
-            id: user.id, email: user.email, name: user.name
-        }
-    });
+    res.status(201).json({ user });
 });
 
 // POST /api/auth/login - Authenticate user and issue token
@@ -67,11 +64,7 @@ router.post('/login', async (req, res) => {
 
     sendAuthCookie(res, user.id);
 
-    res.json({ 
-        user: {
-            id: user.id, email: user.email, name: user.name
-        }
-    });
+    res.json({ user: { id: user.id, email: user.email, name: user.name } });
 });
 
 // POST /api/auth/logout - Log user out, clear cookie
@@ -87,7 +80,7 @@ router.get('/me', requireAuth, async (req, res) => {
         select: { id: true, email: true, name: true }, // Omit password
     });
 
-    res.json({ user } );
+    res.json({ user });
 });
 
 export default router;

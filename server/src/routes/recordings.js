@@ -76,7 +76,8 @@ router.post('/', recordingUpload, async (req, res) => {
                 audioMimeType: audioFile.mimetype,
                 audioFileSizeBytes: audioFile.size,
                 logFileSizeBytes: logFile.size,
-            }
+            },
+            omit: { userId: true, baseFilename: true },
         });
         res.status(201).json({ recording });
     } catch (error) {
@@ -111,6 +112,7 @@ router.get('/', async (req, res) => {
     const recordings = await prisma.recording.findMany({
         where: { userId: req.userId },
         orderBy: { createdAt: 'desc' },
+        omit: { userId: true, baseFilename: true },
     });
     res.status(200).json({ recordings });
 });
@@ -133,7 +135,8 @@ router.patch('/:id', async (req, res) => {
             data: {
                 title: recordingMetadataResult.data.title,
                 notes: recordingMetadataResult.data.notes,
-            }
+            },
+            omit: { userId: true, baseFilename: true },
         });
         res.status(200).json({ recording });
     } catch (error) {
