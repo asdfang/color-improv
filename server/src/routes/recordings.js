@@ -1,11 +1,11 @@
 // Routes for handling recording routes - uploading, serving audio/log files.
 // Requires authentication for all routes. 
 // TODO: swap disk storage for cloud storage.
+// TODO: periodic cleanup of orphaned files.
 // Known issue: TOCTOU race condition
 
 import express from 'express';
 import { prisma } from '../lib/prisma.js';
-import fs from 'fs/promises';
 import { requireAuth } from '../middleware/auth.js';
 import { recordingUpload } from '../middleware/upload.js';
 import { validateAllowedFields, validateRecordingMetadataOnCreate, validateRecordingMetadataOnUpdate } from '../utils/validation.js';
@@ -20,28 +20,36 @@ router.use(requireAuth); // req.userId becomes available in all routes below
  * Helper function to load a recording by ID, ensuring it belongs to the authenticated user.
  * Returns the recording row if found, or null if not found or does not belong to user.
  * NOTE: could be extracted
- * @param {Request} req 
+ * @param {string} recordingId 
+ * @param {string} userId 
  * @returns 
  */
-async function loadOwnedRecording(req) {
+async function loadOwnedRecording(recordingId, userId) {
     return await prisma.recording.findFirst({
-        where: { id: req.params.id, userId: req.userId }
+        where: { id: recordingId, userId: userId }
     });
 }
 
 /**
  * POST /api/recordings - handles recording uploads with recordingUpload multer middleware.
  * Validates metadata and checks library limits before creating a new recording entry in the database.
+ * Optionally accepts a replacesId field in the body to indicate which recording is being replaced when library is full (throws if library isn't full).
  * Cleans up files already written by multer if validation fails or library is full to prevent orphaned files.
+ * 
+ * Expected multipart/form-data body with:
+ * - title (string, required)
+ * - notes (string, optional)
+ * - durationSeconds (number, required)
+ * - replacesId (string, optional) - ID of existing recording this upload replaces because library is full.
  */
 router.post('/', recordingUpload, async (req, res) => {
     const audioFile = req.files?.audio?.[0];
     const logFile = req.files?.log?.[0];
     if (!audioFile || !logFile) {
-        return res.status(400).json({error: 'Audio and log files are required'});
+        return res.status(400).json({ error: 'Audio and log files are required' });
     }
     
-    const allowedFieldsResult = validateAllowedFields(req.body, ['title', 'notes', 'durationSeconds']);
+    const allowedFieldsResult = validateAllowedFields(req.body, ['title', 'notes', 'durationSeconds', 'replacesId']);
     if (!allowedFieldsResult.valid) {
         await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
         return res.status(400).json({ error: allowedFieldsResult.error });
@@ -53,8 +61,11 @@ router.post('/', recordingUpload, async (req, res) => {
         return res.status(400).json({ error: recordingMetadataResult.error });
     }
 
+    const replacesId = recordingMetadataResult.data.replacesId;
+    const replacingExisting = replacesId !== undefined;
     const count = await prisma.recording.count({ where: { userId: req.userId }});
-    if (count >= MAX_RECORDINGS_PER_USER) {
+
+    if (!replacingExisting && count >= MAX_RECORDINGS_PER_USER) {
         await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
 
         return res.status(409).json({
@@ -63,22 +74,60 @@ router.post('/', recordingUpload, async (req, res) => {
                 message: `Limit of ${MAX_RECORDINGS_PER_USER} recordings reached.`
             },
         });
+    } else if (replacingExisting && count < MAX_RECORDINGS_PER_USER) {
+        await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
+
+        return res.status(409).json({
+            error: {
+                code: 'NOT_FULL',
+                message: 'Library is not full, cannot replace existing recording. Please omit replacesId field.',
+            },
+        });
     }
 
+    let recordingToReplace = null;
+    if (replacingExisting) {
+        recordingToReplace = await loadOwnedRecording(replacesId, req.userId);
+        if (!recordingToReplace) {
+            await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
+
+            return res.status(404).json({
+                error: {
+                    code: 'RECORDING_NOT_FOUND',
+                    message: 'Recording to replace not found. Please check replacesId field.',
+                },
+            });
+        }
+    }
+
+    // At this point, all validation has passed.
+    // Replacing -> delete and create; on success, delete old files. Else, just create.
+    // On failure in both cases, delete new files.
+    const createOptions = {
+        data: {
+            userId: req.userId,
+            title: recordingMetadataResult.data.title,
+            notes: recordingMetadataResult.data.notes,
+            durationSeconds: recordingMetadataResult.data.durationSeconds,
+            baseFilename: req.recordingBaseName,
+            audioMimeType: audioFile.mimetype,
+            audioFileSizeBytes: audioFile.size,
+            logFileSizeBytes: logFile.size,
+        },
+        omit: { userId: true, baseFilename: true }
+    };
+
+    let recording;
     try {
-        const recording = await prisma.recording.create({
-            data: {
-                userId: req.userId,
-                title: recordingMetadataResult.data.title,
-                notes: recordingMetadataResult.data.notes,
-                durationSeconds: recordingMetadataResult.data.durationSeconds,
-                baseFilename: req.recordingBaseName,
-                audioMimeType: audioFile.mimetype,
-                audioFileSizeBytes: audioFile.size,
-                logFileSizeBytes: logFile.size,
-            },
-            omit: { userId: true, baseFilename: true },
-        });
+        if (replacingExisting) {
+            recording = await prisma.$transaction(async (tx) => {
+                await tx.recording.delete({ where: { id: recordingToReplace.id }});
+                return await tx.recording.create(createOptions);
+            });
+            await cleanupRecordingFiles(req.userId, recordingToReplace.baseFilename, recordingToReplace.audioMimeType);
+        } else {
+            recording = await prisma.recording.create(createOptions);
+        }
         res.status(201).json({ recording });
     } catch (error) {
         await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
@@ -88,7 +137,7 @@ router.post('/', recordingUpload, async (req, res) => {
 
 // GET /api/recordings/:id/audio - Serves the specified audio file.
 router.get('/:id/audio', async (req, res) => {
-    const recording = await loadOwnedRecording(req);
+    const recording = await loadOwnedRecording(req.params.id, req.userId);
     if (!recording) return res.status(404).json({ error: 'Not found' });
     const ext = audioExtFor(recording.audioMimeType);
     const audioPath = pathFor(req.userId, recording.baseFilename, ext); // TODO: change for cloud storage
@@ -99,7 +148,7 @@ router.get('/:id/audio', async (req, res) => {
 
 // GET /api/recordings/:id/log - Serves the specified log file.
 router.get('/:id/log', async (req, res) => {
-    const recording = await loadOwnedRecording(req);
+    const recording = await loadOwnedRecording(req.params.id, req.userId);
     if (!recording) return res.status(404).json({ error: 'Not found' });
     const logPath = pathFor(req.userId, recording.baseFilename, 'json'); // TODO: change for cloud storage
     res.sendFile(logPath, {
@@ -150,7 +199,7 @@ router.patch('/:id', async (req, res) => {
 // DELETE /api/recordings/:id - Deletes the specified recording and its associated files.
 // No catching for TOCTOU or infrastructure failure; send straight to global error handler.
 router.delete('/:id', async (req, res) => {
-    const recording = await loadOwnedRecording(req);
+    const recording = await loadOwnedRecording(req.params.id, req.userId);
     if (!recording) return res.status(404).json({ error: 'Not found' });
 
     await prisma.recording.delete({ where: { id: recording.id }});

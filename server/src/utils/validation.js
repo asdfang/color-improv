@@ -168,11 +168,11 @@ export function validatePreferencesBody({ difficulty, backingTrackVolume, sample
 }
 
 /**
- * Validates recording metadata for creation. Title and duration are required, notes is optional.
- * @param {{title: string, notes: string, durationSeconds: number}}
+ * Validates recording metadata for creation. Title and duration are required, notes and replacesId are optional.
+ * @param {{title: string, notes: string, durationSeconds: number, replacesId: string }}
  * @returns 
  */
-export function validateRecordingMetadataOnCreate({ title, notes, durationSeconds } = {}) {
+export function validateRecordingMetadataOnCreate({ title, notes, durationSeconds, replacesId } = {}) {
     const titleResult = validateTitle(title);
     if (!titleResult.valid) return titleResult;
     if (titleResult.data === undefined) {
@@ -190,12 +190,16 @@ export function validateRecordingMetadataOnCreate({ title, notes, durationSecond
         return { valid: false, error: 'Duration must be a non-negative number' };
     }
 
+    const replacesIdResult = validateOptionalString(replacesId, 'replacesId');
+    if (!replacesIdResult.valid) return replacesIdResult;
+
     return {
         valid: true,
         data: {
             title: titleResult.data,
             notes: notesResult.data,
             durationSeconds: duration, // Keep as number
+            replacesId: replacesIdResult.data
         }
     };
 }
