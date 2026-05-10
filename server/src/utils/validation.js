@@ -1,6 +1,7 @@
 /**
  * Utility functions for validating and sanitizing request body inputs.
  * Validators return { valid, error, data }
+ * Note: some constraints are hardcoded for now.
  */
 
 function clamp(value, min, max) {
@@ -8,6 +9,9 @@ function clamp(value, min, max) {
 }
 
 export function validateRequiredString(input, fieldName, minLength = 1, maxLength = 100) {
+    if (minLength < 1) {
+        throw new Error('minLength must be at least 1 for required strings');
+    }
     if (typeof input !== 'string') {
         return { valid: false, error: `${fieldName} is required` };
     }
@@ -22,14 +26,14 @@ export function validateRequiredString(input, fieldName, minLength = 1, maxLengt
 
 export function validateOptionalString(input, fieldName, minLength = 0, maxLength = 100) {
     if (input === undefined || input === '') {
-        return { valid: true, data: null }; // Optional field intentionally missing
+        return { valid: true, data: undefined };
     }
     if (typeof input !== 'string') {
         return { valid: false, error: `${fieldName} must be a string` };
     }
     const trimmed = input.trim();
     if (trimmed === '') {
-        return { valid: true, data: null };
+        return { valid: true, data: undefined };
     }
     if (trimmed.length < minLength) {
         return { valid: false, error: `${fieldName} must be at least ${minLength} characters` };
@@ -40,6 +44,7 @@ export function validateOptionalString(input, fieldName, minLength = 0, maxLengt
     return { valid: true, data: trimmed };
 }
 
+// Email is always required
 export function validateEmail(input) {
     const stringResult = validateRequiredString(input, 'Email');
     if (!stringResult.valid) return stringResult;
@@ -78,6 +83,16 @@ export function validateBoolean(input, fieldName) {
         return { valid: false, error: `${fieldName} must be true or false.` };
     }
     return { valid: true, data: input };
+}
+
+// Returns valid with undefined 'data' property when title is absent, only checks when value is provided.
+export function validateTitle(title) {
+    return validateOptionalString(title, 'Title', 1, 100);
+}
+
+// Returns valid with undefined 'data' property when notes is absent, only checks when value is provided.
+export function validateNotes(notes) {
+    return validateOptionalString(notes, 'Notes', 0, 500);
 }
 
 export function validateRegisterBody({ email, name, password } = {}) {
@@ -144,11 +159,19 @@ export function validatePreferencesBody({ difficulty, backingTrackVolume, sample
     };
 }
 
-export function validateRecordingMetadata({ title, notes, durationSeconds } = {}) {
-    const titleResult = validateRequiredString(title, 'Title', 1, 100);
+/**
+ * Validates recording metadata for creation. Title and duration are required, notes is optional.
+ * @param {{title: string, notes: string, durationSeconds: number}}
+ * @returns 
+ */
+export function validateRecordingMetadataOnCreate({ title, notes, durationSeconds } = {}) {
+    const titleResult = validateTitle(title);
     if (!titleResult.valid) return titleResult;
+    if (titleResult.data === undefined) {
+        return { valid: false, error: 'Title is required' };
+    }
 
-    const notesResult = validateOptionalString(notes, 'Notes', 0, 500);
+    const notesResult = validateNotes(notes);
     if (!notesResult.valid) return notesResult;
 
     if (durationSeconds === undefined || durationSeconds === '') {
@@ -165,6 +188,31 @@ export function validateRecordingMetadata({ title, notes, durationSeconds } = {}
             title: titleResult.data,
             notes: notesResult.data,
             durationSeconds: duration, // Keep as number
+        }
+    };
+}
+
+/**
+ * Validates recording metadata for updates. At least one of title or notes must be provided.
+ * @param {{title: string, notes: string}}
+ * @returns 
+ */
+export function validateRecordingMetadataOnUpdate({ title, notes } = {}) {
+    const titleResult = validateTitle(title);
+    if (!titleResult.valid) return titleResult;
+
+    const notesResult = validateNotes(notes);
+    if (!notesResult.valid) return notesResult;
+
+    if (titleResult.data === undefined && notesResult.data === undefined) {
+        return { valid: false, error: 'At least one of title or notes must be provided' };
+    }
+
+    return {
+        valid: true,
+        data: {
+            title: titleResult.data,
+            notes: notesResult.data,
         }
     };
 }
