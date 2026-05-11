@@ -4,27 +4,13 @@ import { useState } from 'react';
 import { useRef, useEffect } from 'react';
 import { Dialog } from './Dialog';
 import { ConfirmCloseDialog } from './ConfirmCloseDialog';
+import { downloadRecordingZip } from '../../utils';
 import PropTypes from 'prop-types';
-
-import JSZip from 'jszip';
-import mime from 'mime-types';
-
-/**
- * @param {string} mimeType
- * @returns {string} file extension without dot
- */
-function normalizeRecordingExtension(mimeType) {
-    let extension = mime.extension(mimeType) || 'webm';
-    // Force better compatibility with common browsers
-    if (extension === 'weba') extension = 'webm';
-    if (extension === 'mp4') extension = 'm4a';
-    return extension;
-}
 
 /**
  * @param {{isOpen: boolean, onClose: () => void, recordingResult: import('../../contexts/PlaybackContext').RecordingResult}} props
  */
-export function DownloadDialog({ isOpen, onClose, recordingResult }) {
+export function SaveDialog({ isOpen, onClose, recordingResult }) {
     const { recordingBlob, logObject } = recordingResult || {};
     const [ hasDownloaded, setHasDownloaded ] = useState(false);
     const [ isConfirmDialogOpen, setIsConfirmDialogOpen ] = useState(false);
@@ -36,22 +22,7 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
     const closeIcon = <FontAwesomeIcon icon={faTimes} aria-hidden="true" />;
 
     const handleDownload = async () => {
-        if (!recordingBlob || !logObject) return;
-
-        const zip = new JSZip();
-        const ext = normalizeRecordingExtension(recordingBlob.type);
-        zip.file(`recording.${ext}`, recordingBlob);
-        zip.file('log.json', JSON.stringify(logObject, null, 2));
-
-        const zipBlob = await zip.generateAsync({ type: 'blob' });
-        const zipUrl = URL.createObjectURL(zipBlob);
-        const a = document.createElement('a');
-        a.href = zipUrl;
-        a.download = `performance_${Date.now()}.zip`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(zipUrl), 100);
+        await downloadRecordingZip(recordingBlob, logObject);
         setHasDownloaded(true);
     }
 
@@ -104,11 +75,11 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
     return (
         <>
             <Dialog
-                id="download-dialog"
-                className="download-dialog"
+                id="save-dialog"
+                className="save-dialog"
                 isOpen={isOpen}
                 onClose={handleClose}
-                title="Download Recording"
+                title="Save Recording"
                 closeOnBackdrop={false} // Prevent accidentally closing
                 footer={footer}
             >
@@ -127,7 +98,7 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
                         </div>
                     </div>
                 </div>
-                <p>Great performance! You can download your audio and MIDI log below.</p>
+                <p>Great performance! You can save your audio and MIDI log below.</p>
             </Dialog>
             <ConfirmCloseDialog
                 isOpen={isConfirmDialogOpen}
@@ -141,7 +112,7 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
     );
 }
 
-DownloadDialog.propTypes = {
+SaveDialog.propTypes = {
     isOpen: PropTypes.bool.isRequired,
     onClose: PropTypes.func.isRequired,
     recordingResult: PropTypes.shape({

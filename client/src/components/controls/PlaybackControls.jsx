@@ -3,7 +3,7 @@ import { faPlay, faPause, faStop, faCircle} from '@fortawesome/free-solid-svg-ic
 import { useCallback, useEffect } from 'react';
 import { usePlayback } from '../../contexts/PlaybackContext';
 import { PlaybackButton } from './PlaybackButton';
-import { DownloadDialog } from '../dialogs/DownloadDialog';
+import { SaveDialog } from '../dialogs/SaveDialog';
 import { ErrorDialog } from '../dialogs/ErrorDialog';
 
 export function PlaybackControls() {
@@ -91,7 +91,7 @@ export function PlaybackControls() {
             <span role="status" className="sr-only">
                 {isRecording ? 'Recording in progress' : ''}
             </span>
-            <DownloadDialog
+            <SaveDialog
                 isOpen={recordingResult !== null}
                 onClose={clearRecordingResult}
                 recordingResult={recordingResult}

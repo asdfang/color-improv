@@ -108,8 +108,8 @@ dialog p {
 
 .confirm-close-dialog { max-width: 440px; width: 90%; }
 
-.download-dialog { max-width: 800px; width: 90%; }
-.download-dialog .dialog-content > p {
+.save-dialog { max-width: 800px; width: 90%; }
+.save-dialog .dialog-content > p {
     margin-bottom: 0;
 }
 
@@ -159,7 +159,7 @@ dialog p {
     text-decoration: underline;
 }
 
-/* DownloadDialog */
+/* SaveDialog */
 .recording-sections {
     display: grid;
     grid-template-columns: 1fr 1fr;
