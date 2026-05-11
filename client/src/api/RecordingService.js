@@ -1,0 +1,179 @@
+// Backend error shape: { error: { code: string, message: string } }
+
+class RecordingApiError extends Error {
+    /**
+     * @param {string} message 
+     * @param {string} code 
+     * @param {number} status 
+     */
+    constructor(message, code, status) {
+        super(message);
+        this.name = 'RecordingApiError';
+        this.code = code;
+        this.status = status;
+    }
+}
+
+export class RecordingService {
+    /**
+     * @param {any} data 
+     * @param {string} fallbackMessage 
+     * @param {number} status 
+     * @returns {RecordingApiError}
+     */
+    buildRecordingError(data, fallbackMessage, status) {
+        const code = data?.error?.code || data?.code;
+        const message = data?.error?.message || data?.error || data?.message || fallbackMessage;
+        return new RecordingApiError(message, code, status);
+    }
+
+    async list() {
+        const response = await fetch('/api/recordings', { credentials: 'include' })
+            .catch(() => {
+                throw new RecordingApiError('Network error', 'NETWORK_ERROR', 0);
+            });
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw this.buildRecordingError(data, 'Failed to load recordings', response.status);
+        }
+        const data = await response.json();
+        return data.recordings;
+    }
+
+    /**
+     * Get recordings owned by user by recording ID.
+     * @param {string} id 
+     * @returns {Promise<{ audioBlob: Blob, logJson: Object }>} audio file as Blob and log file as parsed JSON object on success
+     */
+    async fetchArtifacts(id) {
+        const audioUrl = `/api/recordings/${id}/audio`;
+        const logUrl = `/api/recordings/${id}/log`;
+        const [audioRes, logRes] = await Promise.all([
+            fetch(audioUrl, { credentials: 'include' }),
+            fetch(logUrl, { credentials: 'include' }),
+        ]).catch(() => {
+            throw new RecordingApiError('Network error', 'NETWORK_ERROR', 0);
+        });
+        if (!audioRes.ok) {
+            const data = await audioRes.json().catch(() => ({}));
+            throw this.buildRecordingError(data, 'Failed to fetch audio file', audioRes.status);
+        }
+        if (!logRes.ok) {
+            const data = await logRes.json().catch(() => ({}));
+            throw this.buildRecordingError(data, 'Failed to fetch log file', logRes.status);
+        }
+        
+        const audioBlob = await audioRes.blob();
+        const logJson = await logRes.json();
+        return { audioBlob, logJson };
+    }
+    
+    /**
+     * Update recording metadata (title, notes) via id.
+     * @param {string} id 
+     * @param {{ title?: string, notes?: string }} metadata
+     * @returns {Promise<any>} updated recording object on success
+     */
+    async updateMetadata(id, { title, notes }) {
+        const response = await fetch(`/api/recordings/${id}`, 
+            {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ title, notes }),
+            }
+        ).catch(() => {
+            throw new RecordingApiError('Network error', 'NETWORK_ERROR', 0);
+        });
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw this.buildRecordingError(data, 'Failed to update recording metadata', response.status);
+        }
+        const data = await response.json();
+        return data.recording;
+    }
+
+    /**
+     * Create new recording with given metadata and artifacts.
+     * @param {{
+     *      audioBlob: Blob,
+     *      logObject: Object,
+     *      title: string,
+     *      notes: string,
+     *      durationSeconds: number
+     * }} params
+     * @return {Promise<any>} new recording object on success
+     */
+    async create({ audioBlob, logObject, title, notes, durationSeconds }) {
+        const fd = new FormData();
+        const logBlob = new Blob([JSON.stringify(logObject)], { type: 'application/json' });
+        fd.append('audio', audioBlob);
+        fd.append('log', logBlob);
+        fd.append('title', title);
+        if (notes) fd.append('notes', notes);
+        fd.append('durationSeconds', String(durationSeconds));
+        const response = await fetch('/api/recordings', {
+            method: 'POST',
+            credentials: 'include',
+            body: fd,
+        }).catch(() => {
+            throw new RecordingApiError('Network error', 'NETWORK_ERROR', 0);
+        });
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw this.buildRecordingError(data, 'Failed to create recording', response.status);
+        }
+        const data = await response.json();
+        return data.recording;
+    }
+
+    /**
+     * Replaces an existing recording by uploading new artifacts and metadata.
+     * Note: this is "create" with extra replacesId field
+     * @param {string} replacesId id of recording row to replace with new recording
+     * @param {{ audioBlob: Blob, logObject: Object, title: string, notes: string, durationSeconds: number }} params
+     * @returns {Promise<any>} new recording object on success
+     */
+    async replace(replacesId, { audioBlob, logObject, title, notes, durationSeconds }) {
+        const fd = new FormData();
+        const logBlob = new Blob([JSON.stringify(logObject)], { type: 'application/json' });
+        fd.append('replacesId', replacesId);
+        fd.append('audio', audioBlob);
+        fd.append('log', logBlob);
+        fd.append('title', title);
+        if (notes) fd.append('notes', notes);
+        fd.append('durationSeconds', String(durationSeconds));
+        const response = await fetch('/api/recordings', {
+            method: 'POST',
+            credentials: 'include',
+            body: fd,
+        }).catch(() => {
+            throw new RecordingApiError('Network error', 'NETWORK_ERROR', 0);
+        });
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw this.buildRecordingError(data, 'Failed to replace recording', response.status);
+        }
+        const data = await response.json();
+        return data.recording;
+    }
+
+    /**
+     * Deletes a recording by ID.
+     * @param {string} id 
+     */
+    async remove(id) {
+        const response = await fetch(`/api/recordings/${id}`, {
+            method: 'DELETE',
+            credentials: 'include',
+        }).catch(() => {
+            throw new RecordingApiError('Network error', 'NETWORK_ERROR', 0);
+        });
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw this.buildRecordingError(data, 'Failed to delete recording', response.status);
+        }
+    }
+}
