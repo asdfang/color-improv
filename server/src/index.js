@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import preferencesRoutes from './routes/preferences.js';
 import recordingsRoutes from './routes/recordings.js';
+import { err, ErrorCode } from './utils/errors.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -41,7 +42,7 @@ app.get('{*path}', (req, res) => {
 
 app.use((err, req, res, next) => {
     console.error('Error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json(err(ErrorCode.INTERNAL_SERVER_ERROR, 'Internal server error'));
 });
 
 app.listen(PORT, () => {

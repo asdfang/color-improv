@@ -3,6 +3,7 @@
 // Returns 401 error if no token or invalid/expired token.
 
 import { verifyToken } from '../utils/jwt.js';
+import { err, ErrorCode } from '../utils/errors.js';
 
 /**
  * Attaches userId to req if valid token found in cookies. Otherwise returns 401 error.
@@ -14,23 +15,12 @@ import { verifyToken } from '../utils/jwt.js';
 export function requireAuth(req, res, next) {
     const token = req.cookies.token;
     if (!token) {
-        return res.status(401).json({
-            error: {
-                code: 'UNAUTHENTICATED',
-                message: 'Authentication required'
-            }
-        });
+        return res.status(401).json(err(ErrorCode.UNAUTHENTICATED, 'Authentication required'));
     }
     
     const decoded = verifyToken(token);
-
     if (!decoded) {
-        return res.status(401).json({
-            error: {
-                code: 'INVALID_TOKEN',
-                message: 'Invalid or expired token'
-            }
-        });
+        return res.status(401).json(err(ErrorCode.INVALID_TOKEN, 'Invalid or expired token'));
     }
 
     req.userId = decoded.userId;

@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
 import { validatePreferencesBody } from '../utils/validation.js';
 import { PREFERENCE_DEFAULTS } from '../constants.js';
+import { err, ErrorCode } from '../utils/errors.js';
 
 // Mount at /api/preferences, all routes here require auth
 const router = express.Router();
@@ -36,7 +37,7 @@ router.put('/', async (req, res) => {
     const userId = req.userId;
 
     const result = validatePreferencesBody(req.body);
-    if (!result.valid) return res.status(400).json({ error: result.error });
+    if (!result.valid) return res.status(400).json(err(ErrorCode.VALIDATION_FAILED, result.error));
 
     const {
         difficulty,

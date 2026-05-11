@@ -11,6 +11,7 @@ import { recordingUpload } from '../middleware/upload.js';
 import { validateAllowedFields, validateRecordingMetadataOnCreate, validateRecordingMetadataOnUpdate } from '../utils/validation.js';
 import { MAX_RECORDINGS_PER_USER } from '../constants.js';
 import { audioExtFor, pathFor, cleanupRecordingFiles } from '../storage/localDisk.js';
+import { err, ErrorCode } from '../utils/errors.js';
 
 // Mounted at /api/recordings, all routes here require auth
 const router = express.Router();
@@ -46,19 +47,19 @@ router.post('/', recordingUpload, async (req, res) => {
     const audioFile = req.files?.audio?.[0];
     const logFile = req.files?.log?.[0];
     if (!audioFile || !logFile) {
-        return res.status(400).json({ error: 'Audio and log files are required' });
+        return res.status(400).json(err(ErrorCode.MISSING_FILES, 'Audio and log files are required'));
     }
     
     const allowedFieldsResult = validateAllowedFields(req.body, ['title', 'notes', 'durationSeconds', 'replacesId']);
     if (!allowedFieldsResult.valid) {
         await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
-        return res.status(400).json({ error: allowedFieldsResult.error });
+        return res.status(400).json(err(ErrorCode.VALIDATION_FAILED, allowedFieldsResult.error));
     }
 
     const recordingMetadataResult = validateRecordingMetadataOnCreate(req.body);
     if (!recordingMetadataResult.valid) {
         await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
-        return res.status(400).json({ error: recordingMetadataResult.error });
+        return res.status(400).json(err(ErrorCode.VALIDATION_FAILED, recordingMetadataResult.error));
     }
 
     const replacesId = recordingMetadataResult.data.replacesId;
@@ -68,21 +69,11 @@ router.post('/', recordingUpload, async (req, res) => {
     if (!replacingExisting && count >= MAX_RECORDINGS_PER_USER) {
         await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
 
-        return res.status(409).json({
-            error: {
-                code: 'LIBRARY_FULL',
-                message: `Limit of ${MAX_RECORDINGS_PER_USER} recordings reached.`
-            },
-        });
+        return res.status(409).json(err(ErrorCode.LIBRARY_FULL, `Limit of ${MAX_RECORDINGS_PER_USER} recordings reached.`));
     } else if (replacingExisting && count < MAX_RECORDINGS_PER_USER) {
         await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
 
-        return res.status(409).json({
-            error: {
-                code: 'NOT_FULL',
-                message: 'Library is not full, cannot replace existing recording. Please omit replacesId field.',
-            },
-        });
+        return res.status(409).json(err(ErrorCode.NOT_FULL, 'Library is not full, cannot replace existing recording. Please omit replacesId field.'));
     }
 
     let recordingToReplace = null;
@@ -91,12 +82,7 @@ router.post('/', recordingUpload, async (req, res) => {
         if (!recordingToReplace) {
             await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
 
-            return res.status(404).json({
-                error: {
-                    code: 'RECORDING_NOT_FOUND',
-                    message: 'Recording to replace not found. Please check replacesId field.',
-                },
-            });
+            return res.status(404).json(err(ErrorCode.RECORDING_NOT_FOUND, 'Recording to replace not found. Please check replacesId field.'));
         }
     }
 
@@ -138,7 +124,7 @@ router.post('/', recordingUpload, async (req, res) => {
 // GET /api/recordings/:id/audio - Serves the specified audio file.
 router.get('/:id/audio', async (req, res) => {
     const recording = await loadOwnedRecording(req.params.id, req.userId);
-    if (!recording) return res.status(404).json({ error: 'Not found' });
+    if (!recording) return res.status(404).json(err(ErrorCode.NOT_FOUND, 'Not found'));
     const ext = audioExtFor(recording.audioMimeType);
     const audioPath = pathFor(req.userId, recording.baseFilename, ext); // TODO: change for cloud storage
     res.sendFile(audioPath, {
@@ -149,7 +135,7 @@ router.get('/:id/audio', async (req, res) => {
 // GET /api/recordings/:id/log - Serves the specified log file.
 router.get('/:id/log', async (req, res) => {
     const recording = await loadOwnedRecording(req.params.id, req.userId);
-    if (!recording) return res.status(404).json({ error: 'Not found' });
+    if (!recording) return res.status(404).json(err(ErrorCode.NOT_FOUND, 'Not found'));
     const logPath = pathFor(req.userId, recording.baseFilename, 'json'); // TODO: change for cloud storage
     res.sendFile(logPath, {
         headers: { 'Content-Type': 'application/json' }
@@ -170,12 +156,12 @@ router.get('/', async (req, res) => {
 router.patch('/:id', async (req, res) => {
     const allowedFieldsResult = validateAllowedFields(req.body, ['title', 'notes']);
     if (!allowedFieldsResult.valid) {
-        return res.status(400).json({ error: allowedFieldsResult.error });
+        return res.status(400).json(err(ErrorCode.VALIDATION_FAILED, allowedFieldsResult.error));
     }
 
     const recordingMetadataResult = validateRecordingMetadataOnUpdate(req.body);
     if (!recordingMetadataResult.valid) {
-        return res.status(400).json({ error: recordingMetadataResult.error });
+        return res.status(400).json(err(ErrorCode.VALIDATION_FAILED, recordingMetadataResult.error));
     }
 
     try {
@@ -190,7 +176,7 @@ router.patch('/:id', async (req, res) => {
         res.status(200).json({ recording });
     } catch (error) {
         if (error.code === 'P2025') { // Prisma "Record to update not found" error
-            return res.status(404).json({ error: 'Not found' });
+            return res.status(404).json(err(ErrorCode.NOT_FOUND, 'Not found'));
         }
         throw error;
     }
@@ -200,7 +186,7 @@ router.patch('/:id', async (req, res) => {
 // No catching for TOCTOU or infrastructure failure; send straight to global error handler.
 router.delete('/:id', async (req, res) => {
     const recording = await loadOwnedRecording(req.params.id, req.userId);
-    if (!recording) return res.status(404).json({ error: 'Not found' });
+    if (!recording) return res.status(404).json(err(ErrorCode.NOT_FOUND, 'Not found'));
 
     await prisma.recording.delete({ where: { id: recording.id }});
     await cleanupRecordingFiles(recording.userId, recording.baseFilename, recording.audioMimeType);
