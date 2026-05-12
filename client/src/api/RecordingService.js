@@ -1,5 +1,17 @@
 // Backend error shape: { error: { code: string, message: string } }
 
+/**
+ * @typedef {Object} Recording
+ * @property {string} id - Unique identifier for the recording
+ * @property {string} title - Title of the recording
+ * @property {string} notes - User-provided notes about the recording
+ * @property {number} durationSeconds - Duration of the recording in seconds
+ * @property {string} createdAt - ISO timestamp of when the recording was created
+ * @property {string} audioMimeType - MIME type of the audio file (e.g., "audio/webm")
+ * @property {number} audioFileSizeBytes - Size of the audio file in bytes
+ * @property {number} logFileSizeBytes - Size of the log file in bytes
+ */
+
 class RecordingApiError extends Error {
     /**
      * @param {string} message 
@@ -73,7 +85,7 @@ export class RecordingService {
      * Update recording metadata (title, notes) via id.
      * @param {string} id 
      * @param {{ title?: string, notes?: string }} metadata
-     * @returns {Promise<any>} updated recording object on success
+     * @returns {Promise<Recording>} updated recording object on success
      */
     async updateMetadata(id, { title, notes }) {
         const response = await fetch(`/api/recordings/${id}`, 
@@ -101,10 +113,10 @@ export class RecordingService {
      *      audioBlob: Blob,
      *      logObject: Object,
      *      title: string,
-     *      notes: string,
+     *      notes?: string,
      *      durationSeconds: number
      * }} params
-     * @return {Promise<any>} new recording object on success
+     * @return {Promise<Recording>} new recording object on success
      */
     async create({ audioBlob, logObject, title, notes, durationSeconds }) {
         const fd = new FormData();
@@ -133,8 +145,8 @@ export class RecordingService {
      * Replaces an existing recording by uploading new artifacts and metadata.
      * Note: this is "create" with extra replacesId field
      * @param {string} replacesId id of recording row to replace with new recording
-     * @param {{ audioBlob: Blob, logObject: Object, title: string, notes: string, durationSeconds: number }} params
-     * @returns {Promise<any>} new recording object on success
+     * @param {{ audioBlob: Blob, logObject: Object, title: string, notes?: string, durationSeconds: number }} params
+     * @returns {Promise<Recording>} new recording object on success
      */
     async replace(replacesId, { audioBlob, logObject, title, notes, durationSeconds }) {
         const fd = new FormData();

@@ -5,6 +5,7 @@ import { StudioProvider } from './contexts/StudioContext';
 import { PlaybackProvider } from './contexts/PlaybackContext';
 import { PreferencesProvider } from './contexts/PreferencesContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { RecordingsProvider } from './contexts/RecordingsContext';
 
 import './styles/base.css';
 import './styles/controls.css';
@@ -18,11 +19,13 @@ root.render(
     <StrictMode>
         <StudioProvider>
             <AuthProvider>
-                <PreferencesProvider>
-                    <PlaybackProvider>
-                        <App />
-                    </PlaybackProvider> 
-                </PreferencesProvider>
+                <RecordingsProvider>
+                    <PreferencesProvider>
+                        <PlaybackProvider>
+                            <App />
+                        </PlaybackProvider>
+                    </PreferencesProvider>
+                </RecordingsProvider>
             </AuthProvider>
         </StudioProvider>
     </StrictMode>
