@@ -237,3 +237,5 @@ export const SCHEMA = {
     /** @param {unknown} bool */
     samplesMuted: (bool) => typeof bool === 'boolean' ? bool : undefined,
 }
+
+export const MAX_RECORDINGS_PER_USER = 10;
