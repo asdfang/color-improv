@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { useRef, useEffect } from 'react';
 import { Dialog } from './Dialog';
 import { MetadataDialog } from './MetadataDialog';
-// import { DeleteDialog } from './DeleteDialog';
+import { DeleteDialog } from './DeleteDialog';
 import { ConfirmCloseDialog } from './ConfirmCloseDialog';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRecordings } from '../../contexts/RecordingsContext';
 import { downloadRecordingZip } from '../../utils';
-import { MAX_RECORDINGS_PER_USER } from '/src/constants';
+import { MAX_RECORDINGS_PER_USER } from '../../constants';
 import PropTypes from 'prop-types';
 
 /**
@@ -83,8 +83,6 @@ export function SaveDialog({ isOpen, onClose, recordingResult }) {
             setIsConfirmDialogOpen(true);
         }
         else {
-            setHasSaved(false);
-            setHasDownloaded(false);
             onClose();
         }
     }
@@ -148,9 +146,14 @@ export function SaveDialog({ isOpen, onClose, recordingResult }) {
                 recordingResult={recordingResult}
                 >
             </MetadataDialog>
-            {/* <DeleteDialog
-                isOpen={isDeleteDialogOpen}>
-            </DeleteDialog> */}
+            <DeleteDialog
+                isOpen={isDeleteDialogOpen}
+                onDeleted={() => { 
+                    setIsDeleteDialogOpen(false);
+                    setIsMetadataDialogOpen(true);
+                }}
+                onGoBack={() => setIsDeleteDialogOpen(false)}
+            />
             <ConfirmCloseDialog
                 isOpen={isConfirmDialogOpen}
                 onGoBack={() => setIsConfirmDialogOpen(false)}
