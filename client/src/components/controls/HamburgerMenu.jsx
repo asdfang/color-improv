@@ -5,9 +5,12 @@ import { AuthControls } from './AuthControls';
 import { InstructionsButton } from './InstructionsButton';
 import { DifficultySelect } from './DifficultySelect';
 import { VolumePanel } from './VolumePanel';
+import { useAuth } from '../../contexts/AuthContext';
+import { LibraryButton } from './LibraryButton';
 
 export function HamburgerMenu() {
     const [isOpen, setIsOpen] = useState(false);
+    const { currentUser } = useAuth();
 
     const hamburgerIcon = <FontAwesomeIcon icon={faBars} aria-hidden="true" />;
     const closeIcon = <FontAwesomeIcon icon={faX} aria-hidden="true" />;
@@ -43,6 +46,7 @@ export function HamburgerMenu() {
                 className={`hamburger-drawer ${isOpen ? 'open' : ''}`}
                 inert={!isOpen}>
                 <div className="hamburger-drawer-header">
+                    {currentUser && <LibraryButton />}
                     <AuthControls />
                     <button 
                         className="hamburger-btn"
