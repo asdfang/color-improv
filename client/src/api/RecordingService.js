@@ -56,7 +56,7 @@ export class RecordingService {
     /**
      * Get recordings owned by user by recording ID.
      * @param {string} id 
-     * @returns {Promise<{ audioBlob: Blob, logJson: Object }>} audio file as Blob and log file as parsed JSON object on success
+     * @returns {Promise<{ audioBlob: Blob, logObject: Object }>} audio file as Blob and log file as parsed JSON object on success
      */
     async fetchArtifacts(id) {
         const audioUrl = `/api/recordings/${id}/audio`;
@@ -77,8 +77,8 @@ export class RecordingService {
         }
         
         const audioBlob = await audioRes.blob();
-        const logJson = await logRes.json();
-        return { audioBlob, logJson };
+        const logObject = await logRes.json();
+        return { audioBlob, logObject };
     }
     
     /**
