@@ -91,11 +91,13 @@ export function PlaybackControls() {
             <span role="status" className="sr-only">
                 {isRecording ? 'Recording in progress' : ''}
             </span>
-            <SaveDialog
-                isOpen={recordingResult !== null}
-                onClose={clearRecordingResult}
-                recordingResult={recordingResult}
-            />
+            {recordingResult && (
+                <SaveDialog
+                    isOpen={recordingResult !== null}
+                    onClose={clearRecordingResult}
+                    recordingResult={recordingResult}
+                />
+            )}
             <ErrorDialog
                 isOpen={playbackErrorMessage !== null}
                 onClose={clearPlaybackErrorMessage}

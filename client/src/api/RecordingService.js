@@ -12,7 +12,7 @@
  * @property {number} logFileSizeBytes - Size of the log file in bytes
  */
 
-class RecordingApiError extends Error {
+export class RecordingApiError extends Error {
     /**
      * @param {string} message 
      * @param {string} code 

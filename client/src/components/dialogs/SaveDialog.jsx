@@ -3,6 +3,8 @@ import { faCloudArrowUp, faDownload, faCheck, faTimes } from '@fortawesome/free-
 import { useState } from 'react';
 import { useRef, useEffect } from 'react';
 import { Dialog } from './Dialog';
+import { MetadataDialog } from './MetadataDialog';
+// import { DeleteDialog } from './DeleteDialog';
 import { ConfirmCloseDialog } from './ConfirmCloseDialog';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRecordings } from '../../contexts/RecordingsContext';
@@ -11,10 +13,14 @@ import { MAX_RECORDINGS_PER_USER } from '/src/constants';
 import PropTypes from 'prop-types';
 
 /**
- * @param {{isOpen: boolean, onClose: () => void, recordingResult: import('../../contexts/PlaybackContext').RecordingResult}} props
+ * @param {{
+ *      isOpen: boolean,
+ *      onClose: () => void,
+ *      recordingResult: NonNullable<import('../../contexts/PlaybackContext').RecordingResult>
+ * }} props
  */
 export function SaveDialog({ isOpen, onClose, recordingResult }) {  
-    const { recordingBlob, logObject } = recordingResult || {};
+    const { audioBlob, logObject } = recordingResult;
     const [ hasSaved, setHasSaved ] = useState(false);
     const [ hasDownloaded, setHasDownloaded ] = useState(false);
     const [ isConfirmDialogOpen, setIsConfirmDialogOpen ] = useState(false);
@@ -31,8 +37,6 @@ export function SaveDialog({ isOpen, onClose, recordingResult }) {
     const checkIcon = <FontAwesomeIcon icon={faCheck} aria-hidden="true" />;
     const closeIcon = <FontAwesomeIcon icon={faTimes} aria-hidden="true" />;
 
-    const onSaved = () => setHasSaved(true);
-
     const handleSave = async () => {
         if (!currentUser) return;
         if (count < MAX_RECORDINGS_PER_USER) {
@@ -43,21 +47,21 @@ export function SaveDialog({ isOpen, onClose, recordingResult }) {
     }
 
     const handleDownload = async () => {
-        await downloadRecordingZip(recordingBlob, logObject);
+        await downloadRecordingZip(audioBlob, logObject);
         setHasDownloaded(true);
     }
 
-    // Update audio source when recordingBlob changes, and revoke URL on cleanup
+    // Update audio source when audioBlob changes, and revoke URL on cleanup
     useEffect(() => {
-        if (recordingBlob && audioRef.current) {
-            const recordingUrl = URL.createObjectURL(recordingBlob);
+        if (audioBlob && audioRef.current) {
+            const recordingUrl = URL.createObjectURL(audioBlob);
             audioRef.current.src = recordingUrl;
 
             return () => {
                 URL.revokeObjectURL(recordingUrl);
             };
         }
-    }, [recordingBlob]);
+    }, [audioBlob]);
 
     // Render log preview with truncation if too long, and scroll to top on new log
     useEffect(() => {
@@ -87,8 +91,12 @@ export function SaveDialog({ isOpen, onClose, recordingResult }) {
 
     const footer = (
         <>
-            <button className={`btn-text save-btn ${hasSaved ? 'saved' : ''}`} onClick={handleSave} disabled={!currentUser}>
-                {hasSaved ? <>Saved {checkIcon}</> : <>Save to Account {saveIcon}</>}
+            <button
+                className={`btn-text save-btn ${hasSaved ? 'saved' : ''}`}
+                onClick={handleSave}
+                disabled={!currentUser || hasSaved}
+            >
+                {hasSaved ? <>Saved {checkIcon}</> : <>Save to Account Library {saveIcon}</>}
             </button>
             <button className={`btn-text download-btn ${hasDownloaded ? 'downloaded' : ''}`} onClick={handleDownload}>
                 {hasDownloaded ? <>Downloaded {checkIcon}</> : <>Download (ZIP) {downloadIcon}</>}
@@ -128,11 +136,21 @@ export function SaveDialog({ isOpen, onClose, recordingResult }) {
             </Dialog>
             <MetadataDialog
                 isOpen={isMetadataDialogOpen}
+                onSaved={() => {
+                    setIsMetadataDialogOpen(false);
+                    setHasSaved(true);
+                }}
+                onGoBack={() => setIsMetadataDialogOpen(false)}
+                onLibraryFull={() => {
+                    setIsMetadataDialogOpen(false);
+                    setIsDeleteDialogOpen(true);
+                }}
+                recordingResult={recordingResult}
                 >
             </MetadataDialog>
-            <DeleteDialog
+            {/* <DeleteDialog
                 isOpen={isDeleteDialogOpen}>
-            </DeleteDialog>
+            </DeleteDialog> */}
             <ConfirmCloseDialog
                 isOpen={isConfirmDialogOpen}
                 onGoBack={() => setIsConfirmDialogOpen(false)}
@@ -149,7 +167,8 @@ SaveDialog.propTypes = {
     isOpen: PropTypes.bool.isRequired,
     onClose: PropTypes.func.isRequired,
     recordingResult: PropTypes.shape({
-        recordingBlob: PropTypes.instanceOf(Blob).isRequired,
+        audioBlob: PropTypes.instanceOf(Blob).isRequired,
         logObject: PropTypes.instanceOf(Object).isRequired,
+        durationSeconds: PropTypes.number.isRequired,
     }),
 };
