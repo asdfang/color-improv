@@ -1,7 +1,7 @@
 import { VolumePanel } from './VolumePanel';
 import { PlaybackControls } from './PlaybackControls';
 import { SettingsPanel } from './SettingsPanel';
-import { HamburgerMenu } from './HamburgerMenu';
+import { MobileDrawer } from './MobileDrawer';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 export function TopPanel() {
@@ -12,7 +12,7 @@ export function TopPanel() {
             {!showMenuOnMobile && <VolumePanel />}
             <PlaybackControls />
             {!showMenuOnMobile && <SettingsPanel />}
-            {showMenuOnMobile && <HamburgerMenu />}
+            {showMenuOnMobile && <MobileDrawer />}
         </div>
     );
 }

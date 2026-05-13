@@ -8,7 +8,7 @@ import { VolumePanel } from './VolumePanel';
 import { useAuth } from '../../contexts/AuthContext';
 import { LibraryButton } from './LibraryButton';
 
-export function HamburgerMenu() {
+export function MobileDrawer() {
     const [isOpen, setIsOpen] = useState(false);
     const { currentUser } = useAuth();
 
