@@ -139,7 +139,7 @@ dialog p {
     border-color: var(--color-primary);
 }
 
-.auth-feedback {
+.user-feedback {
     padding: 0.65rem 0.75rem;
     border-radius: var(--radius-sm);
     background: rgba(198, 40, 40, 0.12);

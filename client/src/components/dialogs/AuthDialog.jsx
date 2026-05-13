@@ -113,7 +113,7 @@ export function AuthDialog({ isOpen, onClose, openToRegister, setOpenToRegister,
                         required
                     />
                 </div>
-                {feedback && <div className="auth-feedback" role="alert">{feedback}</div>}
+                {feedback && <div className="user-feedback" role="alert">{feedback}</div>}
                 <button type="submit" className="btn-text">{openToRegister ? 'Register' : 'Login'}</button>
             </form>
         </Dialog>
