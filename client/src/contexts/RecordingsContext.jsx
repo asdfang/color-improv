@@ -13,6 +13,7 @@ import { useAuth } from './AuthContext';
  *   create: (params: { audioBlob: Blob, logObject: Object, title: string, notes: string, durationSeconds: number }) => Promise<void>,
  *   update: (id: string, params: { title?: string, notes?: string }) => Promise<void>,
  *   remove: (id: string) => Promise<void>,
+ *   fetchArtifacts: (id: string) => Promise<{ audioBlob: Blob, logObject: Object }>
  * }} RecordingsContextType
  */
 export const RecordingsContext = createContext(/** @type {RecordingsContextType | null} */ (null));
@@ -80,8 +81,15 @@ export function RecordingsProvider({ children }) {
         setRecordingsList(prev => prev.filter(r => r.id !== id));
     }
 
+    /**
+     * @param {string} id recording ID to fetch artifacts for
+     */
+    const fetchArtifacts = async (id) => {
+        return await recordingService.fetchArtifacts(id);
+    };
+
     return (
-        <RecordingsContext.Provider value={{ recordingsList, count, isLoading, refresh, create, update, remove }}>
+        <RecordingsContext.Provider value={{ recordingsList, count, isLoading, refresh, create, update, remove, fetchArtifacts }}>
             {children}
         </RecordingsContext.Provider>
     );
