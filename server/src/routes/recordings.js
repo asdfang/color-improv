@@ -1,6 +1,5 @@
 // Routes for handling recording routes - uploading, serving audio/log files.
 // Requires authentication for all routes. 
-// TODO: swap disk storage for cloud storage.
 // TODO: periodic cleanup of orphaned files.
 // Known issue: TOCTOU race condition
 
@@ -10,7 +9,9 @@ import { requireAuth } from '../middleware/auth.js';
 import { recordingUpload } from '../middleware/upload.js';
 import { validateAllowedFields, validateRecordingMetadataOnCreate, validateRecordingMetadataOnUpdate } from '../utils/validation.js';
 import { MAX_RECORDINGS_PER_USER } from '../constants.js';
-import { audioExtFor, pathFor, cleanupRecordingFiles } from '../storage/localDisk.js';
+import { audioExtFor, keyFor, cleanupByKeys, uploadToR2 } from '../lib/storage.js';
+import { r2, R2_BUCKET } from '../lib/r2.js';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { err, ErrorCode } from '../utils/errors.js';
 
 // Mounted at /api/recordings, all routes here require auth
@@ -35,7 +36,6 @@ async function loadOwnedRecording(recordingId, userId) {
  * POST /api/recordings - handles recording uploads with recordingUpload multer middleware.
  * Validates metadata and checks library limits before creating a new recording entry in the database.
  * Optionally accepts a replacesId field in the body to indicate which recording is being replaced when library is full (throws if library isn't full).
- * Cleans up files already written by multer if validation fails or library is full to prevent orphaned files.
  * 
  * Expected multipart/form-data body with:
  * - title (string, required)
@@ -44,35 +44,30 @@ async function loadOwnedRecording(recordingId, userId) {
  * - replacesId (string, optional) - ID of existing recording this upload replaces because library is full.
  */
 router.post('/', recordingUpload, async (req, res) => {
+    const baseFilename = `rec_${req.userId}_${Date.now()}`;
     const audioFile = req.files?.audio?.[0];
     const logFile = req.files?.log?.[0];
     if (!audioFile || !logFile) {
         return res.status(400).json(err(ErrorCode.MISSING_FILES, 'Audio and log files are required'));
     }
-    
+
     const allowedFieldsResult = validateAllowedFields(req.body, ['title', 'notes', 'durationSeconds', 'replacesId']);
     if (!allowedFieldsResult.valid) {
-        await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
         return res.status(400).json(err(ErrorCode.VALIDATION_FAILED, allowedFieldsResult.error));
     }
 
     const recordingMetadataResult = validateRecordingMetadataOnCreate(req.body);
     if (!recordingMetadataResult.valid) {
-        await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
         return res.status(400).json(err(ErrorCode.VALIDATION_FAILED, recordingMetadataResult.error));
     }
 
     const replacesId = recordingMetadataResult.data.replacesId;
-    const replacingExisting = replacesId !== undefined;
+    const replacingExisting = Boolean(replacesId);
     const count = await prisma.recording.count({ where: { userId: req.userId }});
 
     if (!replacingExisting && count >= MAX_RECORDINGS_PER_USER) {
-        await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
-
         return res.status(409).json(err(ErrorCode.LIBRARY_FULL, `Limit of ${MAX_RECORDINGS_PER_USER} recordings reached.`));
     } else if (replacingExisting && count < MAX_RECORDINGS_PER_USER) {
-        await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
-
         return res.status(409).json(err(ErrorCode.NOT_FULL, 'Library is not full, cannot replace existing recording. Please omit replacesId field.'));
     }
 
@@ -80,11 +75,17 @@ router.post('/', recordingUpload, async (req, res) => {
     if (replacingExisting) {
         recordingToReplace = await loadOwnedRecording(replacesId, req.userId);
         if (!recordingToReplace) {
-            await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
-
             return res.status(404).json(err(ErrorCode.RECORDING_NOT_FOUND, 'Recording to replace not found. Please check replacesId field.'));
         }
     }
+
+    // Upload to R2
+    const audioKey = keyFor(req.userId, baseFilename, audioExtFor(req.files.audio[0].mimetype));
+    const logKey = keyFor(req.userId, baseFilename, 'json');
+    await Promise.all([
+        uploadToR2(audioKey, audioFile.buffer, req.files.audio[0].mimetype),
+        uploadToR2(logKey, logFile.buffer, 'application/json'),
+    ]);
 
     // At this point, all validation has passed.
     // Replacing -> delete and create; on success, delete old files. Else, just create.
@@ -95,7 +96,7 @@ router.post('/', recordingUpload, async (req, res) => {
             title: recordingMetadataResult.data.title,
             notes: recordingMetadataResult.data.notes,
             durationSeconds: recordingMetadataResult.data.durationSeconds,
-            baseFilename: req.recordingBaseName,
+            baseFilename,
             audioMimeType: audioFile.mimetype,
             audioFileSizeBytes: audioFile.size,
             logFileSizeBytes: logFile.size,
@@ -110,13 +111,19 @@ router.post('/', recordingUpload, async (req, res) => {
                 await tx.recording.delete({ where: { id: recordingToReplace.id }});
                 return await tx.recording.create(createOptions);
             });
-            await cleanupRecordingFiles(req.userId, recordingToReplace.baseFilename, recordingToReplace.audioMimeType);
+            await cleanupByKeys([
+                keyFor(req.userId, recordingToReplace.baseFilename, audioExtFor(recordingToReplace.audioMimeType)),
+                keyFor(req.userId, recordingToReplace.baseFilename, 'json'),
+            ]);
         } else {
             recording = await prisma.recording.create(createOptions);
         }
         res.status(201).json({ recording });
     } catch (error) {
-        await cleanupRecordingFiles(req.userId, req.recordingBaseName, audioFile.mimetype);
+        await cleanupByKeys([
+            audioKey,
+            logKey,
+        ]);
         throw error;
     }
 });
@@ -126,20 +133,44 @@ router.get('/:id/audio', async (req, res) => {
     const recording = await loadOwnedRecording(req.params.id, req.userId);
     if (!recording) return res.status(404).json(err(ErrorCode.NOT_FOUND, 'Not found'));
     const ext = audioExtFor(recording.audioMimeType);
-    const audioPath = pathFor(req.userId, recording.baseFilename, ext); // TODO: change for cloud storage
-    res.sendFile(audioPath, {
-        headers: { 'Content-Type': recording.audioMimeType }
-    });
+    const audioKey = keyFor(req.userId, recording.baseFilename, ext);
+
+    try {
+        const result = await r2.send(new GetObjectCommand({
+            Bucket: R2_BUCKET,
+            Key: audioKey,
+        }));
+        res.setHeader('Content-Type', result.ContentType);
+        if (result.ContentLength) res.setHeader('Content-Length', result.ContentLength);
+        result.Body.pipe(res);
+    } catch (error) {
+        if (error.name === 'NoSuchKey') {
+            return res.status(404).json(err(ErrorCode.NOT_FOUND, 'Audio file not found'));
+        }
+        throw error;
+    }
 });
 
 // GET /api/recordings/:id/log - Serves the specified log file.
 router.get('/:id/log', async (req, res) => {
     const recording = await loadOwnedRecording(req.params.id, req.userId);
     if (!recording) return res.status(404).json(err(ErrorCode.NOT_FOUND, 'Not found'));
-    const logPath = pathFor(req.userId, recording.baseFilename, 'json'); // TODO: change for cloud storage
-    res.sendFile(logPath, {
-        headers: { 'Content-Type': 'application/json' }
-    });
+    const logKey = keyFor(req.userId, recording.baseFilename, 'json');
+
+    try {
+        const result = await r2.send(new GetObjectCommand({
+            Bucket: R2_BUCKET,
+            Key: logKey,
+        }));
+        res.setHeader('Content-Type', result.ContentType);
+        if (result.ContentLength) res.setHeader('Content-Length', result.ContentLength);
+        result.Body.pipe(res);
+    } catch (error) {
+        if (error.name === 'NoSuchKey') {
+            return res.status(404).json(err(ErrorCode.NOT_FOUND, 'Log file not found'));
+        }
+        throw error;
+    }
 });
 
 // GET /api/recordings - Returns a list of all the authenticated user's recordings.
@@ -189,7 +220,10 @@ router.delete('/:id', async (req, res) => {
     if (!recording) return res.status(404).json(err(ErrorCode.NOT_FOUND, 'Not found'));
 
     await prisma.recording.delete({ where: { id: recording.id }});
-    await cleanupRecordingFiles(recording.userId, recording.baseFilename, recording.audioMimeType);
+    await cleanupByKeys([
+        keyFor(req.userId, recording.baseFilename, audioExtFor(recording.audioMimeType)),
+        keyFor(req.userId, recording.baseFilename, 'json'),
+    ]);
     res.status(204).send();
 });
 
