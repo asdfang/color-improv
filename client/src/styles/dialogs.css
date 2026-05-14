@@ -216,6 +216,41 @@ dialog p {
     pointer-events: none;
 }
 
+/* MetadataDialog */
+  .metadata-dialog { max-width: 480px; width: 90%; }
+
+  .metadata-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+  }
+  .metadata-form label {
+      font-size: var(--fs-ui-md);
+      margin-top: 0.5rem;
+  }
+  .metadata-form label:first-child {
+      margin-top: 0;
+  }
+  .metadata-form input,
+  .metadata-form textarea {
+      padding: 0.4rem 0.5rem;
+      background: rgba(255, 255, 255, 0.95);
+      color: #111;
+      border: 1px solid #444;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: var(--fs-ui-sm);
+  }
+  .metadata-form input:focus,
+  .metadata-form textarea:focus {
+      outline: none;
+      border-color: var(--color-primary);
+  }
+  .metadata-form textarea {
+      resize: vertical;
+      min-height: 5rem;
+  }
+
 /* Error dialog */
 .error-message {
     padding: 1rem;

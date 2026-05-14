@@ -59,7 +59,7 @@ export function DeleteDialog({ isOpen, onDeleted, onGoBack }) {
         >
             <p>Your recording library is full. Please delete an existing recording to save your new take.</p>
             <p>Reminder: you can download the recording before deleting it from your library!</p>
-            {feedback && <p className="error">{feedback}</p>}
+            {feedback && <div className="user-feedback" role="alert">{feedback}</div>}
             <ol className="recordings-list">
                 {recordingsList.map(recording => (
                     <RecordingRow

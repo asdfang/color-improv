@@ -33,6 +33,11 @@
     justify-self: end;
     font-size: var(--fs-ui-md);
 }
+.settings-top-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
 
 .auth-controls {
     display: flex;
@@ -368,6 +373,68 @@ button:disabled { cursor: not-allowed; }
 }
 .mobile-drawer.open {
     transform: translateX(0);
+}
+
+.library-drawer {
+    right: 0;
+    width: clamp(28rem, 50vw, 60rem);
+    border-left: 1px solid var(--color-border);
+    padding: calc(0.5rem + env(safe-area-inset-top)) 1.25rem calc(1.25rem + env(safe-area-inset-right)) calc(1.25rem + env(safe-area-inset-bottom));
+    transform: translateX(100%);
+}
+.library-drawer.open {
+    transform: translateX(0);
+}
+.library-drawer .drawer-header {
+    justify-content: space-between;
+}
+
+.recording-row {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--color-border);
+}
+.recording-info {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.9rem 1rem;
+}
+.recording-title {
+    margin: 0;
+    grid-column: 1;
+}
+.recording-actions {
+    grid-column: 2;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+/* notes, audio, meta span the full width below the title row */
+.recording-notes,
+.recording-info > audio,
+.recording-meta {
+    grid-column: 1 / -1;
+    margin: 0;
+}
+.recording-notes {
+    color: #bbb;
+}
+.recording-meta {
+    color: #888;
+    font-size: var(--fs-ui-xs);
+}
+.recording-info > audio {
+    width: 100%;
+    max-width: 24rem;
+}
+.recordings-list {
+    padding-left: 1.5rem;
+}
+.recording-row .delete-btn {
+    color: var(--color-recording);
+}
+.recording-row .delete-btn:hover:not(:disabled) {
+    background: rgba(224, 96, 96, 0.15);
 }
 
 @media (orientation: landscape) and (max-height: 500px) and (hover: none) {
