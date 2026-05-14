@@ -1,7 +1,7 @@
 import { VolumePanel } from './VolumePanel';
 import { PlaybackControls } from './PlaybackControls';
 import { SettingsPanel } from './SettingsPanel';
-import { MobileDrawer } from './MobileDrawer';
+import { MobileDrawer } from './drawers/MobileDrawer';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 export function TopPanel() {
