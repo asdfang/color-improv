@@ -1,4 +1,4 @@
-import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { r2, R2_BUCKET } from './r2.js';
 
 const EXT_BY_AUDIO_MIME = {
@@ -14,6 +14,13 @@ export function audioExtFor(audioMimeType) {
 
 export function keyFor(userId, baseFilename, extension) {
     return `${userId}/${baseFilename}.${extension}`;
+}
+
+export async function getFromR2(key) {
+    return await r2.send(new GetObjectCommand({
+        Bucket: R2_BUCKET,
+        Key: key,
+    }));
 }
 
 export async function uploadToR2(key, buffer, contentType) {

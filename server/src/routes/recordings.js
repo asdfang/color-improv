@@ -9,9 +9,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { recordingUpload } from '../middleware/upload.js';
 import { validateAllowedFields, validateRecordingMetadataOnCreate, validateRecordingMetadataOnUpdate } from '../utils/validation.js';
 import { MAX_RECORDINGS_PER_USER } from '../constants.js';
-import { audioExtFor, keyFor, cleanupByKeys, uploadToR2 } from '../lib/storage.js';
-import { r2, R2_BUCKET } from '../lib/r2.js';
-import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { audioExtFor, keyFor, getFromR2, uploadToR2, cleanupByKeys } from '../lib/storage.js';
 import { err, ErrorCode } from '../utils/errors.js';
 
 // Mounted at /api/recordings, all routes here require auth
@@ -136,10 +134,7 @@ router.get('/:id/audio', async (req, res) => {
     const audioKey = keyFor(req.userId, recording.baseFilename, ext);
 
     try {
-        const result = await r2.send(new GetObjectCommand({
-            Bucket: R2_BUCKET,
-            Key: audioKey,
-        }));
+        const result = await getFromR2(audioKey);
         res.setHeader('Content-Type', result.ContentType);
         if (result.ContentLength) res.setHeader('Content-Length', result.ContentLength);
         result.Body.pipe(res);
@@ -158,10 +153,7 @@ router.get('/:id/log', async (req, res) => {
     const logKey = keyFor(req.userId, recording.baseFilename, 'json');
 
     try {
-        const result = await r2.send(new GetObjectCommand({
-            Bucket: R2_BUCKET,
-            Key: logKey,
-        }));
+        const result = await getFromR2(logKey);
         res.setHeader('Content-Type', result.ContentType);
         if (result.ContentLength) res.setHeader('Content-Length', result.ContentLength);
         result.Body.pipe(res);
