@@ -430,11 +430,14 @@ button:disabled { cursor: not-allowed; }
 .recordings-list {
     padding-left: 1.5rem;
 }
-.recording-row .delete-btn {
+.recording-row .delete-btn,
+.recording-row .cancel-btn {
+    background: rgba(255, 255, 255, 0.08);
     color: var(--color-recording);
 }
-.recording-row .delete-btn:hover:not(:disabled) {
-    background: rgba(224, 96, 96, 0.15);
+.recording-row .delete-btn:hover:not(:disabled),
+.recording-row .cancel-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 @media (orientation: landscape) and (max-height: 500px) and (hover: none) {
