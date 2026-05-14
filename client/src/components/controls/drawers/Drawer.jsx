@@ -38,13 +38,14 @@ export function Drawer({ id, className = '', isOpen, onClose, header, children})
                 id={id}
                 className={`drawer ${className} ${isOpen ? 'open' : ''}`}
                 inert={!isOpen}
+                aria-labelledby={`${id}-header`}
             >
                 <div className="drawer-header">
                     {header}
                     <button
                         className="drawer-close-btn"
                         onClick={onClose}
-                        aria-label={"Close drawer"}
+                        aria-label="Close"
                         aria-controls={id}
                     >{closeIcon}</button>
                 </div>

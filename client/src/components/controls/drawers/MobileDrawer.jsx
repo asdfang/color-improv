@@ -8,14 +8,15 @@ import { DifficultySelect } from '../DifficultySelect';
 import { VolumePanel } from '../VolumePanel';
 import { LibraryDrawer } from './LibraryDrawer';
 import { useAuth } from '../../../contexts/AuthContext';
-
+import { useRecordings } from '../../../contexts/RecordingsContext';
 
 export function MobileDrawer() {
     const [isOpen, setIsOpen] = useState(false);
     const { currentUser } = useAuth();
+    const { setIsLibraryDrawerOpen } = useRecordings();
     
     const menuIcon = <FontAwesomeIcon icon={faBars} aria-hidden="true" />;
-    
+
     return (
         <>
             {!isOpen && (
@@ -30,10 +31,12 @@ export function MobileDrawer() {
                 id="mobile-drawer"
                 className="mobile-drawer"
                 isOpen={isOpen}
-                onClose={() => setIsOpen(false)}
+                onClose={() => { setIsOpen(false); setIsLibraryDrawerOpen(false); }}
                 header={
                     <>
-                        {currentUser && <LibraryDrawer />}
+                        {currentUser && (
+                            <LibraryDrawer />
+                        )}
                         <AuthControls />
                     </>
                 }

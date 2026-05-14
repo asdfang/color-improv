@@ -14,6 +14,8 @@ import { useAuth } from './AuthContext';
  *   update: (id: string, params: { title?: string, notes?: string }) => Promise<void>,
  *   remove: (id: string) => Promise<void>,
  *   fetchArtifacts: (id: string) => Promise<{ audioBlob: Blob, logObject: Object }>
+ *   isLibraryDrawerOpen: boolean,
+ *   setIsLibraryDrawerOpen: (isOpen: boolean) => void,
  * }} RecordingsContextType
  */
 export const RecordingsContext = createContext(/** @type {RecordingsContextType | null} */ (null));
@@ -29,6 +31,7 @@ export function RecordingsProvider({ children }) {
     const [isLoading, setIsLoading] = useState(false);
     const { currentUser } = useAuth();
     const count = recordingsList.length;
+    const [isLibraryDrawerOpen, setIsLibraryDrawerOpen] = useState(false); // UI!
 
     const refresh = useCallback(async () => {
         setIsLoading(true);
@@ -89,7 +92,7 @@ export function RecordingsProvider({ children }) {
     };
 
     return (
-        <RecordingsContext.Provider value={{ recordingsList, count, isLoading, refresh, create, update, remove, fetchArtifacts }}>
+        <RecordingsContext.Provider value={{ recordingsList, count, isLoading, refresh, create, update, remove, fetchArtifacts, isLibraryDrawerOpen, setIsLibraryDrawerOpen }}>
             {children}
         </RecordingsContext.Provider>
     );

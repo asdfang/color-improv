@@ -11,7 +11,7 @@ import { downloadRecordingZip } from '../../utils';
  * @param {{
  *   recording: import('../../api/RecordingService').Recording,
  *   onDelete: (id: string) => Promise<void>,
- *   onUpdate?: (id: string, title: string, notes: string) => Promise<void>
+ *   onUpdate?: (id: string, params: { title?: string, notes?: string }) => Promise<void>
  * }} props 
  */
 export function RecordingRow({ recording, onDelete, onUpdate=undefined }) {
@@ -39,7 +39,7 @@ export function RecordingRow({ recording, onDelete, onUpdate=undefined }) {
         if (onUpdate === undefined) return;
         setEditState('updating');
         try {
-            await onUpdate(id, newTitle, newNotes);
+            await onUpdate(id, { title: newTitle, notes: newNotes });
             setEditState('viewing');
         } catch (error) {
             console.error('Error updating recording:', error);
