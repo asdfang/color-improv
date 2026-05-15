@@ -33,16 +33,16 @@ const __dirname = path.dirname(__filename);
 const clientDistPath = path.join(__dirname, '../../client/dist');
 
 app.use(express.static(clientDistPath));
-app.get('{*path}', (req, res) => {
+app.get('{*path}', (req, res, next) => {
     if (req.path.startsWith('/api/')) {
         return next(); // fall through to error handler or 404
     }
     res.sendFile(path.join(clientDistPath, 'index.html'));
 });
 
-app.use((err, req, res, next) => {
-    console.error('Error:', err);
-    res.status(500).json(err(ErrorCode.INTERNAL_SERVER_ERROR, 'Internal server error'));
+app.use((error, req, res, _next) => {
+    console.error('Error:', error);
+    res.status(500).json(err(ErrorCode.INTERNAL_ERROR, 'Internal server error'));
 });
 
 app.listen(PORT, () => {

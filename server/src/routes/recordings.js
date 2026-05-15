@@ -80,10 +80,18 @@ router.post('/', recordingUpload, async (req, res) => {
     // Upload to R2
     const audioKey = keyFor(req.userId, baseFilename, audioExtFor(req.files.audio[0].mimetype));
     const logKey = keyFor(req.userId, baseFilename, 'json');
-    await Promise.all([
-        uploadToR2(audioKey, audioFile.buffer, req.files.audio[0].mimetype),
-        uploadToR2(logKey, logFile.buffer, 'application/json'),
-    ]);
+    try {
+        await Promise.all([
+            uploadToR2(audioKey, audioFile.buffer, req.files.audio[0].mimetype),
+            uploadToR2(logKey, logFile.buffer, 'application/json'),
+        ]);
+    } catch (error) {
+        await cleanupByKeys([
+            audioKey,
+            logKey,
+        ]);
+        throw error;
+    }
 
     // At this point, all validation has passed.
     // Replacing -> delete and create; on success, delete old files. Else, just create.
@@ -102,6 +110,7 @@ router.post('/', recordingUpload, async (req, res) => {
         omit: { userId: true, baseFilename: true }
     };
 
+    // Update database
     let recording;
     try {
         if (replacingExisting) {

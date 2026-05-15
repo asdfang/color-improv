@@ -39,6 +39,15 @@ export class RecordingService {
         return new RecordingApiError(message, code, status);
     }
 
+    /**
+     * Ensures recording's notes is a string for consistent client-side handling (empty string if null). Other fields are returned as-is.
+     * @param {Recording} recording 
+     * @returns 
+     */
+    normalizeRecording(recording) {
+        return { ...recording, notes: recording.notes ?? '' };
+    }
+
     async list() {
         const response = await fetch('/api/recordings', { credentials: 'include' })
             .catch(() => {
@@ -50,7 +59,7 @@ export class RecordingService {
             throw this.buildRecordingError(data, 'Failed to load recordings', response.status);
         }
         const data = await response.json();
-        return data.recordings;
+        return data.recordings.map(/** @param {Recording} r */ (r) => this.normalizeRecording(r));
     }
 
     /**
@@ -84,7 +93,7 @@ export class RecordingService {
     /**
      * Update recording metadata (title, notes) via id.
      * @param {string} id 
-     * @param {{ title?: string, notes?: string }} metadata
+     * @param {{ title: string, notes: string }} metadata
      * @returns {Promise<Recording>} updated recording object on success
      */
     async updateMetadata(id, { title, notes }) {
@@ -104,7 +113,7 @@ export class RecordingService {
             throw this.buildRecordingError(data, 'Failed to update recording metadata', response.status);
         }
         const data = await response.json();
-        return data.recording;
+        return this.normalizeRecording(data.recording);
     }
 
     /**
@@ -138,7 +147,7 @@ export class RecordingService {
             throw this.buildRecordingError(data, 'Failed to create recording', response.status);
         }
         const data = await response.json();
-        return data.recording;
+        return this.normalizeRecording(data.recording);
     }
 
     /**
@@ -169,7 +178,7 @@ export class RecordingService {
             throw this.buildRecordingError(data, 'Failed to replace recording', response.status);
         }
         const data = await response.json();
-        return data.recording;
+        return this.normalizeRecording(data.recording);
     }
 
     /**
