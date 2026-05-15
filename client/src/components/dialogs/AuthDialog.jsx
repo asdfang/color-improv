@@ -9,13 +9,14 @@ import PropTypes from 'prop-types';
  *     openToRegister: boolean,
  *     setOpenToRegister: (open: boolean) => void,
  *     onLogin: (email: string, password: string) => Promise<void>,
- *     onRegister: (email: string, name: string, password: string) => Promise<void>
+ *     onRegister: (email: string, name: string, password: string) => Promise<void>,
+ *     prefillDemo?: boolean,
  * }} props
  */
-export function AuthDialog({ isOpen, onClose, openToRegister, setOpenToRegister, onLogin, onRegister }) {
-    const [email, setEmail] = useState('');
+export function AuthDialog({ isOpen, onClose, openToRegister, setOpenToRegister, onLogin, onRegister, prefillDemo=false }) {
+    const [email, setEmail] = useState(prefillDemo ? 'demo@example.com' : '');
     const [name, setName] = useState('');
-    const [password, setPassword] = useState('');
+    const [password, setPassword] = useState(prefillDemo ? 'demopassword' : '');
     const [feedback, setFeedback] = useState('');
     const dialogRef = useRef(/** @type { { shake: () => void } | null } */ (null));
 
@@ -127,4 +128,5 @@ AuthDialog.propTypes = {
     setOpenToRegister: PropTypes.func.isRequired,
     onLogin: PropTypes.func.isRequired,
     onRegister: PropTypes.func.isRequired,
+    prefillDemo: PropTypes.bool,
 };
