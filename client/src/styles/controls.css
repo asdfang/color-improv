@@ -418,6 +418,7 @@ button:disabled { cursor: not-allowed; }
 }
 .recording-notes {
     color: #bbb;
+    white-space: pre-wrap;
 }
 .recording-meta {
     color: #888;

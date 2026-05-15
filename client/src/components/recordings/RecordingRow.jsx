@@ -82,7 +82,7 @@ export function RecordingRow({ recording, onDelete, onUpdate=undefined }) {
         <button
             className="btn-text edit-btn"
             onClick={editState === 'viewing' ? handleEdit : handleUpdate}
-            disabled={editState === 'updating'}
+            disabled={editState === 'updating' || newTitle.trim() === ''}
         >
             {editState === 'viewing' ? editIcon : acceptIcon}
         </button>
@@ -123,6 +123,7 @@ export function RecordingRow({ recording, onDelete, onUpdate=undefined }) {
             type="text"
             value={newTitle}
             onChange={e => setNewTitle(e.target.value)}
+            placeholder={'Title cannot be empty'}
         />
     );
 
@@ -130,6 +131,7 @@ export function RecordingRow({ recording, onDelete, onUpdate=undefined }) {
         <textarea
             value={newNotes}
             onChange={e => setNewNotes(e.target.value)}
+            placeholder={'Add your notes here!'}
         />
     );
 
@@ -142,7 +144,7 @@ export function RecordingRow({ recording, onDelete, onUpdate=undefined }) {
                     {(isEditable && editState === 'editing') ? cancelButton : downloadButton}
                     {editState === 'viewing' && deleteButton}
                 </div>
-                {editState === 'editing' ? notesInput : <p className="recording-notes">{notes}</p>}
+                {editState === 'editing' ? notesInput : <p className="recording-notes">{notes === '' ? 'Add your notes here!' : notes}</p>}
                 <audio controls src={`/api/recordings/${id}/audio`}></audio>
                 <p className="recording-meta">
                     Created: {new Date(createdAt).toLocaleString()}
