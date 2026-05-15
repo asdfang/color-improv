@@ -11,3 +11,9 @@ firebase-debug.log*
 
 # Prisma generated client
 server/src/generated/prisma/
+
+# File uploads
+server/uploads/
+
+# Claude
+CLAUDE.md

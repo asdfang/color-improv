@@ -12,7 +12,7 @@ import PropTypes from 'prop-types';
  */
 
 /**
- * @typedef {{recordingBlob: Blob, logObject: NoteLog} | null} RecordingResult
+ * @typedef {{audioBlob: Blob, logObject: NoteLog, durationSeconds: number} | null} RecordingResult
  */
 
 /**
@@ -103,11 +103,12 @@ export function PlaybackProvider({ children }) {
         setIsRecording(false);
 
         try {
-            const recordingBlob = await recordingData.recordingPromise;
-            if (recordingBlob) {
+            const audioResult = await recordingData.recordingPromise;
+            if (audioResult) {
                 setRecordingResult({
-                    recordingBlob,
+                    audioBlob: audioResult.blob,
                     logObject: recordingData.logObject,
+                    durationSeconds: audioResult.durationSeconds,
                 });
             } else {
                 console.error('Recording failed: No audio blob returned');

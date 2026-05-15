@@ -1,22 +1,61 @@
 /**
  * Utility functions for validating and sanitizing request body inputs.
  * Validators return { valid, error, data }
+ * Note: some constraints are hardcoded for now.
  */
 
 function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
 }
 
-export function validateRequiredString(input, fieldName, minLength = 1) {
+export function validateAllowedFields(body, allowedFields) {
+    if (body === undefined || body === null || typeof body !== 'object') {
+        return { valid: false, error: 'Request body must be a JSON object' };
+    }
+    const unknown = Object.keys(body).filter(k => !allowedFields.includes(k));
+    if (unknown.length > 0) {
+        return { valid: false, error: `Unknown fields: ${unknown.join(', ')}. Allowed fields: ${allowedFields.join(', ')}.` };
+    }
+    return { valid: true, data: body };
+}
+
+export function validateRequiredString(input, fieldName, minLength = 1, maxLength = 100) {
+    if (minLength < 1) {
+        throw new Error('minLength must be at least 1 for required strings');
+    }
     if (typeof input !== 'string') {
         return { valid: false, error: `${fieldName} is required` };
     }
     if (input.trim().length < minLength) {
         return { valid: false, error: `${fieldName} must be at least ${minLength} characters` };
     }
+    if (input.trim().length > maxLength) {
+        return { valid: false, error: `${fieldName} must be at most ${maxLength} characters` };
+    }
     return { valid: true, data: input.trim() };
 }
 
+export function validateOptionalString(input, fieldName, minLength = 0, maxLength = 100) {
+    if (input === undefined || input === '') {
+        return { valid: true, data: undefined };
+    }
+    if (typeof input !== 'string') {
+        return { valid: false, error: `${fieldName} must be a string` };
+    }
+    const trimmed = input.trim();
+    if (trimmed === '') {
+        return { valid: true, data: undefined };
+    }
+    if (trimmed.length < minLength) {
+        return { valid: false, error: `${fieldName} must be at least ${minLength} characters` };
+    }
+    if (trimmed.length > maxLength) {
+        return { valid: false, error: `${fieldName} must be at most ${maxLength} characters` };
+    }
+    return { valid: true, data: trimmed };
+}
+
+// Email is always required
 export function validateEmail(input) {
     const stringResult = validateRequiredString(input, 'Email');
     if (!stringResult.valid) return stringResult;
@@ -55,6 +94,15 @@ export function validateBoolean(input, fieldName) {
         return { valid: false, error: `${fieldName} must be true or false.` };
     }
     return { valid: true, data: input };
+}
+
+export function validateTitle(title) {
+    return validateRequiredString(title, 'Title', 1, 100);
+}
+
+export function validateNotes(notes) {
+    if (notes === null || notes === '') return { valid: true, data: null }; // Clears string
+    return validateOptionalString(notes, 'Notes', 0, 500);
 }
 
 export function validateRegisterBody({ email, name, password } = {}) {
@@ -117,6 +165,61 @@ export function validatePreferencesBody({ difficulty, backingTrackVolume, sample
             samplesVolume: samplesVolumeResult.data,
             backingTrackMuted: backingTrackMutedResult.data,
             samplesMuted: samplesMutedResult.data,
+        }
+    };
+}
+
+/**
+ * Validates recording metadata for creation. Title and duration are required, notes and replacesId are optional.
+ * @param {{title: string, notes: string, durationSeconds: number, replacesId: string }}
+ * @returns 
+ */
+export function validateRecordingMetadataOnCreate({ title, notes, durationSeconds, replacesId } = {}) {
+    const titleResult = validateTitle(title);
+    if (!titleResult.valid) return titleResult;
+
+    const notesResult = validateNotes(notes);
+    if (!notesResult.valid) return notesResult;
+
+    if (durationSeconds === undefined || durationSeconds === '') {
+        return { valid: false, error: 'Duration is required' };
+    }
+    const duration = Number(durationSeconds); // Convert multer string to number
+    if (!Number.isFinite(duration) || duration < 0) {
+        return { valid: false, error: 'Duration must be a non-negative number' };
+    }
+
+    const replacesIdResult = validateOptionalString(replacesId, 'replacesId');
+    if (!replacesIdResult.valid) return replacesIdResult;
+
+    return {
+        valid: true,
+        data: {
+            title: titleResult.data,
+            notes: notesResult.data,
+            durationSeconds: duration, // Keep as number
+            replacesId: replacesIdResult.data
+        }
+    };
+}
+
+/**
+ * Validates recording metadata for updates. Title still required, notes optional.
+ * @param {{title: string, notes: string}}
+ * @returns 
+ */
+export function validateRecordingMetadataOnUpdate({ title, notes } = {}) {
+    const titleResult = validateTitle(title);
+    if (!titleResult.valid) return titleResult;
+
+    const notesResult = validateNotes(notes);
+    if (!notesResult.valid) return notesResult;
+
+    return {
+        valid: true,
+        data: {
+            title: titleResult.data,
+            notes: notesResult.data,
         }
     };
 }

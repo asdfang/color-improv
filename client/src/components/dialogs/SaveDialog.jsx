@@ -1,71 +1,67 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDownload, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faCloudArrowUp, faDownload, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useState } from 'react';
 import { useRef, useEffect } from 'react';
 import { Dialog } from './Dialog';
+import { MetadataDialog } from './MetadataDialog';
+import { DeleteDialog } from './DeleteDialog';
 import { ConfirmCloseDialog } from './ConfirmCloseDialog';
+import { useAuth } from '../../contexts/AuthContext';
+import { useRecordings } from '../../contexts/RecordingsContext';
+import { downloadRecordingZip } from '../../utils';
+import { MAX_RECORDINGS_PER_USER } from '../../constants';
 import PropTypes from 'prop-types';
 
-import JSZip from 'jszip';
-import mime from 'mime-types';
-
 /**
- * @param {string} mimeType
- * @returns {string} file extension without dot
+ * @param {{
+ *      isOpen: boolean,
+ *      onClose: () => void,
+ *      recordingResult: NonNullable<import('../../contexts/PlaybackContext').RecordingResult>
+ * }} props
  */
-function normalizeRecordingExtension(mimeType) {
-    let extension = mime.extension(mimeType) || 'webm';
-    // Force better compatibility with common browsers
-    if (extension === 'weba') extension = 'webm';
-    if (extension === 'mp4') extension = 'm4a';
-    return extension;
-}
-
-/**
- * @param {{isOpen: boolean, onClose: () => void, recordingResult: import('../../contexts/PlaybackContext').RecordingResult}} props
- */
-export function DownloadDialog({ isOpen, onClose, recordingResult }) {
-    const { recordingBlob, logObject } = recordingResult || {};
+export function SaveDialog({ isOpen, onClose, recordingResult }) {  
+    const { audioBlob, logObject } = recordingResult;
+    const [ hasSaved, setHasSaved ] = useState(false);
     const [ hasDownloaded, setHasDownloaded ] = useState(false);
     const [ isConfirmDialogOpen, setIsConfirmDialogOpen ] = useState(false);
+    const [ isMetadataDialogOpen, setIsMetadataDialogOpen ] = useState(false);
+    const [ isDeleteDialogOpen, setIsDeleteDialogOpen ] = useState(false);
     const audioRef = useRef(/** @type {HTMLAudioElement | null} */(null));
     const preRef = useRef(/** @type {HTMLPreElement | null} */(null));
 
+    const { currentUser } = useAuth();
+    const { count } = useRecordings();
+
+    const saveIcon = <FontAwesomeIcon icon={faCloudArrowUp} aria-hidden="true" />;
     const downloadIcon = <FontAwesomeIcon icon={faDownload} aria-hidden="true" />;
     const checkIcon = <FontAwesomeIcon icon={faCheck} aria-hidden="true" />;
     const closeIcon = <FontAwesomeIcon icon={faTimes} aria-hidden="true" />;
 
+    const handleSave = async () => {
+        if (!currentUser) return;
+        if (count < MAX_RECORDINGS_PER_USER) {
+            setIsMetadataDialogOpen(true);
+        } else {
+            setIsDeleteDialogOpen(true);
+        }
+    }
+
     const handleDownload = async () => {
-        if (!recordingBlob || !logObject) return;
-
-        const zip = new JSZip();
-        const ext = normalizeRecordingExtension(recordingBlob.type);
-        zip.file(`recording.${ext}`, recordingBlob);
-        zip.file('log.json', JSON.stringify(logObject, null, 2));
-
-        const zipBlob = await zip.generateAsync({ type: 'blob' });
-        const zipUrl = URL.createObjectURL(zipBlob);
-        const a = document.createElement('a');
-        a.href = zipUrl;
-        a.download = `performance_${Date.now()}.zip`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(zipUrl), 100);
+        await downloadRecordingZip(audioBlob, logObject);
         setHasDownloaded(true);
     }
 
-    // Update audio source when recordingBlob changes, and revoke URL on cleanup
+    // Update audio source when audioBlob changes, and revoke URL on cleanup
     useEffect(() => {
-        if (recordingBlob && audioRef.current) {
-            const recordingUrl = URL.createObjectURL(recordingBlob);
+        if (audioBlob && audioRef.current) {
+            const recordingUrl = URL.createObjectURL(audioBlob);
             audioRef.current.src = recordingUrl;
 
             return () => {
                 URL.revokeObjectURL(recordingUrl);
             };
         }
-    }, [recordingBlob]);
+    }, [audioBlob]);
 
     // Render log preview with truncation if too long, and scroll to top on new log
     useEffect(() => {
@@ -83,17 +79,23 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
     }, [logObject]);
 
     const handleClose = () => {
-        if (!hasDownloaded) {
+        if (!hasSaved && !hasDownloaded) {
             setIsConfirmDialogOpen(true);
         }
         else {
-            setHasDownloaded(false); // Cleanup for next time dialog is opened
             onClose();
         }
     }
 
     const footer = (
         <>
+            <button
+                className={`btn-text save-btn ${hasSaved ? 'saved' : ''}`}
+                onClick={handleSave}
+                disabled={!currentUser || hasSaved}
+            >
+                {hasSaved ? <>Saved {checkIcon}</> : <>Save to Account Library {saveIcon}</>}
+            </button>
             <button className={`btn-text download-btn ${hasDownloaded ? 'downloaded' : ''}`} onClick={handleDownload}>
                 {hasDownloaded ? <>Downloaded {checkIcon}</> : <>Download (ZIP) {downloadIcon}</>}
             </button>
@@ -104,11 +106,11 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
     return (
         <>
             <Dialog
-                id="download-dialog"
-                className="download-dialog"
+                id="save-dialog"
+                className="save-dialog"
                 isOpen={isOpen}
                 onClose={handleClose}
-                title="Download Recording"
+                title="Save Recording"
                 closeOnBackdrop={false} // Prevent accidentally closing
                 footer={footer}
             >
@@ -127,8 +129,31 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
                         </div>
                     </div>
                 </div>
-                <p>Great performance! You can download your audio and MIDI log below.</p>
+                <p>Great performance! You can save your audio and MIDI log below.</p>
+                {currentUser === null && <p>(Log in before recording to save to account library next time!)</p>}
             </Dialog>
+            <MetadataDialog
+                isOpen={isMetadataDialogOpen}
+                onSaved={() => {
+                    setIsMetadataDialogOpen(false);
+                    setHasSaved(true);
+                }}
+                onGoBack={() => setIsMetadataDialogOpen(false)}
+                onLibraryFull={() => {
+                    setIsMetadataDialogOpen(false);
+                    setIsDeleteDialogOpen(true);
+                }}
+                recordingResult={recordingResult}
+                >
+            </MetadataDialog>
+            <DeleteDialog
+                isOpen={isDeleteDialogOpen}
+                onDeleted={() => { 
+                    setIsDeleteDialogOpen(false);
+                    setIsMetadataDialogOpen(true);
+                }}
+                onGoBack={() => setIsDeleteDialogOpen(false)}
+            />
             <ConfirmCloseDialog
                 isOpen={isConfirmDialogOpen}
                 onGoBack={() => setIsConfirmDialogOpen(false)}
@@ -141,11 +166,12 @@ export function DownloadDialog({ isOpen, onClose, recordingResult }) {
     );
 }
 
-DownloadDialog.propTypes = {
+SaveDialog.propTypes = {
     isOpen: PropTypes.bool.isRequired,
     onClose: PropTypes.func.isRequired,
     recordingResult: PropTypes.shape({
-        recordingBlob: PropTypes.instanceOf(Blob).isRequired,
+        audioBlob: PropTypes.instanceOf(Blob).isRequired,
         logObject: PropTypes.instanceOf(Object).isRequired,
+        durationSeconds: PropTypes.number.isRequired,
     }),
 };

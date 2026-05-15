@@ -15,6 +15,7 @@ export class RecordingEngine {
         this.chunks = /** @type {Blob[]} */ ([]);
 
         this.isRecording = false;
+        this.startTime = 0;
     }
 
     /**
@@ -83,12 +84,13 @@ export class RecordingEngine {
         
         this.mediaRecorder.start();
         this.isRecording = true;
+        this.startTime = performance.now();
     }
 
     /**
      * Stops recording and returns a Promise that resolves to the recorded audio as a Blob.
       * If recording is not active, resolves to null.
-      * @returns {Promise<Blob|null>} Promise resolving to the recorded audio Blob, or null if not recording
+      * @returns {Promise<{blob: Blob, durationSeconds: number}|null>} Promise resolving to the recorded audio Blob and duration, or null if not recording
       * @throws {Error} if an error occurs during stopping/recording
       * Note: The Blob is created from the collected chunks when the MediaRecorder's `stop` event fires.
      */
@@ -107,7 +109,9 @@ export class RecordingEngine {
                 const blob = new Blob(this.chunks, { type: mediaRecorder.mimeType });
                 this.mediaRecorder = null;
                 this.isRecording = false;
-                resolve(blob);
+                const endTime = performance.now();
+                const durationSeconds = Math.round((endTime - this.startTime) / 1000);
+                resolve({blob, durationSeconds});
             };
 
             mediaRecorder.onerror = (e) => {
