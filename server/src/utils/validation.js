@@ -9,6 +9,9 @@ function clamp(value, min, max) {
 }
 
 export function validateAllowedFields(body, allowedFields) {
+    if (body === undefined || body === null || typeof body !== 'object') {
+        return { valid: false, error: 'Request body must be a JSON object' };
+    }
     const unknown = Object.keys(body).filter(k => !allowedFields.includes(k));
     if (unknown.length > 0) {
         return { valid: false, error: `Unknown fields: ${unknown.join(', ')}. Allowed fields: ${allowedFields.join(', ')}.` };
@@ -93,13 +96,12 @@ export function validateBoolean(input, fieldName) {
     return { valid: true, data: input };
 }
 
-// Returns valid with undefined 'data' property when title is absent, only checks when value is provided.
 export function validateTitle(title) {
-    return validateOptionalString(title, 'Title', 1, 100);
+    return validateRequiredString(title, 'Title', 1, 100);
 }
 
-// Returns valid with undefined 'data' property when notes is absent, only checks when value is provided.
 export function validateNotes(notes) {
+    if (notes === null || notes === '') return { valid: true, data: null }; // Clears string
     return validateOptionalString(notes, 'Notes', 0, 500);
 }
 
@@ -175,9 +177,6 @@ export function validatePreferencesBody({ difficulty, backingTrackVolume, sample
 export function validateRecordingMetadataOnCreate({ title, notes, durationSeconds, replacesId } = {}) {
     const titleResult = validateTitle(title);
     if (!titleResult.valid) return titleResult;
-    if (titleResult.data === undefined) {
-        return { valid: false, error: 'Title is required' };
-    }
 
     const notesResult = validateNotes(notes);
     if (!notesResult.valid) return notesResult;
@@ -205,7 +204,7 @@ export function validateRecordingMetadataOnCreate({ title, notes, durationSecond
 }
 
 /**
- * Validates recording metadata for updates. At least one of title or notes must be provided.
+ * Validates recording metadata for updates. Title still required, notes optional.
  * @param {{title: string, notes: string}}
  * @returns 
  */
@@ -215,10 +214,6 @@ export function validateRecordingMetadataOnUpdate({ title, notes } = {}) {
 
     const notesResult = validateNotes(notes);
     if (!notesResult.valid) return notesResult;
-
-    if (titleResult.data === undefined && notesResult.data === undefined) {
-        return { valid: false, error: 'At least one of title or notes must be provided' };
-    }
 
     return {
         valid: true,
