@@ -40,7 +40,7 @@ export function Drawer({ id, className = '', isOpen, onClose, header, children})
                 inert={!isOpen}
                 aria-labelledby={`${id}-header`}
             >
-                <div className="drawer-header">
+                <div id={`${id}-header`} className="drawer-header">
                     {header}
                     <button
                         className="drawer-close-btn"

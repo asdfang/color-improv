@@ -30,7 +30,7 @@ export function LibraryDrawer() {
                 className="library-drawer"
                 isOpen={isLibraryDrawerOpen}
                 onClose={() => setIsLibraryDrawerOpen(false)}
-                header={<h2 id="library-drawer-header">Your Recordings ({count}/{MAX_RECORDINGS_PER_USER})</h2>}
+                header={<h2>Your Recordings ({count}/{MAX_RECORDINGS_PER_USER})</h2>}
             >
                 <p>Listen to your recordings, edit title and notes, download, and delete here!</p>
                 <ol className="recordings-list">
