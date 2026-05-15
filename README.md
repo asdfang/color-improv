@@ -13,7 +13,8 @@ Note the visuals indicating that the keys for the C and Bb are pressed (compare 
 ## Features
 - Keyboard and touch support - play notes via keyboard or touching the pads directly; responsive layout for mobile/tablet
 - Real-time visualization of actively playing notes, currently playing chord of backing track, and upcoming chord changes; configurable by difficulty level
-- Recording support with downloadable audio recording and MIDI event logs
+- Recording support with downloadable audio and event logs
+- Persistent storage with Cloudflare R2, with a max of 10 recordings per account
 - Sync volume and difficulty preferences across devices with localStorage fallback during anonymous usage, with guided conflict resolution when server preferences differ on login
 - Authentication flow for saving user settings across sessions
 - Accessibility support for screen readers and keyboard-only navigation (ARIA live regions, focus management, semantic HTML)
@@ -32,7 +33,6 @@ A simple way to improvise/solo over these chords is to use notes from the mixoly
 - Express, Prisma + PostgreSQL - REST API, auth, user preferences
 
 ## Roadmap
-- Integrate Cloudflare R2 to save recordings to user accounts
 - Allow user to upload custom backing tracks, analyze for chords and timing
 - Musical analysis/evaluation of recording session
 - Expand note range with octave displacements
