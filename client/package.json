@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite --clearScreen false",
+    "lint": "eslint src",
     "build": "vite build",
     "preview": "vite preview",
     "ship": "npm run build && firebase deploy --only hosting:colorimprov"
