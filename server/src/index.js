@@ -40,7 +40,10 @@ app.get('{*path}', (req, res, next) => {
     res.sendFile(path.join(clientDistPath, 'index.html'));
 });
 
-app.use((error, req, res, _next) => {
+app.use((error, req, res, next) => {
+    if (res.headersSent) {
+        return next(error); // pass on to Express's built-in error handler
+    }
     console.error('Error:', error);
     res.status(500).json(err(ErrorCode.INTERNAL_ERROR, 'Internal server error'));
 });
